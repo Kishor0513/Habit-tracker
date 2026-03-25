@@ -38,6 +38,17 @@ npx.cmd eas-cli@latest build -p android --profile apk
 
 When the build finishes, EAS will show a download link. Download the `.apk`.
 
+### Build on GitHub (Actions)
+
+This repo includes a GitHub Actions workflow at `.github/workflows/android-apk.yml` that can build an APK for you.
+
+1. Create an Expo access token (in your Expo account) and add it to your GitHub repo as a secret:
+   - Secret name: `EAS_ACCESS_TOKEN`
+2. On GitHub: **Actions** → **Build Android APK (Expo EAS)** → **Run workflow**
+3. Download the APK from the workflow **Artifacts**
+
+If you push a tag like `apk-v1.0.0`, the workflow also attaches the APK to a GitHub **Release**.
+
 ### Put the APK on GitHub
 
 Best option: GitHub **Releases** (don’t commit APKs into the repo).
