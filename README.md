@@ -5,6 +5,8 @@ A lightweight, professional habit tracker you can run locally (no external depen
 - Daily tracking (binary + quantity habits)
 - Projects that link to habits (so real-life goals have structure)
 - Insights (streaks, completion rate, recent trends)
+- Auth options: magic link and email/password (Supabase)
+- Focus Hub: live clock, monthly calendar, focus timer, and Spotify embed panel
 - Import/export (JSON) and example templates
 
 ## Install
@@ -35,6 +37,10 @@ VITE_SUPABASE_ANON_KEY=YOUR_ANON_KEY
 ```
 
 Restart `npm run dev`, then sign in via the email link. Your habits/projects/entries will be stored per-user in Supabase.
+
+For email/password auth, ensure Email provider is enabled in Supabase Auth settings.
+
+Spotify note: this app supports embedding public Spotify content via URL. Full account playback control requires Spotify OAuth and a Premium-compatible integration.
 
 If you update this project later, re-run `supabase/schema.sql`. It is idempotent and safely applies missing schema/policies (including settings storage).
 
