@@ -22,6 +22,30 @@ npm run web
 npm run android
 ```
 
+## Build an APK (no Play Store)
+
+Recommended: use **EAS Build** (Expo cloud build). It produces an `.apk` you can upload to GitHub Releases or share directly.
+
+From `rn/`:
+
+```powershell
+# login once
+npx.cmd eas-cli@latest login
+
+# build an APK (see rn/eas.json)
+npx.cmd eas-cli@latest build -p android --profile apk
+```
+
+When the build finishes, EAS will show a download link. Download the `.apk`.
+
+### Put the APK on GitHub
+
+Best option: GitHub **Releases** (don’t commit APKs into the repo).
+
+1. Open your repo on GitHub → **Releases** → **Draft a new release**
+2. Upload the downloaded `.apk` as an asset
+3. Publish the release
+
 ### If Expo fails to write to `C:\\Users\\<you>\\.expo` (EPERM)
 
 Set `EXPO_HOME` to a writable folder (example from repo root):
