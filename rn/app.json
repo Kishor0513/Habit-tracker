@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "Habit Tracker",
+    "slug": "habit-tracker",
+    "scheme": "habit-tracker",
+    "version": "1.0.0",
+    "platforms": ["android", "web", "ios"],
+    "orientation": "portrait",
+    "web": { "bundler": "metro" },
+    "android": { "package": "com.example.habittracker" }
+  }
+}
+

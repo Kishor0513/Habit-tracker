@@ -70,3 +70,14 @@ If you update this project later, re-run `supabase/schema.sql`. It is idempotent
 ```bash
 npm test
 ```
+
+## React Native (Android + Web)
+
+This repo also includes an Expo (React Native) app in `rn/`.
+
+```bash
+npm run rn:install
+npm run rn:web
+# or
+npm run rn:android
+```
