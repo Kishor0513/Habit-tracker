@@ -40,7 +40,21 @@ Restart `npm run dev`, then sign in via the email link. Your habits/projects/ent
 
 For email/password auth, ensure Email provider is enabled in Supabase Auth settings.
 
-Spotify note: this app supports embedding public Spotify content via URL. Full account playback control requires Spotify OAuth and a Premium-compatible integration.
+Spotify note: this app supports full control integration (connect, play/pause, next/prev, seek, volume) using Spotify OAuth + Web Playback SDK.
+
+### Spotify Full Control Setup
+
+1. Create a Spotify app at https://developer.spotify.com/dashboard and copy its Client ID.
+2. Add `VITE_SPOTIFY_CLIENT_ID` to `.env` and Vercel env variables.
+3. In Spotify app settings, add Redirect URI(s):
+   - local: `http://localhost:5173/`
+   - production: your Vercel URL (for example `https://your-app.vercel.app/`)
+4. Restart the app and use "Connect Spotify" inside Focus Hub.
+
+Important:
+
+- Full playback control typically requires a Spotify Premium account.
+- Browser autoplay and Spotify account/device restrictions may still limit automatic playback in some sessions.
 
 If you update this project later, re-run `supabase/schema.sql`. It is idempotent and safely applies missing schema/policies (including settings storage).
 

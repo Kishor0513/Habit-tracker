@@ -1,4 +1,22 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+	clearSpotifyAuth,
+	completeSpotifyAuthFromUrl,
+	ensureSpotifyAccessToken,
+	getStoredSpotifyAuth,
+	loadSpotifyWebPlaybackSdk,
+	parseSpotifyInputToPlaybackPayload,
+	spotifyGetMe,
+	spotifyGetPlaybackState,
+	spotifyNext,
+	spotifyPause,
+	spotifyPlay,
+	spotifyPrevious,
+	spotifySeek,
+	spotifySetVolume,
+	spotifyTransferPlayback,
+	startSpotifyLogin,
+} from '../lib/spotify.js';
 import { useApp } from '../state/AppState.jsx';
 import { useToast } from '../state/ToastState.jsx';
 
@@ -28,20 +46,6 @@ function isPalindromeClock(date) {
 	return `${hh}${mm}` === `${mm}${hh}`;
 }
 
-function normalizeSpotifyEmbedUrl(input) {
-	const value = input.trim();
-	if (!value) return '';
-
-	// Accept raw Spotify URL and convert it into embed URL.
-	const match = value.match(
-		/spotify\.com\/(track|playlist|album|episode|show)\/([A-Za-z0-9]+)/,
-	);
-	if (match) return `https://open.spotify.com/embed/${match[1]}/${match[2]}`;
-
-	if (value.includes('open.spotify.com/embed/')) return value;
-	return '';
-}
-
 function formatFocus(totalSeconds) {
 	const m = Math.floor(totalSeconds / 60);
 	const s = totalSeconds % 60;
@@ -49,13 +53,25 @@ function formatFocus(totalSeconds) {
 }
 
 export default function ProductivityHub() {
-	const { api, refresh } = useApp();
+	const { api } = useApp();
 	const toast = useToast();
+	const spotifyClientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID?.trim() ?? '';
+	const redirectUri = window.location.origin + window.location.pathname;
+	const playerRef = useRef(null);
+
 	const [now, setNow] = useState(() => new Date());
 	const [focusSeconds, setFocusSeconds] = useState(25 * 60);
 	const [running, setRunning] = useState(false);
-	const [spotifyUrl, setSpotifyUrl] = useState('');
 	const [spotifyInput, setSpotifyInput] = useState('');
+	const [spotifyMe, setSpotifyMe] = useState(null);
+	const [spotifyDeviceId, setSpotifyDeviceId] = useState('');
+	const [spotifyState, setSpotifyState] = useState(null);
+	const [spotifyAuthed, setSpotifyAuthed] = useState(
+		Boolean(getStoredSpotifyAuth()),
+	);
+	const [spotifyBusy, setSpotifyBusy] = useState(false);
+	const [volumePercent, setVolumePercent] = useState(75);
+	const [positionMs, setPositionMs] = useState(0);
 
 	useEffect(() => {
 		const id = window.setInterval(() => setNow(new Date()), 1000);
@@ -66,12 +82,10 @@ export default function ProductivityHub() {
 		if (!api) return;
 		let alive = true;
 		api
-			.getSetting('spotify_embed_url')
+			.getSetting('spotify_last_input')
 			.then((saved) => {
 				if (!alive || !saved?.value) return;
-				const val = String(saved.value);
-				setSpotifyUrl(val);
-				setSpotifyInput(val);
+				setSpotifyInput(String(saved.value));
 			})
 			.catch((e) => console.error(e));
 
@@ -79,6 +93,117 @@ export default function ProductivityHub() {
 			alive = false;
 		};
 	}, [api]);
+
+	useEffect(() => {
+		if (!spotifyClientId) return;
+		completeSpotifyAuthFromUrl({ clientId: spotifyClientId, redirectUri })
+			.then((completed) => {
+				if (!completed) return;
+				setSpotifyAuthed(true);
+				toast.push('Spotify connected.');
+			})
+			.catch((e) => toast.push(e?.message ?? 'Spotify login failed.'));
+	}, [spotifyClientId, redirectUri, toast]);
+
+	useEffect(() => {
+		if (!spotifyClientId || !spotifyAuthed) return;
+		let alive = true;
+
+		const loadProfileAndState = async () => {
+			try {
+				await ensureSpotifyAccessToken(spotifyClientId);
+				const [me, state] = await Promise.all([
+					spotifyGetMe(spotifyClientId),
+					spotifyGetPlaybackState(spotifyClientId).catch(() => null),
+				]);
+				if (!alive) return;
+				setSpotifyMe(me);
+				setSpotifyState(state);
+				setPositionMs(state?.progress_ms ?? 0);
+			} catch (e) {
+				toast.push(e?.message ?? 'Could not load Spotify profile.');
+			}
+		};
+
+		loadProfileAndState();
+		return () => {
+			alive = false;
+		};
+	}, [spotifyAuthed, spotifyClientId, toast]);
+
+	useEffect(() => {
+		if (!spotifyClientId || !spotifyAuthed) return;
+		let cancelled = false;
+
+		const boot = async () => {
+			try {
+				await loadSpotifyWebPlaybackSdk();
+				if (cancelled || !window.Spotify?.Player) return;
+
+				const player = new window.Spotify.Player({
+					name: 'Habit Tracker Player',
+					getOAuthToken: async (cb) => {
+						const token = await ensureSpotifyAccessToken(spotifyClientId);
+						cb(token || '');
+					},
+					volume: volumePercent / 100,
+				});
+
+				player.addListener('ready', async ({ device_id }) => {
+					setSpotifyDeviceId(device_id);
+					try {
+						await spotifyTransferPlayback(spotifyClientId, device_id);
+					} catch (_e) {
+						// Transfer may fail on free plans or when no active session exists.
+					}
+				});
+
+				player.addListener('player_state_changed', (state) => {
+					if (!state) return;
+					setSpotifyState(state);
+					setPositionMs(state.position ?? 0);
+				});
+
+				player.addListener('initialization_error', ({ message }) =>
+					toast.push(message),
+				);
+				player.addListener('authentication_error', ({ message }) =>
+					toast.push(message),
+				);
+				player.addListener('account_error', ({ message }) =>
+					toast.push(message),
+				);
+
+				await player.connect();
+				playerRef.current = player;
+			} catch (e) {
+				toast.push(e?.message ?? 'Spotify player could not start.');
+			}
+		};
+
+		boot();
+		return () => {
+			cancelled = true;
+			playerRef.current?.disconnect?.();
+			playerRef.current = null;
+		};
+	}, [spotifyAuthed, spotifyClientId, toast, volumePercent]);
+
+	useEffect(() => {
+		if (!spotifyClientId || !spotifyAuthed) return;
+		const id = window.setInterval(() => {
+			spotifyGetPlaybackState(spotifyClientId)
+				.then((state) => {
+					setSpotifyState(state);
+					setPositionMs((prev) => {
+						if (typeof state?.progress_ms !== 'number') return prev;
+						return state.progress_ms;
+					});
+				})
+				.catch(() => {});
+		}, 8000);
+		return () => window.clearInterval(id);
+	}, [spotifyAuthed, spotifyClientId]);
 
 	useEffect(() => {
 		if (!running) return;
@@ -99,6 +224,21 @@ export default function ProductivityHub() {
 	const calendarCells = useMemo(() => getCalendarCells(now), [now]);
 	const todayDay = now.getDate();
 	const palClock = isPalindromeClock(now);
+	const trackName =
+		spotifyState?.item?.name ||
+		spotifyState?.track_window?.current_track?.name ||
+		'';
+	const artists =
+		spotifyState?.item?.artists?.map((x) => x.name).join(', ') ||
+		spotifyState?.track_window?.current_track?.artists
+			?.map((x) => x.name)
+			.join(', ') ||
+		'';
+	const durationMs =
+		spotifyState?.item?.duration_ms || spotifyState?.duration || 0;
+	const isPlaying = Boolean(
+		spotifyState?.is_playing || spotifyState?.paused === false,
+	);
 
 	return (
 		<div className="card productivityHub">
@@ -205,54 +345,199 @@ export default function ProductivityHub() {
 						Open Spotify
 					</a>
 				</div>
-				<input
-					className="input"
-					type="text"
-					placeholder="Paste Spotify track/playlist URL"
-					value={spotifyInput}
-					onChange={(e) => setSpotifyInput(e.target.value)}
-				/>
-				<div
-					className="row"
-					style={{ flexWrap: 'wrap' }}
-				>
-					<button
-						className="btn primary"
-						type="button"
-						onClick={async () => {
-							const embed = normalizeSpotifyEmbedUrl(spotifyInput);
-							if (!embed) {
-								toast.push(
-									'Use a valid Spotify track/playlist/album/show URL.',
-								);
-								return;
-							}
-							setSpotifyUrl(embed);
-							if (api) {
-								await api.setSetting('spotify_embed_url', embed);
-								refresh();
-							}
-							toast.push('Spotify player saved.');
-						}}
-					>
-						Save player
-					</button>
-				</div>
-
-				{spotifyUrl ? (
-					<iframe
-						title="Spotify player"
-						src={spotifyUrl}
-						width="100%"
-						height="152"
-						frameBorder="0"
-						allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-						loading="lazy"
-					/>
-				) : (
+				{!spotifyClientId ? (
 					<div className="subtle">
-						Add a Spotify URL to embed your player here.
+						Add VITE_SPOTIFY_CLIENT_ID to your env to enable full Spotify
+						controls.
 					</div>
+				) : !spotifyAuthed ? (
+					<div
+						className="row"
+						style={{ flexWrap: 'wrap' }}
+					>
+						<button
+							className="btn primary"
+							type="button"
+							onClick={() =>
+								startSpotifyLogin({ clientId: spotifyClientId, redirectUri })
+							}
+						>
+							Connect Spotify
+						</button>
+						<div className="subtle">
+							Full playback control requires Spotify Premium.
+						</div>
+					</div>
+				) : (
+					<>
+						<div className="subtle">
+							Connected as{' '}
+							{spotifyMe?.display_name || spotifyMe?.id || 'Spotify user'}
+						</div>
+						<input
+							className="input"
+							type="text"
+							placeholder="Paste Spotify track/playlist/album URL or URI"
+							value={spotifyInput}
+							onChange={(e) => setSpotifyInput(e.target.value)}
+						/>
+						<div
+							className="row"
+							style={{ flexWrap: 'wrap' }}
+						>
+							<button
+								className="btn"
+								type="button"
+								disabled={spotifyBusy}
+								onClick={async () => {
+									const payload =
+										parseSpotifyInputToPlaybackPayload(spotifyInput);
+									if (!payload) {
+										toast.push(
+											'Use a valid Spotify URL/URI for track, playlist, or album.',
+										);
+										return;
+									}
+									try {
+										setSpotifyBusy(true);
+										await spotifyPlay(
+											spotifyClientId,
+											spotifyDeviceId,
+											payload,
+										);
+										if (api)
+											await api.setSetting(
+												'spotify_last_input',
+												spotifyInput.trim(),
+											);
+										toast.push('Playback started.');
+									} catch (e) {
+										toast.push(e?.message ?? 'Could not start playback.');
+									} finally {
+										setSpotifyBusy(false);
+									}
+								}}
+							>
+								Play selection
+							</button>
+							<button
+								className="btn"
+								type="button"
+								onClick={async () => {
+									try {
+										await spotifyPrevious(spotifyClientId, spotifyDeviceId);
+									} catch (e) {
+										toast.push(e?.message ?? 'Previous failed.');
+									}
+								}}
+							>
+								Prev
+							</button>
+							<button
+								className="btn primary"
+								type="button"
+								onClick={async () => {
+									try {
+										if (isPlaying)
+											await spotifyPause(spotifyClientId, spotifyDeviceId);
+										else await spotifyPlay(spotifyClientId, spotifyDeviceId);
+									} catch (e) {
+										toast.push(e?.message ?? 'Play/pause failed.');
+									}
+								}}
+							>
+								{isPlaying ? 'Pause' : 'Play'}
+							</button>
+							<button
+								className="btn"
+								type="button"
+								onClick={async () => {
+									try {
+										await spotifyNext(spotifyClientId, spotifyDeviceId);
+									} catch (e) {
+										toast.push(e?.message ?? 'Next failed.');
+									}
+								}}
+							>
+								Next
+							</button>
+							<button
+								className="btn danger"
+								type="button"
+								onClick={() => {
+									clearSpotifyAuth();
+									playerRef.current?.disconnect?.();
+									playerRef.current = null;
+									setSpotifyAuthed(false);
+									setSpotifyMe(null);
+									setSpotifyState(null);
+									setSpotifyDeviceId('');
+								}}
+							>
+								Disconnect
+							</button>
+						</div>
+
+						<div className="stack spotifyNowPlaying">
+							<div className="subtle">
+								{trackName
+									? `Now playing: ${trackName}${artists ? ` · ${artists}` : ''}`
+									: 'No active track yet.'}
+							</div>
+							<input
+								className="input"
+								type="range"
+								min={0}
+								max={Math.max(1000, durationMs)}
+								value={Math.min(positionMs, Math.max(1000, durationMs))}
+								onChange={(e) => setPositionMs(Number(e.target.value))}
+								onMouseUp={async () => {
+									try {
+										await spotifySeek(
+											spotifyClientId,
+											positionMs,
+											spotifyDeviceId,
+										);
+									} catch (e) {
+										toast.push(e?.message ?? 'Seek failed.');
+									}
+								}}
+							/>
+							<div className="row between">
+								<span className="subtle">Position</span>
+								<span className="subtle">
+									{Math.floor(positionMs / 1000)}s /{' '}
+									{Math.floor(durationMs / 1000)}s
+								</span>
+							</div>
+							<div
+								className="row"
+								style={{ gap: 10 }}
+							>
+								<span className="subtle">Volume</span>
+								<input
+									className="input"
+									type="range"
+									min={0}
+									max={100}
+									value={volumePercent}
+									onChange={(e) => setVolumePercent(Number(e.target.value))}
+									onMouseUp={async () => {
+										try {
+											await spotifySetVolume(
+												spotifyClientId,
+												volumePercent,
+												spotifyDeviceId,
+											);
+										} catch (e) {
+											toast.push(e?.message ?? 'Volume change failed.');
+										}
+									}}
+								/>
+								<span className="subtle">{volumePercent}%</span>
+							</div>
+						</div>
+					</>
 				)}
 			</div>
 		</div>

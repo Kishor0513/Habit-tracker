@@ -442,6 +442,13 @@ textarea {
 	font-weight: 700;
 }
 
+.spotifyNowPlaying {
+	padding: 10px;
+	border-radius: 12px;
+	border: 1px solid var(--border);
+	background: rgba(255, 255, 255, 0.03);
+}
+
 .dot {
 	width: 11px;
 	height: 11px;
