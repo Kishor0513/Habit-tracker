@@ -410,7 +410,7 @@ export default function ProductivityHub() {
 						<input
 							className="input"
 							type="text"
-							placeholder="Paste Spotify track/playlist/album URL or URI"
+							placeholder="Spotify URL"
 							value={spotifyInput}
 							onChange={(e) => setSpotifyInput(e.target.value)}
 						/>
