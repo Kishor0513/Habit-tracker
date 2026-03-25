@@ -449,6 +449,71 @@ textarea {
 	background: rgba(255, 255, 255, 0.03);
 }
 
+.spotifyPlayerCard {
+	padding: 10px;
+	border-radius: 12px;
+	border: 1px solid var(--border);
+	background: linear-gradient(
+		180deg,
+		rgba(30, 215, 96, 0.14),
+		rgba(255, 255, 255, 0.03)
+	);
+	display: grid;
+	gap: 10px;
+}
+
+.spotifyPlayerHead {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.spotifyTrackRow {
+	display: grid;
+	grid-template-columns: 64px 1fr;
+	gap: 10px;
+	align-items: center;
+}
+
+.spotifyCoverWrap {
+	width: 64px;
+	height: 64px;
+}
+
+.spotifyCover {
+	width: 100%;
+	height: 100%;
+	border-radius: 12px;
+	object-fit: cover;
+	border: 1px solid var(--border);
+	box-shadow: 0 8px 18px rgba(2, 6, 23, 0.25);
+}
+
+.spotifyCoverFallback {
+	display: grid;
+	place-items: center;
+	font-size: 26px;
+	font-weight: 700;
+	color: #bbf7d0;
+	background: rgba(30, 215, 96, 0.2);
+}
+
+.spotifyTrackMeta {
+	min-width: 0;
+	display: grid;
+	gap: 4px;
+}
+
+.spotifyTrackTitle {
+	font-size: 14px;
+	font-weight: 700;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
 .dot {
 	width: 11px;
 	height: 11px;

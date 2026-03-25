@@ -52,6 +52,13 @@ function formatFocus(totalSeconds) {
 	return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
+function formatMs(ms) {
+	const totalSeconds = Math.max(0, Math.floor((ms || 0) / 1000));
+	const minutes = Math.floor(totalSeconds / 60);
+	const seconds = totalSeconds % 60;
+	return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
 export default function ProductivityHub() {
 	const { api } = useApp();
 	const toast = useToast();
@@ -236,6 +243,12 @@ export default function ProductivityHub() {
 		'';
 	const durationMs =
 		spotifyState?.item?.duration_ms || spotifyState?.duration || 0;
+	const albumArt =
+		spotifyState?.item?.album?.images?.[1]?.url ||
+		spotifyState?.track_window?.current_track?.album?.images?.[1]?.url ||
+		spotifyState?.item?.album?.images?.[0]?.url ||
+		spotifyState?.track_window?.current_track?.album?.images?.[0]?.url ||
+		'';
 	const isPlaying = Boolean(
 		spotifyState?.is_playing || spotifyState?.paused === false,
 	);
@@ -370,9 +383,38 @@ export default function ProductivityHub() {
 					</div>
 				) : (
 					<>
-						<div className="subtle">
-							Connected as{' '}
-							{spotifyMe?.display_name || spotifyMe?.id || 'Spotify user'}
+						<div className="spotifyPlayerCard">
+							<div className="spotifyPlayerHead">
+								<div className="subtle">
+									Connected as{' '}
+									{spotifyMe?.display_name || spotifyMe?.id || 'Spotify user'}
+								</div>
+								<span className={`badge ${isPlaying ? 'isPalClock' : ''}`}>
+									{isPlaying ? 'Playing' : 'Paused'}
+								</span>
+							</div>
+
+							<div className="spotifyTrackRow">
+								<div className="spotifyCoverWrap">
+									{albumArt ? (
+										<img
+											className="spotifyCover"
+											src={albumArt}
+											alt={trackName || 'Album art'}
+										/>
+									) : (
+										<div className="spotifyCover spotifyCoverFallback">♪</div>
+									)}
+								</div>
+								<div className="spotifyTrackMeta">
+									<div className="spotifyTrackTitle">
+										{trackName || 'No active track yet.'}
+									</div>
+									<div className="subtle">
+										{artists || 'Pick a track, playlist, or album to start.'}
+									</div>
+								</div>
+							</div>
 						</div>
 						<input
 							className="input"
@@ -479,11 +521,6 @@ export default function ProductivityHub() {
 						</div>
 
 						<div className="stack spotifyNowPlaying">
-							<div className="subtle">
-								{trackName
-									? `Now playing: ${trackName}${artists ? ` · ${artists}` : ''}`
-									: 'No active track yet.'}
-							</div>
 							<input
 								className="input"
 								type="range"
@@ -506,8 +543,7 @@ export default function ProductivityHub() {
 							<div className="row between">
 								<span className="subtle">Position</span>
 								<span className="subtle">
-									{Math.floor(positionMs / 1000)}s /{' '}
-									{Math.floor(durationMs / 1000)}s
+									{formatMs(positionMs)} / {formatMs(durationMs)}
 								</span>
 							</div>
 							<div
