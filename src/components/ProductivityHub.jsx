@@ -243,93 +243,6 @@ export default function ProductivityHub() {
 	return (
 		<div className="card productivityHub">
 			<h2>Focus Hub</h2>
-			<div className="hubTopRow">
-				<div>
-					<div className="hubClock">
-						{now.toLocaleTimeString([], {
-							hour: '2-digit',
-							minute: '2-digit',
-							second: '2-digit',
-						})}
-					</div>
-					<div className="subtle">
-						{now.toLocaleDateString([], {
-							weekday: 'long',
-							day: 'numeric',
-							month: 'long',
-							year: 'numeric',
-						})}
-					</div>
-				</div>
-				<span className={`badge ${palClock ? 'isPalClock' : ''}`}>
-					{palClock ? 'Palindrome minute' : 'Standard minute'}
-				</span>
-			</div>
-
-			<div className="calendarCard">
-				<div className="calendarTitle">{monthName(now.getMonth())}</div>
-				<div className="calendarWeekdays">
-					<span>M</span>
-					<span>T</span>
-					<span>W</span>
-					<span>T</span>
-					<span>F</span>
-					<span>S</span>
-					<span>S</span>
-				</div>
-				<div className="calendarGrid">
-					{calendarCells.map((cell, idx) => (
-						<div
-							key={`${idx}-${cell ?? 'x'}`}
-							className={`calendarCell ${cell === todayDay ? 'isToday' : ''}`}
-						>
-							{cell ?? ''}
-						</div>
-					))}
-				</div>
-			</div>
-
-			<div className="focusTimerRow">
-				<div className="timerLabel">Focus timer</div>
-				<div className="timerValue">{formatFocus(focusSeconds)}</div>
-				<div
-					className="row"
-					style={{ flexWrap: 'wrap' }}
-				>
-					<button
-						className="btn"
-						type="button"
-						onClick={() => setFocusSeconds(25 * 60)}
-					>
-						25m
-					</button>
-					<button
-						className="btn"
-						type="button"
-						onClick={() => setFocusSeconds(50 * 60)}
-					>
-						50m
-					</button>
-					<button
-						className="btn primary"
-						type="button"
-						onClick={() => setRunning((v) => !v)}
-					>
-						{running ? 'Pause' : 'Start'}
-					</button>
-					<button
-						className="btn"
-						type="button"
-						onClick={() => {
-							setRunning(false);
-							setFocusSeconds(25 * 60);
-						}}
-					>
-						Reset
-					</button>
-				</div>
-			</div>
-
 			<div className="stack">
 				<div
 					className="row between"
@@ -561,6 +474,94 @@ export default function ProductivityHub() {
 					</>
 				)}
 			</div>
+
+			<div className="hubTopRow">
+				<div>
+					<div className="hubClock">
+						{now.toLocaleTimeString([], {
+							hour: '2-digit',
+							minute: '2-digit',
+							second: '2-digit',
+						})}
+					</div>
+					<div className="subtle">
+						{now.toLocaleDateString([], {
+							weekday: 'long',
+							day: 'numeric',
+							month: 'long',
+							year: 'numeric',
+						})}
+					</div>
+				</div>
+				<span className={`badge ${palClock ? 'isPalClock' : ''}`}>
+					{palClock ? 'Palindrome minute' : 'Standard minute'}
+				</span>
+			</div>
+
+			<div className="calendarCard">
+				<div className="calendarTitle">{monthName(now.getMonth())}</div>
+				<div className="calendarWeekdays">
+					<span>M</span>
+					<span>T</span>
+					<span>W</span>
+					<span>T</span>
+					<span>F</span>
+					<span>S</span>
+					<span>S</span>
+				</div>
+				<div className="calendarGrid">
+					{calendarCells.map((cell, idx) => (
+						<div
+							key={`${idx}-${cell ?? 'x'}`}
+							className={`calendarCell ${cell === todayDay ? 'isToday' : ''}`}
+						>
+							{cell ?? ''}
+						</div>
+					))}
+				</div>
+			</div>
+
+			<div className="focusTimerRow">
+				<div className="timerLabel">Focus timer</div>
+				<div className="timerValue">{formatFocus(focusSeconds)}</div>
+				<div
+					className="row"
+					style={{ flexWrap: 'wrap' }}
+				>
+					<button
+						className="btn"
+						type="button"
+						onClick={() => setFocusSeconds(25 * 60)}
+					>
+						25m
+					</button>
+					<button
+						className="btn"
+						type="button"
+						onClick={() => setFocusSeconds(50 * 60)}
+					>
+						50m
+					</button>
+					<button
+						className="btn primary"
+						type="button"
+						onClick={() => setRunning((v) => !v)}
+					>
+						{running ? 'Pause' : 'Start'}
+					</button>
+					<button
+						className="btn"
+						type="button"
+						onClick={() => {
+							setRunning(false);
+							setFocusSeconds(25 * 60);
+						}}
+					>
+						Reset
+					</button>
+				</div>
+			</div>
+
 		</div>
 	);
 }

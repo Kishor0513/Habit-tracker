@@ -118,19 +118,16 @@ export default function TodayPage() {
 	const today = isoToday();
 	const [habits, setHabits] = useState([]);
 	const [entriesByKey, setEntriesByKey] = useState(new Map());
-	const [projectsCount, setProjectsCount] = useState(0);
 
 	useEffect(() => {
 		if (!api) return;
 		let alive = true;
-		Promise.all([api.listHabits(), api.listEntries(), api.listProjects()])
-			.then(([h, e, p]) => {
+		Promise.all([api.listHabits(), api.listEntries()])
+			.then(([h, e]) => {
 				if (!alive) return;
 				const activeHabits = h.filter((x) => !x.archivedAt);
-				const activeProjects = p.filter((x) => !x.archivedAt);
 				setHabits(activeHabits);
 				setEntriesByKey(new Map(e.map((x) => [x.id, x])));
-				setProjectsCount(activeProjects.length);
 			})
 			.catch((err) => console.error(err));
 		return () => {
@@ -224,37 +221,6 @@ export default function TodayPage() {
 
 			<div className="stack">
 				<ProductivityHub />
-				<div className="card">
-					<h2>How to make it real</h2>
-					<p className="subtle">
-						Attach each habit to a project. Example: “Deep work” → “Learn React
-						by shipping a mini app”.
-					</p>
-					<div
-						className="stack"
-						style={{ gap: 6 }}
-					>
-						<div className="subtle">
-							• Start tiny; scale targets after 2 consistent weeks.
-						</div>
-						<div className="subtle">
-							• Reduce friction: prep, cues, time blocks.
-						</div>
-						<div className="subtle">
-							• Review weekly: keep what works, delete what doesn’t.
-						</div>
-					</div>
-				</div>
-				<div className="card">
-					<h2>Projects check</h2>
-					<p className="subtle">Active projects: {projectsCount}</p>
-					<a
-						className="btn"
-						href="#/projects"
-					>
-						Open Projects
-					</a>
-				</div>
 			</div>
 		</div>
 	);
