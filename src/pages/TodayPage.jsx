@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import EmptyState from '../components/EmptyState.jsx';
-import Modal from '../components/Modal.jsx';
 import ProductivityHub from '../components/ProductivityHub.jsx';
 import { isoToday } from '../lib/date.js';
 import {
@@ -10,7 +9,6 @@ import {
 	targetLabel,
 } from '../lib/habits.js';
 import { computeTodaySummary, currentStreak } from '../lib/stats.js';
-import { TEMPLATE_PACKS } from '../seed.js';
 import { useApp } from '../state/AppState.jsx';
 import { useToast } from '../state/ToastState.jsx';
 
@@ -121,7 +119,6 @@ export default function TodayPage() {
 	const [habits, setHabits] = useState([]);
 	const [entriesByKey, setEntriesByKey] = useState(new Map());
 	const [projectsCount, setProjectsCount] = useState(0);
-	const [showFirstRun, setShowFirstRun] = useState(false);
 
 	useEffect(() => {
 		if (!api) return;
@@ -134,9 +131,6 @@ export default function TodayPage() {
 				setHabits(activeHabits);
 				setEntriesByKey(new Map(e.map((x) => [x.id, x])));
 				setProjectsCount(activeProjects.length);
-				setShowFirstRun(
-					activeHabits.length === 0 && activeProjects.length === 0,
-				);
 			})
 			.catch((err) => console.error(err));
 		return () => {
@@ -159,20 +153,6 @@ export default function TodayPage() {
 		[habits, entriesByHabitToday, today],
 	);
 
-	async function loadPack(pack) {
-		if (!api) return;
-		const created = [];
-		for (const h of pack.habits) created.push(await api.upsertHabit(h));
-		for (const p of pack.projects)
-			await api.upsertProject({
-				...p,
-				habitIds: created.slice(0, 3).map((x) => x.id),
-			});
-		toast.push('Loaded example pack.');
-		setShowFirstRun(false);
-		refresh();
-	}
-
 	if (!isReady) return <div className="card">Loading…</div>;
 
 	return (
@@ -190,7 +170,7 @@ export default function TodayPage() {
 				{due.length === 0 ? (
 					<EmptyState
 						title="Nothing due today"
-						body="Add a habit (or load examples) to start tracking."
+						body="Add a habit to start tracking."
 						action={
 							<a
 								className="btn primary"
@@ -276,52 +256,6 @@ export default function TodayPage() {
 					</a>
 				</div>
 			</div>
-
-			{showFirstRun ? (
-				<Modal
-					title="Start with examples?"
-					onClose={() => setShowFirstRun(false)}
-					actions={
-						<>
-							<button
-								className="btn"
-								type="button"
-								onClick={() => setShowFirstRun(false)}
-							>
-								Not now
-							</button>
-							<button
-								className="btn primary"
-								type="button"
-								onClick={() => loadPack(TEMPLATE_PACKS[0])}
-							>
-								Load pack
-							</button>
-						</>
-					}
-				>
-					<p className="subtle">
-						Want a professional starting point? Load a real-life pack (habits +
-						a project), then customize.
-					</p>
-					<div className="list">
-						{TEMPLATE_PACKS.map((p) => (
-							<div
-								key={p.id}
-								className="item"
-							>
-								<div
-									className="itemName"
-									style={{ fontWeight: 750 }}
-								>
-									{p.name}
-								</div>
-								<div className="subtle">{p.description}</div>
-							</div>
-						))}
-					</div>
-				</Modal>
-			) : null}
 		</div>
 	);
 }
