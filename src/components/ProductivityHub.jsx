@@ -17,7 +17,6 @@ import {
 	startSpotifyLogin,
 } from '../lib/spotify.js';
 import { useApp } from '../state/AppState.jsx';
-import { useToast } from '../state/ToastState.jsx';
 
 function monthName(monthIndex) {
 	return new Intl.DateTimeFormat(undefined, { month: 'long' }).format(
@@ -60,7 +59,6 @@ function formatMs(ms) {
 
 export default function ProductivityHub() {
 	const { api } = useApp();
-	const toast = useToast();
 	const spotifyClientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID?.trim() ?? '';
 	const redirectUri = window.location.origin + window.location.pathname;
 	const playerRef = useRef(null);
@@ -126,13 +124,13 @@ export default function ProductivityHub() {
 			.catch((e) => {
 				if (!mounted) return;
 				if (e?.message?.includes('state mismatch')) {
-					toast.push('Spotify login failed');
+					console.error('Spotify login failed');
 				}
 			});
 		return () => {
 			mounted = false;
 		};
-	}, [spotifyClientId, redirectUri, toast]);
+	}, [spotifyClientId, redirectUri]);
 
 	useEffect(() => {
 		if (!spotifyClientId || !spotifyAuthed) return;
@@ -158,7 +156,7 @@ export default function ProductivityHub() {
 		return () => {
 			alive = false;
 		};
-	}, [spotifyAuthed, spotifyClientId, toast]);
+	}, [spotifyAuthed, spotifyClientId]);
 
 	useEffect(() => {
 		if (!spotifyClientId || !spotifyAuthed) return;
@@ -212,7 +210,7 @@ export default function ProductivityHub() {
 			playerRef.current?.disconnect?.();
 			playerRef.current = null;
 		};
-	}, [spotifyAuthed, spotifyClientId, toast, volumePercent]);
+	}, [spotifyAuthed, spotifyClientId, volumePercent]);
 
 	useEffect(() => {
 		if (!spotifyClientId || !spotifyAuthed) return;
@@ -237,14 +235,14 @@ export default function ProductivityHub() {
 				if (prev <= 1) {
 					window.clearInterval(id);
 					setRunning(false);
-					toast.push('Focus session complete.');
+					console.error('Focus session complete.');
 					return 0;
 				}
 				return prev - 1;
 			});
 		}, 1000);
 		return () => window.clearInterval(id);
-	}, [running, toast]);
+	}, [running]);
 
 	// Preview player audio management
 	useEffect(() => {
@@ -280,7 +278,7 @@ export default function ProductivityHub() {
 			audio.removeEventListener('ended', handleEnded);
 			audio.removeEventListener('error', handleError);
 		};
-	}, [previewCurrentIndex, previewTracks.length, toast]);
+	}, [previewCurrentIndex, previewTracks.length]);
 
 	// Preview track playback
 	useEffect(() => {
@@ -468,26 +466,7 @@ export default function ProductivityHub() {
 					</div>
 				) : (
 					<>
-						{/* Mode toggle */}
-						<div
-							className="row"
-							style={{ gap: 8 }}
-						>
-							<button
-								className={`btn ${spotifyMode === 'device' ? 'primary' : ''}`}
-								type="button"
-								onClick={() => setSpotifyMode('device')}
-							>
-								Your Device
-							</button>
-							<button
-								className={`btn ${spotifyMode === 'playlist' ? 'primary' : ''}`}
-								type="button"
-								onClick={() => setSpotifyMode('playlist')}
-							>
-								Playlist Preview
-							</button>
-						</div>
+						<div className="subtle">Playback mode: Your Device</div>
 
 						{spotifyMode === 'device' ? (
 							// DEVICE MODE - Full Spotify Control
@@ -549,7 +528,7 @@ export default function ProductivityHub() {
 											const payload =
 												parseSpotifyInputToPlaybackPayload(spotifyInput);
 											if (!payload) {
-												toast.push(
+												console.error(
 													'Use a valid Spotify URL/URI for track, playlist, or album.',
 												);
 												return;
@@ -566,9 +545,11 @@ export default function ProductivityHub() {
 														'spotify_last_input',
 														spotifyInput.trim(),
 													);
-												toast.push('Playback started.');
+												console.error('Playback started.');
 											} catch (e) {
-												toast.push(e?.message ?? 'Could not start playback.');
+												console.error(
+													e?.message ?? 'Could not start playback.',
+												);
 											} finally {
 												setSpotifyBusy(false);
 											}
@@ -583,7 +564,7 @@ export default function ProductivityHub() {
 											try {
 												await spotifyPrevious(spotifyClientId, spotifyDeviceId);
 											} catch (e) {
-												toast.push(e?.message ?? 'Previous failed.');
+												console.error(e?.message ?? 'Previous failed.');
 											}
 										}}
 									>
@@ -599,7 +580,7 @@ export default function ProductivityHub() {
 												else
 													await spotifyPlay(spotifyClientId, spotifyDeviceId);
 											} catch (e) {
-												toast.push(e?.message ?? 'Play/pause failed.');
+												console.error(e?.message ?? 'Play/pause failed.');
 											}
 										}}
 									>
@@ -612,7 +593,7 @@ export default function ProductivityHub() {
 											try {
 												await spotifyNext(spotifyClientId, spotifyDeviceId);
 											} catch (e) {
-												toast.push(e?.message ?? 'Next failed.');
+												console.error(e?.message ?? 'Next failed.');
 											}
 										}}
 									>
@@ -651,7 +632,7 @@ export default function ProductivityHub() {
 													spotifyDeviceId,
 												);
 											} catch (e) {
-												toast.push(e?.message ?? 'Seek failed.');
+												console.error(e?.message ?? 'Seek failed.');
 											}
 										}}
 									/>
@@ -681,7 +662,7 @@ export default function ProductivityHub() {
 														spotifyDeviceId,
 													);
 												} catch (e) {
-													toast.push(e?.message ?? 'Volume change failed.');
+													console.error(e?.message ?? 'Volume change failed.');
 												}
 											}}
 										/>
@@ -706,7 +687,7 @@ export default function ProductivityHub() {
 									onClick={async () => {
 										const playlistId = extractPlaylistId(previewInput);
 										if (!playlistId) {
-											toast.push('Use a valid Spotify playlist URL or URI.');
+											console.error('Use a valid Spotify playlist URL or URI.');
 											return;
 										}
 										try {
@@ -720,7 +701,9 @@ export default function ProductivityHub() {
 												playlistId,
 											);
 											if (tracks.length === 0) {
-												toast.push('No preview tracks found in this playlist.');
+												console.error(
+													'No preview tracks found in this playlist.',
+												);
 												return;
 											}
 											setPreviewPlaylist(info);
@@ -728,11 +711,11 @@ export default function ProductivityHub() {
 											setPreviewCurrentIndex(0);
 											setPreviewPlaying(false);
 											setPreviewPosition(0);
-											toast.push(
+											console.error(
 												`Loaded ${tracks.length} tracks with previews.`,
 											);
 										} catch (e) {
-											toast.push(e?.message ?? 'Could not load playlist.');
+											console.error(e?.message ?? 'Could not load playlist.');
 										} finally {
 											setPreviewBusy(false);
 										}
