@@ -14,7 +14,6 @@ import {
 	spotifyPrevious,
 	spotifySeek,
 	spotifySetVolume,
-	spotifyTransferPlayback,
 	startSpotifyLogin,
 } from '../lib/spotify.js';
 import { useApp } from '../state/AppState.jsx';
@@ -67,6 +66,7 @@ export default function ProductivityHub() {
 	const playerRef = useRef(null);
 	const audioRef = useRef(null);
 	const audioContextRef = useRef(null);
+	const authCompletedRef = useRef(false);
 
 	const [now, setNow] = useState(() => new Date());
 	const [focusSeconds, setFocusSeconds] = useState(25 * 60);
@@ -115,14 +115,23 @@ export default function ProductivityHub() {
 	}, [api]);
 
 	useEffect(() => {
-		if (!spotifyClientId) return;
+		if (!spotifyClientId || authCompletedRef.current) return;
+		let mounted = true;
 		completeSpotifyAuthFromUrl({ clientId: spotifyClientId, redirectUri })
 			.then((completed) => {
-				if (!completed) return;
+				if (!mounted || !completed) return;
+				authCompletedRef.current = true;
 				setSpotifyAuthed(true);
-				toast.push('Spotify connected.');
 			})
-			.catch((e) => toast.push(e?.message ?? 'Spotify login failed.'));
+			.catch((e) => {
+				if (!mounted) return;
+				if (e?.message?.includes('state mismatch')) {
+					toast.push('Spotify login failed');
+				}
+			});
+		return () => {
+			mounted = false;
+		};
 	}, [spotifyClientId, redirectUri, toast]);
 
 	useEffect(() => {
@@ -141,7 +150,7 @@ export default function ProductivityHub() {
 				setSpotifyState(state);
 				setPositionMs(state?.progress_ms ?? 0);
 			} catch (e) {
-				toast.push(e?.message ?? 'Could not load Spotify profile.');
+				console.error('Profile load error:', e?.message);
 			}
 		};
 
@@ -169,13 +178,9 @@ export default function ProductivityHub() {
 					volume: volumePercent / 100,
 				});
 
-				player.addListener('ready', async ({ device_id }) => {
+				player.addListener('ready', ({ device_id }) => {
 					setSpotifyDeviceId(device_id);
-					try {
-						await spotifyTransferPlayback(spotifyClientId, device_id);
-					} catch (_e) {
-						// Transfer may fail on free plans or when no active session exists.
-					}
+					// Don't auto-transfer playback - let user manually play content
 				});
 
 				player.addListener('player_state_changed', (state) => {
@@ -184,20 +189,20 @@ export default function ProductivityHub() {
 					setPositionMs(state.position ?? 0);
 				});
 
-				player.addListener('initialization_error', ({ message }) =>
-					toast.push(message),
-				);
-				player.addListener('authentication_error', ({ message }) =>
-					toast.push(message),
-				);
-				player.addListener('account_error', ({ message }) =>
-					toast.push(message),
-				);
+				player.addListener('initialization_error', ({ message }) => {
+					console.error('Spotify init error:', message);
+				});
+				player.addListener('authentication_error', ({ message }) => {
+					console.error('Spotify auth error:', message);
+				});
+				player.addListener('account_error', ({ message }) => {
+					console.error('Spotify account error:', message);
+				});
 
 				await player.connect();
 				playerRef.current = player;
 			} catch (e) {
-				toast.push(e?.message ?? 'Spotify player could not start.');
+				console.error('Spotify player error:', e?.message);
 			}
 		};
 
@@ -260,7 +265,7 @@ export default function ProductivityHub() {
 			}
 		};
 		const handleError = () => {
-			toast.push('Could not play preview track.');
+			console.error('Preview audio error');
 			setPreviewPlaying(false);
 		};
 
