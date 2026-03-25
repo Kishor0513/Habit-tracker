@@ -65,6 +65,8 @@ export default function ProductivityHub() {
 	const spotifyClientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID?.trim() ?? '';
 	const redirectUri = window.location.origin + window.location.pathname;
 	const playerRef = useRef(null);
+	const audioRef = useRef(null);
+	const audioContextRef = useRef(null);
 
 	const [now, setNow] = useState(() => new Date());
 	const [focusSeconds, setFocusSeconds] = useState(25 * 60);
@@ -79,6 +81,17 @@ export default function ProductivityHub() {
 	const [spotifyBusy, setSpotifyBusy] = useState(false);
 	const [volumePercent, setVolumePercent] = useState(75);
 	const [positionMs, setPositionMs] = useState(0);
+
+	// Playlist preview mode state
+	const [spotifyMode, setSpotifyMode] = useState('device'); // 'device' or 'playlist'
+	const [previewInput, setPreviewInput] = useState('');
+	const [previewPlaylist, setPreviewPlaylist] = useState(null);
+	const [previewTracks, setPreviewTracks] = useState([]);
+	const [previewCurrentIndex, setPreviewCurrentIndex] = useState(0);
+	const [previewPlaying, setPreviewPlaying] = useState(false);
+	const [previewPosition, setPreviewPosition] = useState(0);
+	const [previewDuration, setPreviewDuration] = useState(0);
+	const [previewBusy, setPreviewBusy] = useState(false);
 
 	useEffect(() => {
 		const id = window.setInterval(() => setNow(new Date()), 1000);
@@ -227,6 +240,73 @@ export default function ProductivityHub() {
 		}, 1000);
 		return () => window.clearInterval(id);
 	}, [running, toast]);
+
+	// Preview player audio management
+	useEffect(() => {
+		if (!audioRef.current) {
+			audioRef.current = new Audio();
+			audioRef.current.crossOrigin = 'anonymous';
+		}
+
+		const audio = audioRef.current;
+		const handleTimeUpdate = () => setPreviewPosition(audio.currentTime * 1000);
+		const handleLoadedMetadata = () =>
+			setPreviewDuration(audio.duration * 1000);
+		const handleEnded = () => {
+			setPreviewPlaying(false);
+			if (previewTracks.length > 0) {
+				const nextIdx = (previewCurrentIndex + 1) % previewTracks.length;
+				setPreviewCurrentIndex(nextIdx);
+			}
+		};
+		const handleError = () => {
+			toast.push('Could not play preview track.');
+			setPreviewPlaying(false);
+		};
+
+		audio.addEventListener('timeupdate', handleTimeUpdate);
+		audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+		audio.addEventListener('ended', handleEnded);
+		audio.addEventListener('error', handleError);
+
+		return () => {
+			audio.removeEventListener('timeupdate', handleTimeUpdate);
+			audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+			audio.removeEventListener('ended', handleEnded);
+			audio.removeEventListener('error', handleError);
+		};
+	}, [previewCurrentIndex, previewTracks.length, toast]);
+
+	// Preview track playback
+	useEffect(() => {
+		if (spotifyMode !== 'playlist' || !previewTracks.length) return;
+
+		const track = previewTracks[previewCurrentIndex];
+		if (!track?.preview_url) {
+			setPreviewPlaying(false);
+			return;
+		}
+
+		const audio = audioRef.current;
+		if (!audio) return;
+
+		if (audio.src !== track.preview_url) {
+			audio.src = track.preview_url;
+		}
+
+		if (previewPlaying) {
+			audio.play().catch((e) => {
+				console.error('Preview play error:', e);
+				setPreviewPlaying(false);
+			});
+		} else {
+			audio.pause();
+		}
+
+		return () => {
+			if (audio) audio.pause();
+		};
+	}, [spotifyMode, previewTracks, previewCurrentIndex, previewPlaying]);
 
 	const calendarCells = useMemo(() => getCalendarCells(now), [now]);
 	const todayDay = now.getDate();
@@ -383,196 +463,443 @@ export default function ProductivityHub() {
 					</div>
 				) : (
 					<>
-						<div className="spotifyPlayerCard">
-							<div className="spotifyPlayerHead">
-								<div className="subtle">
-									Connected as{' '}
-									{spotifyMe?.display_name || spotifyMe?.id || 'Spotify user'}
-								</div>
-								<span className={`badge ${isPlaying ? 'isPalClock' : ''}`}>
-									{isPlaying ? 'Playing' : 'Paused'}
-								</span>
-							</div>
-
-							<div className="spotifyTrackRow">
-								<div className="spotifyCoverWrap">
-									{albumArt ? (
-										<img
-											className="spotifyCover"
-											src={albumArt}
-											alt={trackName || 'Album art'}
-										/>
-									) : (
-										<div className="spotifyCover spotifyCoverFallback">♪</div>
-									)}
-								</div>
-								<div className="spotifyTrackMeta">
-									<div className="spotifyTrackTitle">
-										{trackName || 'No active track yet.'}
-									</div>
-									<div className="subtle">
-										{artists || 'Pick a track, playlist, or album to start.'}
-									</div>
-								</div>
-							</div>
-						</div>
-						<input
-							className="input"
-							type="text"
-							placeholder="Paste Spotify track/playlist/album URL or URI"
-							value={spotifyInput}
-							onChange={(e) => setSpotifyInput(e.target.value)}
-						/>
+						{/* Mode toggle */}
 						<div
 							className="row"
-							style={{ flexWrap: 'wrap' }}
+							style={{ gap: 8 }}
 						>
 							<button
-								className="btn"
+								className={`btn ${spotifyMode === 'device' ? 'primary' : ''}`}
 								type="button"
-								disabled={spotifyBusy}
-								onClick={async () => {
-									const payload =
-										parseSpotifyInputToPlaybackPayload(spotifyInput);
-									if (!payload) {
-										toast.push(
-											'Use a valid Spotify URL/URI for track, playlist, or album.',
-										);
-										return;
-									}
-									try {
-										setSpotifyBusy(true);
-										await spotifyPlay(
-											spotifyClientId,
-											spotifyDeviceId,
-											payload,
-										);
-										if (api)
-											await api.setSetting(
-												'spotify_last_input',
-												spotifyInput.trim(),
-											);
-										toast.push('Playback started.');
-									} catch (e) {
-										toast.push(e?.message ?? 'Could not start playback.');
-									} finally {
-										setSpotifyBusy(false);
-									}
-								}}
+								onClick={() => setSpotifyMode('device')}
 							>
-								Play selection
+								Your Device
 							</button>
 							<button
-								className="btn"
+								className={`btn ${spotifyMode === 'playlist' ? 'primary' : ''}`}
 								type="button"
-								onClick={async () => {
-									try {
-										await spotifyPrevious(spotifyClientId, spotifyDeviceId);
-									} catch (e) {
-										toast.push(e?.message ?? 'Previous failed.');
-									}
-								}}
+								onClick={() => setSpotifyMode('playlist')}
 							>
-								Prev
-							</button>
-							<button
-								className="btn primary"
-								type="button"
-								onClick={async () => {
-									try {
-										if (isPlaying)
-											await spotifyPause(spotifyClientId, spotifyDeviceId);
-										else await spotifyPlay(spotifyClientId, spotifyDeviceId);
-									} catch (e) {
-										toast.push(e?.message ?? 'Play/pause failed.');
-									}
-								}}
-							>
-								{isPlaying ? 'Pause' : 'Play'}
-							</button>
-							<button
-								className="btn"
-								type="button"
-								onClick={async () => {
-									try {
-										await spotifyNext(spotifyClientId, spotifyDeviceId);
-									} catch (e) {
-										toast.push(e?.message ?? 'Next failed.');
-									}
-								}}
-							>
-								Next
-							</button>
-							<button
-								className="btn danger"
-								type="button"
-								onClick={() => {
-									clearSpotifyAuth();
-									playerRef.current?.disconnect?.();
-									playerRef.current = null;
-									setSpotifyAuthed(false);
-									setSpotifyMe(null);
-									setSpotifyState(null);
-									setSpotifyDeviceId('');
-								}}
-							>
-								Disconnect
+								Playlist Preview
 							</button>
 						</div>
 
-						<div className="stack spotifyNowPlaying">
-							<input
-								className="input"
-								type="range"
-								min={0}
-								max={Math.max(1000, durationMs)}
-								value={Math.min(positionMs, Math.max(1000, durationMs))}
-								onChange={(e) => setPositionMs(Number(e.target.value))}
-								onMouseUp={async () => {
-									try {
-										await spotifySeek(
-											spotifyClientId,
-											positionMs,
-											spotifyDeviceId,
-										);
-									} catch (e) {
-										toast.push(e?.message ?? 'Seek failed.');
-									}
-								}}
-							/>
-							<div className="row between">
-								<span className="subtle">Position</span>
-								<span className="subtle">
-									{formatMs(positionMs)} / {formatMs(durationMs)}
-								</span>
-							</div>
-							<div
-								className="row"
-								style={{ gap: 10 }}
-							>
-								<span className="subtle">Volume</span>
+						{spotifyMode === 'device' ? (
+							// DEVICE MODE - Full Spotify Control
+							<>
+								<div className="spotifyPlayerCard">
+									<div className="spotifyPlayerHead">
+										<div className="subtle">
+											Connected as{' '}
+											{spotifyMe?.display_name ||
+												spotifyMe?.id ||
+												'Spotify user'}
+										</div>
+										<span className={`badge ${isPlaying ? 'isPalClock' : ''}`}>
+											{isPlaying ? 'Playing' : 'Paused'}
+										</span>
+									</div>
+
+									<div className="spotifyTrackRow">
+										<div className="spotifyCoverWrap">
+											{albumArt ? (
+												<img
+													className="spotifyCover"
+													src={albumArt}
+													alt={trackName || 'Album art'}
+												/>
+											) : (
+												<div className="spotifyCover spotifyCoverFallback">
+													♪
+												</div>
+											)}
+										</div>
+										<div className="spotifyTrackMeta">
+											<div className="spotifyTrackTitle">
+												{trackName || 'No active track yet.'}
+											</div>
+											<div className="subtle">
+												{artists ||
+													'Pick a track, playlist, or album to start.'}
+											</div>
+										</div>
+									</div>
+								</div>
 								<input
 									className="input"
-									type="range"
-									min={0}
-									max={100}
-									value={volumePercent}
-									onChange={(e) => setVolumePercent(Number(e.target.value))}
-									onMouseUp={async () => {
+									type="text"
+									placeholder="Paste Spotify track/playlist/album URL or URI"
+									value={spotifyInput}
+									onChange={(e) => setSpotifyInput(e.target.value)}
+								/>
+								<div
+									className="row"
+									style={{ flexWrap: 'wrap' }}
+								>
+									<button
+										className="btn"
+										type="button"
+										disabled={spotifyBusy}
+										onClick={async () => {
+											const payload =
+												parseSpotifyInputToPlaybackPayload(spotifyInput);
+											if (!payload) {
+												toast.push(
+													'Use a valid Spotify URL/URI for track, playlist, or album.',
+												);
+												return;
+											}
+											try {
+												setSpotifyBusy(true);
+												await spotifyPlay(
+													spotifyClientId,
+													spotifyDeviceId,
+													payload,
+												);
+												if (api)
+													await api.setSetting(
+														'spotify_last_input',
+														spotifyInput.trim(),
+													);
+												toast.push('Playback started.');
+											} catch (e) {
+												toast.push(e?.message ?? 'Could not start playback.');
+											} finally {
+												setSpotifyBusy(false);
+											}
+										}}
+									>
+										Play selection
+									</button>
+									<button
+										className="btn"
+										type="button"
+										onClick={async () => {
+											try {
+												await spotifyPrevious(spotifyClientId, spotifyDeviceId);
+											} catch (e) {
+												toast.push(e?.message ?? 'Previous failed.');
+											}
+										}}
+									>
+										Prev
+									</button>
+									<button
+										className="btn primary"
+										type="button"
+										onClick={async () => {
+											try {
+												if (isPlaying)
+													await spotifyPause(spotifyClientId, spotifyDeviceId);
+												else
+													await spotifyPlay(spotifyClientId, spotifyDeviceId);
+											} catch (e) {
+												toast.push(e?.message ?? 'Play/pause failed.');
+											}
+										}}
+									>
+										{isPlaying ? 'Pause' : 'Play'}
+									</button>
+									<button
+										className="btn"
+										type="button"
+										onClick={async () => {
+											try {
+												await spotifyNext(spotifyClientId, spotifyDeviceId);
+											} catch (e) {
+												toast.push(e?.message ?? 'Next failed.');
+											}
+										}}
+									>
+										Next
+									</button>
+									<button
+										className="btn danger"
+										type="button"
+										onClick={() => {
+											clearSpotifyAuth();
+											playerRef.current?.disconnect?.();
+											playerRef.current = null;
+											setSpotifyAuthed(false);
+											setSpotifyMe(null);
+											setSpotifyState(null);
+											setSpotifyDeviceId('');
+										}}
+									>
+										Disconnect
+									</button>
+								</div>
+
+								<div className="stack spotifyNowPlaying">
+									<input
+										className="input"
+										type="range"
+										min={0}
+										max={Math.max(1000, durationMs)}
+										value={Math.min(positionMs, Math.max(1000, durationMs))}
+										onChange={(e) => setPositionMs(Number(e.target.value))}
+										onMouseUp={async () => {
+											try {
+												await spotifySeek(
+													spotifyClientId,
+													positionMs,
+													spotifyDeviceId,
+												);
+											} catch (e) {
+												toast.push(e?.message ?? 'Seek failed.');
+											}
+										}}
+									/>
+									<div className="row between">
+										<span className="subtle">Position</span>
+										<span className="subtle">
+											{formatMs(positionMs)} / {formatMs(durationMs)}
+										</span>
+									</div>
+									<div
+										className="row"
+										style={{ gap: 10 }}
+									>
+										<span className="subtle">Volume</span>
+										<input
+											className="input"
+											type="range"
+											min={0}
+											max={100}
+											value={volumePercent}
+											onChange={(e) => setVolumePercent(Number(e.target.value))}
+											onMouseUp={async () => {
+												try {
+													await spotifySetVolume(
+														spotifyClientId,
+														volumePercent,
+														spotifyDeviceId,
+													);
+												} catch (e) {
+													toast.push(e?.message ?? 'Volume change failed.');
+												}
+											}}
+										/>
+										<span className="subtle">{volumePercent}%</span>
+									</div>
+								</div>
+							</>
+						) : (
+							// PLAYLIST PREVIEW MODE - 30 Second Previews
+							<>
+								<input
+									className="input"
+									type="text"
+									placeholder="Paste Spotify playlist URL or URI"
+									value={previewInput}
+									onChange={(e) => setPreviewInput(e.target.value)}
+								/>
+								<button
+									className="btn primary"
+									type="button"
+									disabled={previewBusy}
+									onClick={async () => {
+										const playlistId = extractPlaylistId(previewInput);
+										if (!playlistId) {
+											toast.push('Use a valid Spotify playlist URL or URI.');
+											return;
+										}
 										try {
-											await spotifySetVolume(
+											setPreviewBusy(true);
+											const info = await spotifyGetPlaylistInfo(
 												spotifyClientId,
-												volumePercent,
-												spotifyDeviceId,
+												playlistId,
+											);
+											const tracks = await spotifyFetchAllPlaylistTracks(
+												spotifyClientId,
+												playlistId,
+											);
+											if (tracks.length === 0) {
+												toast.push('No preview tracks found in this playlist.');
+												return;
+											}
+											setPreviewPlaylist(info);
+											setPreviewTracks(tracks);
+											setPreviewCurrentIndex(0);
+											setPreviewPlaying(false);
+											setPreviewPosition(0);
+											toast.push(
+												`Loaded ${tracks.length} tracks with previews.`,
 											);
 										} catch (e) {
-											toast.push(e?.message ?? 'Volume change failed.');
+											toast.push(e?.message ?? 'Could not load playlist.');
+										} finally {
+											setPreviewBusy(false);
 										}
 									}}
-								/>
-								<span className="subtle">{volumePercent}%</span>
-							</div>
-						</div>
+								>
+									Load Playlist
+								</button>
+
+								{previewPlaylist && (
+									<>
+										<div className="spotifyPlayerCard">
+											<div className="spotifyPlayerHead">
+												<div className="subtle">
+													{previewPlaylist.name || 'Playlist'}
+												</div>
+												<span
+													className={`badge ${previewPlaying ? 'isPalClock' : ''}`}
+												>
+													{previewPlaying ? 'Playing' : 'Paused'} (30s previews)
+												</span>
+											</div>
+
+											{previewTracks.length > 0 && (
+												<>
+													<div className="spotifyTrackRow">
+														<div className="spotifyCoverWrap">
+															{previewTracks[previewCurrentIndex]?.album
+																?.images?.[1]?.url ? (
+																<img
+																	className="spotifyCover"
+																	src={
+																		previewTracks[previewCurrentIndex].album
+																			.images[1].url
+																	}
+																	alt={
+																		previewTracks[previewCurrentIndex].name ||
+																		'Album art'
+																	}
+																/>
+															) : (
+																<div className="spotifyCover spotifyCoverFallback">
+																	♪
+																</div>
+															)}
+														</div>
+														<div className="spotifyTrackMeta">
+															<div className="spotifyTrackTitle">
+																{previewTracks[previewCurrentIndex]?.name ||
+																	'No track'}
+															</div>
+															<div className="subtle">
+																{previewTracks[previewCurrentIndex]?.artists
+																	?.map((a) => a.name)
+																	.join(', ') || 'Unknown'}
+															</div>
+														</div>
+													</div>
+
+													<div className="stack spotifyNowPlaying">
+														<input
+															className="input"
+															type="range"
+															min={0}
+															max={Math.max(1000, previewDuration)}
+															value={Math.min(
+																previewPosition,
+																Math.max(1000, previewDuration),
+															)}
+															onChange={(e) => {
+																const audio = audioRef.current;
+																if (audio) {
+																	audio.currentTime =
+																		Number(e.target.value) / 1000;
+																	setPreviewPosition(Number(e.target.value));
+																}
+															}}
+														/>
+														<div className="row between">
+															<span className="subtle">Position</span>
+															<span className="subtle">
+																{formatMs(previewPosition)} /{' '}
+																{formatMs(previewDuration)}
+															</span>
+														</div>
+													</div>
+
+													<div
+														className="row"
+														style={{ flexWrap: 'wrap', gap: 8 }}
+													>
+														<button
+															className="btn"
+															type="button"
+															onClick={() => {
+																if (previewCurrentIndex > 0) {
+																	setPreviewCurrentIndex(
+																		previewCurrentIndex - 1,
+																	);
+																	setPreviewPosition(0);
+																}
+															}}
+														>
+															Previous
+														</button>
+														<button
+															className="btn primary"
+															type="button"
+															onClick={() => {
+																setPreviewPlaying(!previewPlaying);
+															}}
+														>
+															{previewPlaying ? 'Pause' : 'Play'}
+														</button>
+														<button
+															className="btn"
+															type="button"
+															onClick={() => {
+																if (
+																	previewCurrentIndex <
+																	previewTracks.length - 1
+																) {
+																	setPreviewCurrentIndex(
+																		previewCurrentIndex + 1,
+																	);
+																	setPreviewPosition(0);
+																}
+															}}
+														>
+															Next
+														</button>
+													</div>
+
+													<div
+														className="stack"
+														style={{ maxHeight: '300px', overflowY: 'auto' }}
+													>
+														<div className="subtle">
+															Track {previewCurrentIndex + 1}/
+															{previewTracks.length}
+														</div>
+														{previewTracks.map((track, idx) => (
+															<div
+																key={`${idx}-${track.id}`}
+																className={`playlistTrackItem ${
+																	idx === previewCurrentIndex ? 'isActive' : ''
+																}`}
+																onClick={() => {
+																	setPreviewCurrentIndex(idx);
+																	setPreviewPosition(0);
+																	setPreviewPlaying(true);
+																}}
+																style={{ cursor: 'pointer' }}
+															>
+																<div className="playlistTrackNumber">
+																	{idx + 1}
+																</div>
+																<div className="playlistTrackName">
+																	{track.name}
+																</div>
+																<div className="subtle playlistTrackArtist">
+																	{track.artists?.map((a) => a.name).join(', ')}
+																</div>
+															</div>
+														))}
+													</div>
+												</>
+											)}
+										</div>
+									</>
+								)}
+							</>
+						)}
 					</>
 				)}
 			</div>

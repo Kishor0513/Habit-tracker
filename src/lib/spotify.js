@@ -287,3 +287,62 @@ export function parseSpotifyInputToPlaybackPayload(input) {
 		return { uris: [`spotify:track:${urlMatch[2]}`] };
 	return { context_uri: `spotify:${urlMatch[1]}:${urlMatch[2]}` };
 }
+
+export function extractPlaylistId(input) {
+	const value = input.trim();
+	if (!value) return null;
+
+	const uriMatch = value.match(/^spotify:playlist:([A-Za-z0-9]+)$/);
+	if (uriMatch) return uriMatch[1];
+
+	const urlMatch = value.match(/spotify\.com\/playlist\/([A-Za-z0-9?=&]+)/);
+	if (urlMatch) {
+		const id = urlMatch[1].split('?')[0];
+		return id || null;
+	}
+
+	return null;
+}
+
+export async function spotifyGetPlaylistInfo(clientId, playlistId) {
+	return spotifyApiRequest(clientId, 'GET', `/playlists/${playlistId}`);
+}
+
+export async function spotifyGetPlaylistTracks(
+	clientId,
+	playlistId,
+	limit = 50,
+	offset = 0,
+) {
+	return spotifyApiRequest(
+		clientId,
+		'GET',
+		`/playlists/${playlistId}/tracks?limit=${limit}&offset=${offset}&fields=items(track(id,name,artists,preview_url,album(name,images)),added_at)),total`,
+	);
+}
+
+export async function spotifyFetchAllPlaylistTracks(clientId, playlistId) {
+	const allTracks = [];
+	let offset = 0;
+	const limit = 50;
+	let hasMore = true;
+
+	while (hasMore) {
+		try {
+			const response = await spotifyGetPlaylistTracks(
+				clientId,
+				playlistId,
+				limit,
+				offset,
+			);
+			const tracks = response?.items?.map((item) => item.track) || [];
+			allTracks.push(...tracks.filter((t) => t && t.preview_url));
+			hasMore = response?.total ? offset + limit < response.total : false;
+			offset += limit;
+		} catch (_e) {
+			hasMore = false;
+		}
+	}
+
+	return allTracks;
+}
