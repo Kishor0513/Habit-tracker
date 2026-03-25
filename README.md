@@ -25,9 +25,9 @@ Then open the printed URL (Vite default is `http://localhost:5173`).
 
 Important: if you’ve posted your Supabase key publicly, **rotate it** in the Supabase dashboard.
 
-1) Create the tables + RLS policies by running `supabase/schema.sql` in Supabase SQL editor.
-2) Enable Auth (Email) in Supabase (Authentication → Providers).
-3) Create a `.env` file (see `.env.example`):
+1. Create or update tables + RLS policies by running `supabase/schema.sql` in Supabase SQL editor.
+2. Enable Auth (Email) in Supabase (Authentication → Providers).
+3. Create a `.env` file (see `.env.example`):
 
 ```bash
 VITE_SUPABASE_URL=YOUR_PROJECT_URL
@@ -35,6 +35,8 @@ VITE_SUPABASE_ANON_KEY=YOUR_ANON_KEY
 ```
 
 Restart `npm run dev`, then sign in via the email link. Your habits/projects/entries will be stored per-user in Supabase.
+
+If you update this project later, re-run `supabase/schema.sql`. It is idempotent and safely applies missing schema/policies (including settings storage).
 
 ## How to use (real-life workflow)
 

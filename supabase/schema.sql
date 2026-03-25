@@ -53,9 +53,20 @@ create table if not exists public.projects (
 
 create index if not exists projects_user_id_idx on public.projects(user_id);
 
+create table if not exists public.settings (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  key text not null,
+  value jsonb null,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, key)
+);
+
+create index if not exists settings_user_id_idx on public.settings(user_id);
+
 alter table public.habits enable row level security;
 alter table public.entries enable row level security;
 alter table public.projects enable row level security;
+alter table public.settings enable row level security;
 
 -- Habits policies
 drop policy if exists "habits_select_own" on public.habits;
@@ -109,5 +120,23 @@ create policy "projects_update_own" on public.projects for update
 
 drop policy if exists "projects_delete_own" on public.projects;
 create policy "projects_delete_own" on public.projects for delete
+  using (auth.uid() = user_id);
+
+-- Settings policies
+drop policy if exists "settings_select_own" on public.settings;
+create policy "settings_select_own" on public.settings for select
+  using (auth.uid() = user_id);
+
+drop policy if exists "settings_insert_own" on public.settings;
+create policy "settings_insert_own" on public.settings for insert
+  with check (auth.uid() = user_id);
+
+drop policy if exists "settings_update_own" on public.settings;
+create policy "settings_update_own" on public.settings for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+drop policy if exists "settings_delete_own" on public.settings;
+create policy "settings_delete_own" on public.settings for delete
   using (auth.uid() = user_id);
 
