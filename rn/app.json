@@ -10,7 +10,7 @@
     "android": { "package": "com.habittracker.app" },
     "extra": {
       "eas": {
-        "projectId": "2cbe873c-2084-491f-a29f-be12013f5bf1"
+        "projectId": "4f49cd7b-8fde-4de5-91e6-dd6ff7373f5b"
       }
     }
   }
