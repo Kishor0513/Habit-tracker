@@ -4,7 +4,10 @@ import { useApp } from "../state/AppState";
 import { useToast } from "../state/ToastState";
 import { TEMPLATE_PACKS } from "../seed";
 import { Btn, Card, Screen } from "../ui/components";
-import { getSpotifyClientId, spotifyClearAuth, spotifyGetMe, spotifyLoadAuth, spotifySignIn } from "../lib/spotifyMobile";
+
+async function loadSpotify() {
+  return import("../lib/spotifyMobile");
+}
 
 function JsonModal({ visible, title, initialValue, onClose, onConfirm, confirmLabel }) {
   const [text, setText] = useState(initialValue ?? "");
@@ -49,7 +52,7 @@ export default function SettingsScreen() {
   const [entries, setEntries] = useState([]);
   const [spotifyBusy, setSpotifyBusy] = useState(false);
   const [spotifyMe, setSpotifyMe] = useState(null);
-  const spotifyClientId = getSpotifyClientId();
+  const spotifyClientId = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID?.trim() || "";
 
   const [exportOpen, setExportOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -74,17 +77,22 @@ export default function SettingsScreen() {
   useEffect(() => {
     if (!spotifyClientId) return;
     let alive = true;
-    spotifyLoadAuth()
-      .then((authState) => {
-        if (!alive) return;
-        if (!authState?.accessToken) return;
-        return spotifyGetMe({ clientId: spotifyClientId });
-      })
-      .then((me) => {
-        if (!alive) return;
-        if (me) setSpotifyMe(me);
-      })
-      .catch(() => {});
+    loadSpotify()
+      .then(({ spotifyLoadAuth, spotifyGetMe }) =>
+        spotifyLoadAuth()
+          .then((authState) => {
+            if (!alive) return null;
+            if (!authState?.accessToken) return null;
+            return spotifyGetMe({ clientId: spotifyClientId });
+          })
+          .then((me) => {
+            if (!alive) return;
+            if (me) setSpotifyMe(me);
+          })
+      )
+      .catch(() => {
+        // If Spotify deps are not available in a given build, keep the app usable.
+      });
     return () => {
       alive = false;
     };
@@ -141,9 +149,14 @@ export default function SettingsScreen() {
                   kind="danger"
                   label="Disconnect"
                   onPress={async () => {
-                    await spotifyClearAuth();
-                    setSpotifyMe(null);
-                    toast.push("Spotify disconnected.");
+                    try {
+                      const { spotifyClearAuth } = await loadSpotify();
+                      await spotifyClearAuth();
+                      setSpotifyMe(null);
+                      toast.push("Spotify disconnected.");
+                    } catch (e) {
+                      toast.push(e?.message ?? "Spotify disconnect failed.");
+                    }
                   }}
                 />
               ) : (
@@ -154,6 +167,7 @@ export default function SettingsScreen() {
                   onPress={async () => {
                     try {
                       setSpotifyBusy(true);
+                      const { spotifyGetMe, spotifySignIn } = await loadSpotify();
                       // Standalone builds use the scheme set in app.json (habit-tracker://)
                       await spotifySignIn({ clientId: spotifyClientId, scheme: "habit-tracker" });
                       const me = await spotifyGetMe({ clientId: spotifyClientId });
