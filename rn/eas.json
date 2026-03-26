@@ -3,16 +3,19 @@
     "version": ">= 16.0.0"
   },
   "build": {
-    "apk": {
+    "production": {
       "android": {
-        "buildType": "apk"
+        "gradleCommand": ":app:assembleRelease"
       }
     },
-    "aab": {
+    "preview": {
       "android": {
-        "buildType": "app-bundle"
+        "gradleCommand": ":app:assembleDebug"
       }
     }
+  },
+  "submit": {
+    "production": {}
   }
 }
 
