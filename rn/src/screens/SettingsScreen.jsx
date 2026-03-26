@@ -4,6 +4,7 @@ import { useApp } from "../state/AppState";
 import { useToast } from "../state/ToastState";
 import { TEMPLATE_PACKS } from "../seed";
 import { Btn, Card, Screen } from "../ui/components";
+import { getSpotifyClientId, spotifyClearAuth, spotifyGetMe, spotifyLoadAuth, spotifySignIn } from "../lib/spotifyMobile";
 
 function JsonModal({ visible, title, initialValue, onClose, onConfirm, confirmLabel }) {
   const [text, setText] = useState(initialValue ?? "");
@@ -46,6 +47,9 @@ export default function SettingsScreen() {
   const [habits, setHabits] = useState([]);
   const [projects, setProjects] = useState([]);
   const [entries, setEntries] = useState([]);
+  const [spotifyBusy, setSpotifyBusy] = useState(false);
+  const [spotifyMe, setSpotifyMe] = useState(null);
+  const spotifyClientId = getSpotifyClientId();
 
   const [exportOpen, setExportOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -66,6 +70,25 @@ export default function SettingsScreen() {
       alive = false;
     };
   }, [api, isReady, exportOpen, importOpen]);
+
+  useEffect(() => {
+    if (!spotifyClientId) return;
+    let alive = true;
+    spotifyLoadAuth()
+      .then((authState) => {
+        if (!alive) return;
+        if (!authState?.accessToken) return;
+        return spotifyGetMe({ clientId: spotifyClientId });
+      })
+      .then((me) => {
+        if (!alive) return;
+        if (me) setSpotifyMe(me);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [spotifyClientId]);
 
   const exportPayload = useMemo(() => ({ habits, projects, entries, settings: {} }), [habits, projects, entries]);
 
@@ -97,6 +120,53 @@ export default function SettingsScreen() {
                   }
                 }}
               />
+            </View>
+          ) : null}
+        </Card>
+
+        <Card>
+          <Text style={{ fontWeight: "700" }}>Spotify</Text>
+          {!spotifyClientId ? (
+            <Text style={{ opacity: 0.7, marginTop: 6 }}>Set `EXPO_PUBLIC_SPOTIFY_CLIENT_ID` to enable Spotify.</Text>
+          ) : spotifyMe ? (
+            <Text style={{ opacity: 0.7, marginTop: 6 }}>{`Connected as ${spotifyMe.display_name || spotifyMe.id}`}</Text>
+          ) : (
+            <Text style={{ opacity: 0.7, marginTop: 6 }}>Not connected.</Text>
+          )}
+
+          {spotifyClientId ? (
+            <View style={{ marginTop: 10, flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
+              {spotifyMe ? (
+                <Btn
+                  kind="danger"
+                  label="Disconnect"
+                  onPress={async () => {
+                    await spotifyClearAuth();
+                    setSpotifyMe(null);
+                    toast.push("Spotify disconnected.");
+                  }}
+                />
+              ) : (
+                <Btn
+                  kind="primary"
+                  label={spotifyBusy ? "Connecting…" : "Connect"}
+                  disabled={spotifyBusy}
+                  onPress={async () => {
+                    try {
+                      setSpotifyBusy(true);
+                      // Standalone builds use the scheme set in app.json (habit-tracker://)
+                      await spotifySignIn({ clientId: spotifyClientId, scheme: "habit-tracker" });
+                      const me = await spotifyGetMe({ clientId: spotifyClientId });
+                      setSpotifyMe(me);
+                      toast.push("Spotify connected.");
+                    } catch (e) {
+                      toast.push(e?.message ?? "Spotify connect failed.");
+                    } finally {
+                      setSpotifyBusy(false);
+                    }
+                  }}
+                />
+              )}
             </View>
           ) : null}
         </Card>
@@ -181,4 +251,3 @@ export default function SettingsScreen() {
     </Screen>
   );
 }
-
