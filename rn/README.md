@@ -32,8 +32,8 @@ From `rn/`:
 # login once
 npx eas-cli@latest login
 
-# build an APK for sharing (see rn/eas.json -> build.preview)
-npx eas-cli@latest build -p android --profile preview
+# build an APK for sharing (see rn/eas.json -> build.apk)
+npx eas-cli@latest build -p android --profile apk
 ```
 
 When the build finishes, EAS will show a download link. Download the `.apk`.
