@@ -1,18 +1,17 @@
 {
-  "expo": {
-    "name": "Habit Tracker",
-    "slug": "habit-tracker",
-    "scheme": "habit-tracker",
-    "version": "1.0.0",
-    "platforms": ["android", "web", "ios"],
-    "orientation": "portrait",
-    "web": { "bundler": "metro" },
-    "android": { "package": "com.habittracker.app" },
-    "extra": {
-      "eas": {
-        "projectId": "4f49cd7b-8fde-4de5-91e6-dd6ff7373f5b"
-      }
-    }
-  }
+	"expo": {
+		"name": "Habit Tracker",
+		"slug": "habit-tracker",
+		"scheme": "habit-tracker",
+		"version": "1.0.0",
+		"platforms": ["android", "web", "ios"],
+		"orientation": "portrait",
+		"web": { "bundler": "metro" },
+		"android": { "package": "com.habittracker.app" },
+		"extra": {
+			"eas": {
+				"projectId": "4f49cd7b-8fde-4de5-91e6-dd6ff737315b"
+			}
+		}
+	}
 }
-
