@@ -3,7 +3,7 @@ import { Modal, ScrollView, Text, TextInput, View } from "react-native";
 import { useApp } from "../state/AppState";
 import { useToast } from "../state/ToastState";
 import { TEMPLATE_PACKS } from "../seed";
-import { Btn, Card, Screen } from "../ui/components";
+import { Btn, Card, Screen, SectionTitle, StatCard, colors, radius } from "../ui/components";
 
 async function loadSpotify() {
   return import("../lib/spotifyMobile");
@@ -12,33 +12,36 @@ async function loadSpotify() {
 function JsonModal({ visible, title, initialValue, onClose, onConfirm, confirmLabel }) {
   const [text, setText] = useState(initialValue ?? "");
   useEffect(() => setText(initialValue ?? ""), [initialValue, visible]);
+
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <Screen title={title} right={<Btn label="Close" onPress={onClose} />}>
-        <ScrollView contentContainerStyle={{ gap: 12 }}>
-          <Card>
-            <TextInput
-              value={text}
-              onChangeText={setText}
-              multiline
-              autoCapitalize="none"
-              style={{
-                minHeight: 260,
-                backgroundColor: "rgba(10,10,20,0.04)",
-                borderRadius: 12,
-                paddingHorizontal: 12,
-                paddingVertical: 10,
-                textAlignVertical: "top"
-              }}
-            />
-            {onConfirm ? (
-              <View style={{ flexDirection: "row", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
-                <Btn label="Cancel" onPress={onClose} />
-                <Btn kind="primary" label={confirmLabel ?? "Confirm"} onPress={() => onConfirm(text)} />
-              </View>
-            ) : null}
-          </Card>
-        </ScrollView>
+      <Screen title={title} subtitle="Copy, inspect, and move your data safely." eyebrow="Data tools" scroll right={<Btn label="Close" onPress={onClose} />}>
+        <Card>
+          <TextInput
+            value={text}
+            onChangeText={setText}
+            multiline
+            autoCapitalize="none"
+            placeholderTextColor={colors.muted}
+            style={{
+              minHeight: 280,
+              borderRadius: radius.md,
+              borderWidth: 1,
+              borderColor: colors.line,
+              backgroundColor: "rgba(255,255,255,0.74)",
+              color: colors.text,
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+              textAlignVertical: "top",
+            }}
+          />
+          {onConfirm ? (
+            <View style={{ flexDirection: "row", gap: 10, justifyContent: "flex-end" }}>
+              <Btn label="Cancel" onPress={onClose} />
+              <Btn kind="primary" label={confirmLabel ?? "Confirm"} onPress={() => onConfirm(text)} />
+            </View>
+          ) : null}
+        </Card>
       </Screen>
     </Modal>
   );
@@ -53,7 +56,6 @@ export default function SettingsScreen() {
   const [spotifyBusy, setSpotifyBusy] = useState(false);
   const [spotifyMe, setSpotifyMe] = useState(null);
   const spotifyClientId = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID?.trim() || "";
-
   const [exportOpen, setExportOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [exportText, setExportText] = useState("");
@@ -90,9 +92,7 @@ export default function SettingsScreen() {
             if (me) setSpotifyMe(me);
           })
       )
-      .catch(() => {
-        // If Spotify deps are not available in a given build, keep the app usable.
-      });
+      .catch(() => {});
     return () => {
       alive = false;
     };
@@ -103,18 +103,30 @@ export default function SettingsScreen() {
   if (!isReady) return null;
 
   return (
-    <Screen title="Settings" subtitle={supabaseConfigured ? "Supabase sync enabled." : "Local-only mode."}>
-      <ScrollView contentContainerStyle={{ gap: 12 }}>
-        <Card>
-          <Text style={{ fontWeight: "700" }}>Account</Text>
-          {supabaseConfigured ? (
-            <Text style={{ opacity: 0.7, marginTop: 6 }}>{user ? `Signed in as ${user.email ?? user.id}` : "Not signed in"}</Text>
-          ) : (
-            <Text style={{ opacity: 0.7, marginTop: 6 }}>Set `EXPO_PUBLIC_SUPABASE_URL` + `EXPO_PUBLIC_SUPABASE_ANON_KEY` to enable cloud sync.</Text>
-          )}
+    <>
+      <Screen
+        title="Control the workspace."
+        subtitle="Templates, sync, import, export, and integrations live here."
+        eyebrow="Workspace control"
+        scroll
+        heroStats={[
+          { label: "Habits", value: habits.length },
+          { label: "Projects", value: projects.length },
+          { label: "Entries", value: entries.length },
+        ]}
+      >
+        <Card tone="accent">
+          <SectionTitle eyebrow="Status" title="Current setup" subtitle={supabaseConfigured ? "Cloud sync is available for this app." : "This app is currently running in local-only mode."} />
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <StatCard label="Sync" value={supabaseConfigured ? "Supabase" : "Local"} accent />
+            <StatCard label="Spotify" value={spotifyMe ? "Connected" : spotifyClientId ? "Ready" : "Off"} />
+          </View>
+        </Card>
 
+        <Card>
+          <SectionTitle eyebrow="Account" title="Authentication" subtitle={supabaseConfigured ? (user ? `Signed in as ${user.email ?? user.id}` : "Sign in is available.") : "Set Expo public Supabase keys to enable sign-in and sync."} />
           {supabaseConfigured && user ? (
-            <View style={{ marginTop: 10, flexDirection: "row", gap: 10 }}>
+            <View style={{ flexDirection: "row", gap: 10 }}>
               <Btn
                 kind="danger"
                 label="Sign out"
@@ -133,17 +145,9 @@ export default function SettingsScreen() {
         </Card>
 
         <Card>
-          <Text style={{ fontWeight: "700" }}>Spotify</Text>
-          {!spotifyClientId ? (
-            <Text style={{ opacity: 0.7, marginTop: 6 }}>Set `EXPO_PUBLIC_SPOTIFY_CLIENT_ID` to enable Spotify.</Text>
-          ) : spotifyMe ? (
-            <Text style={{ opacity: 0.7, marginTop: 6 }}>{`Connected as ${spotifyMe.display_name || spotifyMe.id}`}</Text>
-          ) : (
-            <Text style={{ opacity: 0.7, marginTop: 6 }}>Not connected.</Text>
-          )}
-
+          <SectionTitle eyebrow="Spotify" title="Playback account" subtitle={!spotifyClientId ? "Set EXPO_PUBLIC_SPOTIFY_CLIENT_ID to enable Spotify." : spotifyMe ? `Connected as ${spotifyMe.display_name || spotifyMe.id}` : "Connect Spotify to use playback tools."} />
           {spotifyClientId ? (
-            <View style={{ marginTop: 10, flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
+            <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
               {spotifyMe ? (
                 <Btn
                   kind="danger"
@@ -162,13 +166,12 @@ export default function SettingsScreen() {
               ) : (
                 <Btn
                   kind="primary"
-                  label={spotifyBusy ? "Connecting…" : "Connect"}
+                  label={spotifyBusy ? "Connecting..." : "Connect"}
                   disabled={spotifyBusy}
                   onPress={async () => {
                     try {
                       setSpotifyBusy(true);
                       const { spotifyGetMe, spotifySignIn } = await loadSpotify();
-                      // Standalone builds use the scheme set in app.json (habit-tracker://)
                       await spotifySignIn({ clientId: spotifyClientId, scheme: "habit-tracker" });
                       const me = await spotifyGetMe({ clientId: spotifyClientId });
                       setSpotifyMe(me);
@@ -186,20 +189,19 @@ export default function SettingsScreen() {
         </Card>
 
         <Card>
-          <Text style={{ fontWeight: "700" }}>Templates</Text>
-          <Text style={{ opacity: 0.7, marginTop: 6 }}>Load example habits and projects.</Text>
-          <View style={{ gap: 10, marginTop: 10 }}>
-            {TEMPLATE_PACKS.map((p) => (
-              <View key={p.id} style={{ gap: 6 }}>
-                <Text style={{ fontWeight: "700" }}>{p.name}</Text>
-                <Text style={{ opacity: 0.7 }}>{p.description}</Text>
-                <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
+          <SectionTitle eyebrow="Templates" title="Example packs" subtitle="Load a starting set if you want structure immediately." />
+          <View style={{ gap: 12 }}>
+            {TEMPLATE_PACKS.map((pack) => (
+              <View key={pack.id} style={{ gap: 8 }}>
+                <Text style={{ color: colors.text, fontSize: 16, fontWeight: "800" }}>{pack.name}</Text>
+                <Text style={{ color: colors.muted, lineHeight: 20 }}>{pack.description}</Text>
+                <View style={{ flexDirection: "row", gap: 10 }}>
                   <Btn
                     kind="primary"
                     label="Load pack"
                     onPress={async () => {
-                      for (const h of p.habits ?? []) await api.upsertHabit(h);
-                      for (const proj of p.projects ?? []) await api.upsertProject({ ...proj, habitIds: [] });
+                      for (const h of pack.habits ?? []) await api.upsertHabit(h);
+                      for (const proj of pack.projects ?? []) await api.upsertProject({ ...proj, habitIds: [] });
                       toast.push("Loaded.");
                       refresh();
                     }}
@@ -211,9 +213,8 @@ export default function SettingsScreen() {
         </Card>
 
         <Card>
-          <Text style={{ fontWeight: "700" }}>Import / Export</Text>
-          <Text style={{ opacity: 0.7, marginTop: 6 }}>Copy/paste JSON to back up or migrate data.</Text>
-          <View style={{ flexDirection: "row", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
+          <SectionTitle eyebrow="Data" title="Import and export" subtitle="Use JSON backups to move between devices or test setups safely." />
+          <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
             <Btn
               label="Export"
               onPress={async () => {
@@ -230,12 +231,10 @@ export default function SettingsScreen() {
                 }
               }}
             />
-            <Btn label="Import" kind="primary" onPress={() => setImportOpen(true)} />
+            <Btn kind="primary" label="Import" onPress={() => setImportOpen(true)} />
           </View>
         </Card>
-
-        <View style={{ height: 40 }} />
-      </ScrollView>
+      </Screen>
 
       <JsonModal visible={exportOpen} title="Export JSON" initialValue={exportText} onClose={() => setExportOpen(false)} />
       <JsonModal
@@ -262,6 +261,6 @@ export default function SettingsScreen() {
           }
         }}
       />
-    </Screen>
+    </>
   );
 }

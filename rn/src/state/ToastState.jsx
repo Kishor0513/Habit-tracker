@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
+import { colors, radius } from "../ui/theme";
 
 const ToastContext = createContext(null);
 
@@ -54,12 +55,13 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   toast: {
-    backgroundColor: "rgba(20,20,24,0.92)",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 999,
+    backgroundColor: colors.toast,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.24)",
     maxWidth: "90%"
   },
-  text: { color: "white" }
+  text: { color: colors.white, fontWeight: "700" }
 });
-

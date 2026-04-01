@@ -109,8 +109,8 @@ function ProjectDetail({ project, habitsById }) {
     <div className="stack">
       <div className="card">
         <h2>Goal</h2>
-        <div className="subtle">{project.goal || "Define success in one sentence."}</div>
-        {project.targetDate ? <div className="subtle">Target date: {project.targetDate}</div> : null}
+        <div className="subtle" style={{ fontSize: '1rem', color: 'var(--text)', marginBottom: 4 }}>{project.goal || "Define success in one sentence."}</div>
+        {project.targetDate ? <div className="badge accent">Target: {project.targetDate}</div> : null}
       </div>
       <div className="card">
         <h2>Why</h2>
@@ -119,30 +119,31 @@ function ProjectDetail({ project, habitsById }) {
       <div className="card">
         <h2>Milestones</h2>
         {project.milestones?.length ? (
-          <div className="stack" style={{ gap: 6 }}>
+          <div className="stack" style={{ gap: 8 }}>
             {project.milestones.map((m, idx) => (
-              <div key={idx} className="subtle">
-                • {m}
+              <div key={idx} className="item" style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.03)' }}>
+                <span style={{ color: 'var(--brand-mid)', marginRight: 8 }}>•</span>
+                {m}
               </div>
             ))}
           </div>
         ) : (
-          <div className="subtle">Add milestones (one per line).</div>
+          <p className="subtle">Add milestones to track your progress.</p>
         )}
       </div>
       <div className="card">
         <h2>Linked habits</h2>
         {project.habitIds?.length ? (
-          <div className="stack">
+          <div className="list">
             {project.habitIds.map((id) => (
               <div key={id} className="row" style={{ gap: 10 }}>
-                <span className="badge">habit</span>
-                <div className="subtle">{habitsById.get(id)?.name ?? "(missing)"}</div>
+                <span className="badge brand">habit</span>
+                <div className="itemName">{habitsById.get(id)?.name ?? "(missing)"}</div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="subtle">Link 1–3 habits to drive progress.</div>
+          <p className="subtle">Link 1–3 habits to drive progress.</p>
         )}
       </div>
     </div>
@@ -181,7 +182,7 @@ export default function ProjectsPage() {
   return (
     <div className="stack">
       <div className="card">
-        <div className="row between">
+        <div className="sectionHeader">
           <div>
             <h2>Projects</h2>
             <div className="subtle">Tie habits to outcomes: fitness, learning, business, health.</div>
@@ -206,27 +207,35 @@ export default function ProjectsPage() {
         <div className="list">
           {projects.map((project) => {
             const progress = projectProgress({ project, habitsById, entriesByKey });
+            const pct = Math.round(progress.rate * 100);
+            const progressClass = pct >= 80 ? "badge success" : pct >= 50 ? "badge warning" : "badge";
+
             return (
               <div key={project.id} className="item">
                 <div className="row between" style={{ gap: 14 }}>
-                  <div className="stack" style={{ gap: 4, minWidth: 0 }}>
-                    <div className="itemName" style={{ fontWeight: 750 }}>
+                  <div className="stack" style={{ gap: 6, minWidth: 0, flex: 1 }}>
+                    <div className="itemName" style={{ fontSize: '1rem' }}>
                       {project.name}
                     </div>
-                    <div className="subtle">{project.goal || "No goal set yet."}</div>
-                    <div className="subtle">
-                      7-day habit progress: {Math.round(progress.rate * 100)}% · Linked habits:{" "}
-                      {(project.habitIds ?? []).length}
+                    <div className="subtle" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {project.goal || "No goal set yet."}
+                    </div>
+                    <div className="row" style={{ gap: 8 }}>
+                      <span className={progressClass}>{pct}% progress</span>
+                      <span className="badge accent">{(project.habitIds ?? []).length} habits</span>
                     </div>
                   </div>
-                  <div className="row" style={{ gap: 10 }}>
-                    <button className="btn" type="button" onClick={() => setActiveProject(project)}>
+                  <div className="row" style={{ gap: 8 }}>
+                    <button className="btn ghost" type="button" onClick={() => setActiveProject(project)}>
                       Open
                     </button>
                     <button
                       className="btn danger"
                       type="button"
+                      style={{ padding: '7px 10px' }}
                       onClick={async () => {
+                        const ok = window.confirm(`Delete project "${project.name}"?`);
+                        if (!ok) return;
                         await api.deleteProject(project.id);
                         toast.push("Deleted.");
                         refresh();
@@ -247,16 +256,19 @@ export default function ProjectsPage() {
           title={activeProject.name}
           onClose={() => setActiveProject(null)}
           actions={
-            <button
-              className="btn"
-              type="button"
-              onClick={() => {
-                setEditing(activeProject);
-                setActiveProject(null);
-              }}
-            >
-              Edit
-            </button>
+            <div className="row" style={{ gap: 8 }}>
+              <button
+                className="btn primary"
+                type="button"
+                onClick={() => {
+                  setEditing(activeProject);
+                  setActiveProject(null);
+                }}
+              >
+                Edit project
+              </button>
+              <button className="btn ghost" type="button" onClick={() => setActiveProject(null)}>Close</button>
+            </div>
           }
         >
           <ProjectDetail project={activeProject} habitsById={habitsById} />

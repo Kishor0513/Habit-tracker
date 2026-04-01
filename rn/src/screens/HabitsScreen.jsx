@@ -1,12 +1,24 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Modal, ScrollView, Text, TextInput, View } from "react-native";
+import { Modal, ScrollView, Text, View } from "react-native";
 import { useApp } from "../state/AppState";
 import { useToast } from "../state/ToastState";
 import { HabitType } from "../lib/habits";
 import { completionRateLastNDays, currentStreak } from "../lib/stats";
-import { Btn, Card, Field, Screen } from "../ui/components";
+import {
+  Btn,
+  Card,
+  Dot,
+  EmptyCard,
+  Field,
+  Pill,
+  Screen,
+  SectionTitle,
+  StatCard,
+  colors,
+  radius,
+} from "../ui/components";
 
-const COLORS = ["#7c5cff", "#22c55e", "#06b6d4", "#f59e0b", "#ef4444", "#a855f7", "#f43f5e"];
+const COLORS = ["#c65d2e", "#1f6b5c", "#db7c28", "#5278c1", "#b53f32", "#a35d8f", "#8c7a3d"];
 
 function HabitEditor({ initial, onCancel, onSave }) {
   const [name, setName] = useState(initial?.name ?? "");
@@ -18,83 +30,76 @@ function HabitEditor({ initial, onCancel, onSave }) {
   const [notes, setNotes] = useState(initial?.notes ?? "");
 
   return (
-    <ScrollView contentContainerStyle={{ gap: 12 }}>
+    <ScrollView contentContainerStyle={{ gap: 14 }} showsVerticalScrollIndicator={false}>
       <Card>
-        <Field label="Name" value={name} onChangeText={setName} placeholder="e.g., Deep work" />
-
-        <View style={{ flexDirection: "row", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
-          <Btn label={type === HabitType.binary ? "Binary ✓" : "Binary"} onPress={() => setType(HabitType.binary)} kind={type === HabitType.binary ? "primary" : "default"} />
-          <Btn label={type === HabitType.quantity ? "Quantity ✓" : "Quantity"} onPress={() => setType(HabitType.quantity)} kind={type === HabitType.quantity ? "primary" : "default"} />
-        </View>
-
-        <View style={{ flexDirection: "row", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
-          <Btn label={schedule === "daily" ? "Daily ✓" : "Daily"} onPress={() => setSchedule("daily")} kind={schedule === "daily" ? "primary" : "default"} />
-          <Btn label={schedule === "weekdays" ? "Weekdays ✓" : "Weekdays"} onPress={() => setSchedule("weekdays")} kind={schedule === "weekdays" ? "primary" : "default"} />
+        <SectionTitle eyebrow="Basics" title="Core setup" subtitle="Keep names short and the rule easy to understand." />
+        <Field label="Name" value={name} onChangeText={setName} placeholder="Deep work" autoCapitalize="sentences" />
+        <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
+          <Pill label="Binary" active={type === HabitType.binary} onPress={() => setType(HabitType.binary)} />
+          <Pill label="Quantity" active={type === HabitType.quantity} onPress={() => setType(HabitType.quantity)} />
         </View>
       </Card>
 
       <Card>
-        <Text style={{ fontWeight: "700" }}>Target (quantity)</Text>
-        <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
-          <TextInput
+        <SectionTitle eyebrow="Cadence" title="Schedule" subtitle="Start conservative. Reliability matters more than ambition." />
+        <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
+          <Pill label="Every day" active={schedule === "daily"} onPress={() => setSchedule("daily")} />
+          <Pill label="Weekdays" active={schedule === "weekdays"} onPress={() => setSchedule("weekdays")} />
+        </View>
+      </Card>
+
+      <Card>
+        <SectionTitle eyebrow="Target" title="Quantity rule" subtitle="Binary habits ignore this section." />
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <Field
+            label="Target"
             value={target}
             onChangeText={setTarget}
             keyboardType="numeric"
-            editable={type === HabitType.quantity}
-            style={{
-              flex: 1,
-              backgroundColor: "rgba(10,10,20,0.04)",
-              borderRadius: 12,
-              paddingHorizontal: 12,
-              paddingVertical: 10,
-              opacity: type === HabitType.quantity ? 1 : 0.5
-            }}
             placeholder="10"
+            editable={type === HabitType.quantity}
+            style={{ flex: 1 }}
           />
-          <TextInput
+          <Field
+            label="Unit"
             value={unit}
             onChangeText={setUnit}
+            placeholder="min"
             editable={type === HabitType.quantity}
-            style={{
-              flex: 1,
-              backgroundColor: "rgba(10,10,20,0.04)",
-              borderRadius: 12,
-              paddingHorizontal: 12,
-              paddingVertical: 10,
-              opacity: type === HabitType.quantity ? 1 : 0.5
-            }}
-            placeholder="min / pages"
+            autoCapitalize="none"
+            style={{ flex: 1 }}
           />
         </View>
-        <Text style={{ opacity: 0.7, marginTop: 8 }}>Binary habits ignore target.</Text>
       </Card>
 
       <Card>
-        <Text style={{ fontWeight: "700" }}>Color</Text>
-        <View style={{ flexDirection: "row", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
-          {COLORS.map((c) => (
-            <Btn key={c} label={c === color ? "✓" : " "} onPress={() => setColor(c)} kind={c === color ? "primary" : "default"} />
+        <SectionTitle eyebrow="Style" title="Color" subtitle="Use color to scan quickly, not to decorate randomly." />
+        <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
+          {COLORS.map((swatch) => (
+            <Pill
+              key={swatch}
+              label={swatch === color ? "Selected" : "Pick"}
+              active={swatch === color}
+              onPress={() => setColor(swatch)}
+              style={{ backgroundColor: swatch === color ? `${swatch}22` : colors.panelMuted }}
+            />
           ))}
         </View>
-        <Text style={{ opacity: 0.7, marginTop: 8 }}>Selected: {color}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Dot color={color} size={14} />
+          <Text style={{ color: colors.muted }}>Current accent: {color}</Text>
+        </View>
       </Card>
 
       <Card>
-        <Text style={{ fontWeight: "700" }}>Notes</Text>
-        <TextInput
+        <SectionTitle eyebrow="Notes" title="Context" subtitle="Add cues, boundaries, or a rule for what counts as done." />
+        <Field
+          label="Notes"
           value={notes}
           onChangeText={setNotes}
-          placeholder="Cues, friction reducers, rules…"
+          placeholder="Cues, friction reducers, rules..."
           multiline
-          style={{
-            marginTop: 10,
-            backgroundColor: "rgba(10,10,20,0.04)",
-            borderRadius: 12,
-            paddingHorizontal: 12,
-            paddingVertical: 10,
-            minHeight: 90,
-            textAlignVertical: "top"
-          }}
+          autoCapitalize="sentences"
         />
       </Card>
 
@@ -102,7 +107,7 @@ function HabitEditor({ initial, onCancel, onSave }) {
         <Btn label="Cancel" onPress={onCancel} />
         <Btn
           kind="primary"
-          label="Save"
+          label="Save habit"
           onPress={() => {
             const cleanName = name.trim();
             if (!cleanName) return onSave({ ok: false, error: "Name is required." });
@@ -120,13 +125,13 @@ function HabitEditor({ initial, onCancel, onSave }) {
                 unit: type === HabitType.quantity ? unit.trim() : "",
                 schedule: schedule === "weekdays" ? { kind: "weekdays", days: [1, 2, 3, 4, 5] } : { kind: "daily" },
                 color,
-                notes: notes.trim()
-              }
+                notes: notes.trim(),
+              },
             });
           }}
         />
       </View>
-      <View style={{ height: 40 }} />
+      <View style={{ height: 20 }} />
     </ScrollView>
   );
 }
@@ -166,64 +171,103 @@ export default function HabitsScreen() {
 
   return (
     <Screen
-      title="Habits"
-      subtitle="Build systems, not just streaks."
+      title="Design repeatable routines."
+      subtitle="Keep habits specific, visible, and easy to maintain."
+      eyebrow="Habit architecture"
+      scroll
       right={
         <Btn
           kind="primary"
-          label="+ New"
+          label="New"
           onPress={() => {
             setEditing(null);
             setShowEditor(true);
           }}
         />
       }
+      heroStats={[
+        { label: "Active", value: habits.length },
+        { label: "Focus", value: "Consistency" },
+        { label: "Window", value: "14 days" },
+      ]}
     >
-      <ScrollView contentContainerStyle={{ gap: 12 }}>
-        {habits.length === 0 ? (
-          <Card>
-            <Text style={{ fontWeight: "700" }}>No habits yet</Text>
-            <Text style={{ opacity: 0.7, marginTop: 6 }}>Create your first habit, or load templates in Settings.</Text>
-          </Card>
-        ) : (
-          cards.map(({ habit, stats, streak }) => (
-            <Card key={habit.id} style={{ gap: 10 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <View style={{ width: 10, height: 10, borderRadius: 999, backgroundColor: habit.color ?? "#7c5cff" }} />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontWeight: "700" }}>{habit.name}</Text>
-                  <Text style={{ opacity: 0.7, marginTop: 2 }}>
-                    14-day completion: {Math.round(stats.rate * 100)}% • Current streak: {streak}
-                  </Text>
-                </View>
-              </View>
-              <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
-                <Btn
-                  label="Edit"
-                  onPress={() => {
-                    setEditing(habit);
-                    setShowEditor(true);
-                  }}
-                />
-                <Btn
-                  kind="danger"
-                  label="Archive"
-                  onPress={async () => {
-                    await api.archiveHabit(habit.id);
-                    toast.push("Archived.");
-                    refresh();
-                  }}
-                />
-              </View>
-            </Card>
-          ))
-        )}
+      <Card tone="accent">
+        <SectionTitle eyebrow="Overview" title="Your operating system" subtitle="Good habits should be obvious to start and boring to repeat." />
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <StatCard label="Active habits" value={habits.length} accent />
+          <StatCard label="Tracked window" value="14d" />
+        </View>
+      </Card>
 
-        <View style={{ height: 40 }} />
-      </ScrollView>
+      {habits.length === 0 ? (
+        <EmptyCard title="No habits yet" body="Create the first habit here or load templates from Settings." />
+      ) : (
+        cards.map(({ habit, stats, streak }) => (
+          <Card key={habit.id}>
+            <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
+              <View
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 14,
+                  backgroundColor: `${habit.color ?? colors.brand}22`,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Dot color={habit.color ?? colors.brand} />
+              </View>
+              <View style={{ flex: 1, gap: 6 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <Text style={{ color: colors.text, fontSize: 17, fontWeight: "800" }}>{habit.name}</Text>
+                  <View
+                    style={{
+                      paddingHorizontal: 10,
+                      paddingVertical: 4,
+                      borderRadius: radius.pill,
+                      backgroundColor: "rgba(33,23,15,0.06)",
+                    }}
+                  >
+                    <Text style={{ color: colors.muted, fontSize: 11, fontWeight: "700", textTransform: "uppercase" }}>
+                      {habit.type === HabitType.binary ? "Binary" : "Quantity"}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={{ color: colors.muted, lineHeight: 20 }}>
+                  14-day completion: {Math.round(stats.rate * 100)}%   Current streak: {streak}
+                </Text>
+              </View>
+            </View>
+            <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
+              <Btn
+                label="Edit"
+                onPress={() => {
+                  setEditing(habit);
+                  setShowEditor(true);
+                }}
+              />
+              <Btn
+                kind="danger"
+                label="Archive"
+                onPress={async () => {
+                  await api.archiveHabit(habit.id);
+                  toast.push("Archived.");
+                  refresh();
+                }}
+              />
+            </View>
+          </Card>
+        ))
+      )}
 
       <Modal visible={showEditor} animationType="slide" onRequestClose={() => setShowEditor(false)}>
-        <Screen title={editing ? "Edit habit" : "New habit"} right={<Btn label="Close" onPress={() => setShowEditor(false)} />}>
+        <Screen
+          title={editing ? "Refine the habit." : "Create a new habit."}
+          subtitle="Tighten the rule before you scale the target."
+          eyebrow="Habit editor"
+          scroll
+          right={<Btn label="Close" onPress={() => setShowEditor(false)} />}
+        >
           <HabitEditor
             initial={editing}
             onCancel={() => setShowEditor(false)}
@@ -240,4 +284,3 @@ export default function HabitsScreen() {
     </Screen>
   );
 }
-

@@ -1,20 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ScrollView, Text, TextInput, View } from "react-native";
+import { Text, TextInput, View } from "react-native";
 import { useApp } from "../state/AppState";
 import { useToast } from "../state/ToastState";
 import { isoToday } from "../lib/date";
 import { entryMeetsTarget, HabitType, isDueOn, targetLabel } from "../lib/habits";
 import { computeTodaySummary, currentStreak } from "../lib/stats";
-import { Btn, Card, Screen } from "../ui/components";
-
-function Kpi({ label, value }) {
-  return (
-    <View style={{ flex: 1, padding: 12, borderRadius: 12, backgroundColor: "rgba(10,10,20,0.04)" }}>
-      <Text style={{ opacity: 0.7, fontSize: 12 }}>{label}</Text>
-      <Text style={{ fontSize: 18, fontWeight: "700", marginTop: 4 }}>{value}</Text>
-    </View>
-  );
-}
+import { Btn, Card, Dot, EmptyCard, Screen, SectionTitle, StatCard, colors, radius } from "../ui/components";
 
 function HabitRow({ habit, entry, streak, onToggle, onSetQuantity }) {
   const done = entryMeetsTarget(habit, entry);
@@ -25,14 +16,37 @@ function HabitRow({ habit, entry, streak, onToggle, onSetQuantity }) {
   }, [entry?.value]);
 
   return (
-    <Card style={{ gap: 10 }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <View style={{ width: 10, height: 10, borderRadius: 999, backgroundColor: habit.color ?? "#7c5cff" }} />
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontWeight: "700" }}>{habit.name}</Text>
-          <Text style={{ opacity: 0.7, marginTop: 2 }}>
-            {targetLabel(habit)} • Streak {streak}
-          </Text>
+    <Card style={{ gap: 14 }}>
+      <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
+        <View
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 14,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: `${habit.color ?? colors.brand}22`,
+          }}
+        >
+          <Dot color={habit.color ?? colors.brand} />
+        </View>
+        <View style={{ flex: 1, gap: 4 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <Text style={{ color: colors.text, fontWeight: "800", fontSize: 16 }}>{habit.name}</Text>
+            <View
+              style={{
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                borderRadius: radius.pill,
+                backgroundColor: "rgba(33,23,15,0.06)",
+              }}
+            >
+              <Text style={{ color: colors.muted, fontSize: 11, fontWeight: "700", textTransform: "uppercase" }}>
+                Streak {streak}
+              </Text>
+            </View>
+          </View>
+          <Text style={{ color: colors.muted, lineHeight: 20 }}>{targetLabel(habit)}</Text>
         </View>
       </View>
 
@@ -45,7 +59,18 @@ function HabitRow({ habit, entry, streak, onToggle, onSetQuantity }) {
             onChangeText={setQty}
             keyboardType="numeric"
             placeholder="0"
-            style={{ flex: 1, backgroundColor: "rgba(10,10,20,0.04)", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 }}
+            placeholderTextColor={colors.muted}
+            style={{
+              flex: 1,
+              minHeight: 48,
+              borderRadius: radius.md,
+              borderWidth: 1,
+              borderColor: colors.line,
+              backgroundColor: "rgba(255,255,255,0.74)",
+              color: colors.text,
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+            }}
           />
           <Btn
             kind={done ? "primary" : "default"}
@@ -94,49 +119,65 @@ export default function TodayScreen() {
   if (!isReady) return null;
 
   return (
-    <Screen title="Today" subtitle={today}>
-      <ScrollView contentContainerStyle={{ gap: 12 }}>
-        <Card>
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            <Kpi label="Due habits" value={summary.dueCount} />
-            <Kpi label="Completed" value={summary.doneCount} />
-          </View>
-        </Card>
+    <Screen
+      title="Run the day cleanly."
+      subtitle="See what is due, finish the essentials, and keep progress visible."
+      eyebrow="Calm execution"
+      scroll
+      heroStats={[
+        { label: "Date", value: today },
+        { label: "Due", value: summary.dueCount },
+        { label: "Done", value: summary.doneCount },
+      ]}
+    >
+      <Card tone="accent">
+        <SectionTitle
+          eyebrow="Today"
+          title="Daily scoreboard"
+          subtitle="Use this view to keep the list short and the signals honest."
+        />
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <StatCard label="Due habits" value={summary.dueCount} accent />
+          <StatCard label="Completed" value={summary.doneCount} />
+        </View>
+      </Card>
 
-        {due.length === 0 ? (
-          <Card>
-            <Text style={{ fontWeight: "700" }}>Nothing due today</Text>
-            <Text style={{ opacity: 0.7, marginTop: 6 }}>Add a habit in the Habits tab.</Text>
-          </Card>
-        ) : (
-          due.map((h) => {
-            const entry = entriesByKey.get(`${h.id}__${today}`) ?? null;
-            const streak = currentStreak(h, entriesByKey, today);
-            return (
-              <HabitRow
-                key={h.id}
-                habit={h}
-                entry={entry}
-                streak={streak}
-                onToggle={async () => {
-                  const done = entryMeetsTarget(h, entry);
-                  if (done) await api.deleteEntry(h.id, today);
-                  else await api.setEntry({ habitId: h.id, date: today, value: 1, note: "" });
-                  refresh();
-                }}
-                onSetQuantity={async (value) => {
-                  if (!Number.isFinite(value) || value < 0) return toast.push("Please enter a valid number.");
-                  await api.setEntry({ habitId: h.id, date: today, value, note: "" });
-                  toast.push("Saved.");
-                  refresh();
-                }}
-              />
-            );
-          })
-        )}
-        <View style={{ height: 40 }} />
-      </ScrollView>
+      <SectionTitle
+        eyebrow="Active list"
+        title={due.length ? "What needs attention now" : "Nothing due right now"}
+        subtitle={due.length ? "Start with the easiest win and keep the pace steady." : "Add a habit in the Habits tab or review your schedule."}
+      />
+
+      {due.length === 0 ? (
+        <EmptyCard title="Nothing due today" body="Your list is clear. Add habits or adjust cadence if this screen is empty too often." />
+      ) : (
+        due.map((h) => {
+          const entry = entriesByKey.get(`${h.id}__${today}`) ?? null;
+          const streak = currentStreak(h, entriesByKey, today);
+          return (
+            <HabitRow
+              key={h.id}
+              habit={h}
+              entry={entry}
+              streak={streak}
+              onToggle={async () => {
+                const done = entryMeetsTarget(h, entry);
+                if (done) await api.deleteEntry(h.id, today);
+                else await api.setEntry({ habitId: h.id, date: today, value: 1, note: "" });
+                refresh();
+              }}
+              onSetQuantity={async (value) => {
+                if (!Number.isFinite(value) || value < 0) return toast.push("Please enter a valid number.");
+                await api.setEntry({ habitId: h.id, date: today, value, note: "" });
+                toast.push("Saved.");
+                refresh();
+              }}
+            />
+          );
+        })
+      )}
+
+      <View style={{ height: 16 }} />
     </Screen>
   );
 }
-

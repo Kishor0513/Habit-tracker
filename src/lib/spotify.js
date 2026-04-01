@@ -68,6 +68,8 @@ export async function startSpotifyLogin({ clientId, redirectUri }) {
 		].join(' '),
 	});
 
+	console.info(`[Spotify] Starting OAuth login with Redirect URI: ${redirectUri}`);
+
 	window.location.assign(`${AUTHORIZE_ENDPOINT}?${params.toString()}`);
 }
 
@@ -163,13 +165,21 @@ async function spotifyApiRequest(clientId, method, endpoint, body) {
 	});
 
 	if (!res.ok && res.status !== 204) {
-		let message = 'Spotify API request failed.';
+		let message = `Spotify API error (${res.status})`;
 		try {
 			const json = await res.json();
-			message = json?.error?.message || message;
+			message = json?.error?.message ? `${message}: ${json.error.message}` : message;
 		} catch (_e) {
-			// no-op
+			// fallback
 		}
+		
+		if (res.status === 403) {
+			message += ' - This usually means a Spotify Premium account is required for this action.';
+		}
+		if (res.status === 404) {
+			message += ' - Resource not found. Ensure your Spotify playback is active on a device.';
+		}
+		
 		throw new Error(message);
 	}
 

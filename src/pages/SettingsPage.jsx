@@ -54,21 +54,25 @@ export default function SettingsPage() {
 	return (
 		<div className="stack">
 			<div className="card">
-				<h2>Settings</h2>
-				<p className="subtle">
-					Load real-life examples, export your data, or import it on another
-					device.
-				</p>
+				<div className="sectionHeader">
+					<div>
+						<h2>Settings</h2>
+						<div className="subtle">
+							Load real-life examples, export your data, or import it on another device.
+						</div>
+					</div>
+				</div>
 			</div>
 
 			{supabaseConfigured ? (
 				<div className="card">
 					<h2>Account</h2>
-					<div className="subtle">Signed in as: {user?.email ?? user?.id}</div>
-					<div style={{ marginTop: 10 }}>
+					<div className="row" style={{ gap: 12, alignItems: 'center' }}>
+						<div className="badge accent">{user?.email ?? user?.id}</div>
 						<button
-							className="btn"
+							className="btn ghost"
 							type="button"
+							style={{ padding: '6px 12px', fontSize: '0.85rem' }}
 							onClick={async () => {
 								try {
 									await auth.signOut();
@@ -88,28 +92,14 @@ export default function SettingsPage() {
 				<h2>Example packs</h2>
 				<div className="list">
 					{TEMPLATE_PACKS.map((pack) => (
-						<div
-							key={pack.id}
-							className="item"
-						>
-							<div
-								className="row between"
-								style={{ gap: 14 }}
-							>
-								<div
-									className="stack"
-									style={{ gap: 4, minWidth: 0 }}
-								>
-									<div
-										className="itemName"
-										style={{ fontWeight: 750 }}
-									>
-										{pack.name}
-									</div>
+						<div key={pack.id} className="item">
+							<div className="row between" style={{ gap: 14 }}>
+								<div className="stack" style={{ gap: 6, minWidth: 0, flex: 1 }}>
+									<div className="itemName">{pack.name}</div>
 									<div className="subtle">{pack.description}</div>
-									<div className="subtle">
-										Habits: {pack.habits.length} · Projects:{' '}
-										{pack.projects.length}
+									<div className="row" style={{ gap: 8 }}>
+										<span className="badge">Habits: {pack.habits.length}</span>
+										<span className="badge accent">Projects: {pack.projects.length}</span>
 									</div>
 								</div>
 								<button
@@ -117,7 +107,7 @@ export default function SettingsPage() {
 									type="button"
 									onClick={() => loadPack(pack)}
 								>
-									Load
+									Load pack
 								</button>
 							</div>
 						</div>
@@ -126,13 +116,10 @@ export default function SettingsPage() {
 			</div>
 
 			<div className="card">
-				<h2>Data</h2>
-				<div
-					className="row"
-					style={{ flexWrap: 'wrap' }}
-				>
+				<h2>Data management</h2>
+				<div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
 					<button
-						className="btn"
+						className="btn ghost"
 						type="button"
 						onClick={async () => {
 							const payload = await exportData(api);
@@ -152,7 +139,7 @@ export default function SettingsPage() {
 						Export JSON
 					</button>
 					<button
-						className="btn"
+						className="btn ghost"
 						type="button"
 						onClick={() => {
 							const input = document.createElement('input');
@@ -180,7 +167,7 @@ export default function SettingsPage() {
 						type="button"
 						onClick={async () => {
 							const ok = window.confirm(
-								'This wipes all local data for this app in this browser. Continue?',
+								'This wipes all local data for this app in this browser. This cannot be undone. Continue?',
 							);
 							if (!ok) return;
 							await new Promise((resolve, reject) => {
@@ -192,13 +179,13 @@ export default function SettingsPage() {
 							window.setTimeout(() => window.location.reload(), 600);
 						}}
 					>
-						Reset app (wipe local data)
+						Reset application
 					</button>
 				</div>
-				<p className="subtle">
+				<p className="subtle" style={{ marginTop: 12 }}>
 					{supabaseConfigured
-						? 'Signed-in data is stored in Supabase and scoped to your account.'
-						: 'Data is stored locally in your browser (IndexedDB). Export regularly if it matters.'}
+						? 'Signed-in data is stored in Supabase and synced across devices.'
+						: 'Data is stored locally in your browser (IndexedDB). Export regularly to prevent data loss.'}
 				</p>
 			</div>
 		</div>

@@ -1,18 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useApp } from "../state/AppState";
 import { isoToday, lastNDays } from "../lib/date";
 import { entryMeetsTarget, isDueOn } from "../lib/habits";
-import { completionRateLastNDays } from "../lib/stats";
-import { Card, Screen } from "../ui/components";
+import { completionRateLastNDays, currentStreak } from "../lib/stats";
+import { Card, EmptyCard, Dot, Screen, SectionTitle, StatCard, colors } from "../ui/components";
 
-function StatLine({ label, value }) {
-  return (
-    <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 6 }}>
-      <Text style={{ opacity: 0.7 }}>{label}</Text>
-      <Text style={{ fontWeight: "700" }}>{value}</Text>
-    </View>
-  );
+function fmtPct(rate) {
+  return `${Math.round(rate * 100)}%`;
 }
 
 export default function InsightsScreen() {
@@ -54,25 +49,66 @@ export default function InsightsScreen() {
       const rate = due ? done / due : 0;
       if (rate > best.rate) best = { day: d, rate };
     }
-    return best.day ? `${best.day} (${Math.round(best.rate * 100)}%)` : "—";
+    return best.day ? `${best.day} (${Math.round(best.rate * 100)}%)` : "-";
   }, [habits, entriesByKey, today]);
 
   if (!isReady) return null;
 
   return (
-    <Screen title="Insights" subtitle="Trends over time.">
-      <ScrollView contentContainerStyle={{ gap: 12 }}>
-        <Card>
-          <Text style={{ fontWeight: "700" }}>Overview</Text>
-          <View style={{ marginTop: 10 }}>
-            <StatLine label="Active habits" value={habits.length} />
-            <StatLine label="7-day completion" value={`${Math.round(last7.rate * 100)}%`} />
-            <StatLine label="30-day completion" value={`${Math.round(last30.rate * 100)}%`} />
-            <StatLine label="Best day (last 14)" value={bestDay} />
-          </View>
-        </Card>
-      </ScrollView>
+    <Screen
+      title="Read the trend before reacting."
+      subtitle="Insights are useful when they help you simplify or scale at the right time."
+      eyebrow="Performance review"
+      scroll
+      heroStats={[
+        { label: "Active", value: habits.length },
+        { label: "7d", value: fmtPct(last7.rate) },
+        { label: "30d", value: fmtPct(last30.rate) },
+      ]}
+    >
+      {habits.length === 0 ? (
+        <EmptyCard title="No data yet" body="Add habits or load example packs before reviewing trends." />
+      ) : (
+        <>
+          <Card tone="accent">
+            <SectionTitle eyebrow="Overview" title="Recent consistency" subtitle="Look for stable improvement, not perfect days." />
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <StatCard label="7-day rate" value={fmtPct(last7.rate)} accent />
+              <StatCard label="30-day rate" value={fmtPct(last30.rate)} />
+            </View>
+            <StatCard label="Best day in last 14" value={bestDay} />
+          </Card>
+
+          <SectionTitle eyebrow="Habits" title="Individual streaks" subtitle="A high streak with a low completion rate usually means the habit is too occasional." />
+          {habits.map((habit) => {
+            const streak = currentStreak(habit, entriesByKey, today);
+            const stats = completionRateLastNDays([habit], entriesByKey, 30, today);
+            return (
+              <Card key={habit.id}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 14,
+                      backgroundColor: `${habit.color ?? colors.brand}22`,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Dot color={habit.color ?? colors.brand} />
+                  </View>
+                  <View style={{ flex: 1, gap: 4 }}>
+                    <Text style={{ color: colors.text, fontSize: 16, fontWeight: "800" }}>{habit.name}</Text>
+                    <Text style={{ color: colors.muted }}>30-day completion: {fmtPct(stats.rate)}</Text>
+                  </View>
+                  <Text style={{ color: colors.brandStrong, fontWeight: "800" }}>{`Streak ${streak}`}</Text>
+                </View>
+              </Card>
+            );
+          })}
+        </>
+      )}
     </Screen>
   );
 }
-

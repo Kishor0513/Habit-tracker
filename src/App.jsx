@@ -1,5 +1,5 @@
-import React from "react";
-import { NavLink, Route, Routes } from "react-router-dom";
+import React, { useMemo } from "react";
+import { NavLink, Route, Routes, useLocation } from "react-router-dom";
 import TodayPage from "./pages/TodayPage.jsx";
 import HabitsPage from "./pages/HabitsPage.jsx";
 import ProjectsPage from "./pages/ProjectsPage.jsx";
@@ -10,46 +10,145 @@ import { ToastProvider } from "./state/ToastState.jsx";
 import LogoMark from "./components/LogoMark.jsx";
 import ToastViewport from "./components/ToastViewport.jsx";
 import AuthGate from "./components/AuthGate.jsx";
+import { useApp } from "./state/AppState.jsx";
 
-function subtitleFor(pathname) {
-  if (pathname === "/") return "Execute today. Review weekly. Improve forever.";
-  if (pathname === "/habits") return "Habits: your daily system.";
-  if (pathname === "/projects") return "Projects: real goals with milestones.";
-  if (pathname === "/insights") return "Insights: progress that’s hard to fake.";
-  if (pathname === "/settings") return "Examples, export/import, reset.";
-  return "";
+// ─── Nav items with icons ────────────────────────────────────────────────────
+const NAV_ITEMS = [
+  { to: "/",         label: "Today",    eyebrow: "Daily rhythm",      icon: "⚡" },
+  { to: "/habits",   label: "Habits",   eyebrow: "System design",     icon: "🔁" },
+  { to: "/projects", label: "Projects", eyebrow: "Outcome tracking",  icon: "🎯" },
+  { to: "/insights", label: "Insights", eyebrow: "Momentum review",   icon: "📈" },
+  { to: "/settings", label: "Settings", eyebrow: "Workspace control", icon: "⚙️" },
+];
+
+// ─── Greeting / hero copy per route ──────────────────────────────────────────
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
 }
 
-function Topbar() {
-  const path = window.location.hash.replace(/^#/, "") || "/";
-  const subtitle = subtitleFor(path);
+function contentFor(pathname) {
+  if (pathname === "/") return {
+    title: "Run your day with clarity.",
+    subtitle: "Track what matters, review momentum, and keep habits tied to real outcomes.",
+  };
+  if (pathname === "/habits") return {
+    title: "Shape routines that stick.",
+    subtitle: "Define cadence, targets, and the small rules that keep consistency alive.",
+  };
+  if (pathname === "/projects") return {
+    title: "Connect inputs to outcomes.",
+    subtitle: "Projects become clearer when linked habits are visible and measurable.",
+  };
+  if (pathname === "/insights") return {
+    title: "Read the trend first.",
+    subtitle: "Completion rates and streaks show whether your setup is sustainable or overloaded.",
+  };
+  if (pathname === "/settings") return {
+    title: "Control your workspace.",
+    subtitle: "Manage examples, backups, and local setup from one place.",
+  };
+  return { title: "Habit Tracker", subtitle: "A focused control room for habits and projects." };
+}
+
+// ─── Sidebar ─────────────────────────────────────────────────────────────────
+function Sidebar() {
   return (
-    <header className="topbar">
-      <div className="brand">
-        <LogoMark />
-        <div className="brandText">
-          <h1>Habit Tracker</h1>
-          <p>{subtitle}</p>
+    <aside className="sidebar">
+      <div className="brandPanel">
+        <div className="brand">
+          <div className="logo">
+            <LogoMark />
+          </div>
+          <div className="brandText">
+            <span className="eyebrow">Habit Tracker</span>
+            <h1>Operate your routines like&nbsp;a&nbsp;system.</h1>
+          </div>
         </div>
       </div>
+
       <nav className="nav" aria-label="Primary navigation">
-        <NavLink className={({ isActive }) => (isActive ? "pill isActive" : "pill")} to="/">
-          Today
-        </NavLink>
-        <NavLink className={({ isActive }) => (isActive ? "pill isActive" : "pill")} to="/habits">
-          Habits
-        </NavLink>
-        <NavLink className={({ isActive }) => (isActive ? "pill isActive" : "pill")} to="/projects">
-          Projects
-        </NavLink>
-        <NavLink className={({ isActive }) => (isActive ? "pill isActive" : "pill")} to="/insights">
-          Insights
-        </NavLink>
-        <NavLink className={({ isActive }) => (isActive ? "pill isActive" : "pill")} to="/settings">
-          Settings
-        </NavLink>
+        {NAV_ITEMS.map((item) => (
+          <NavLink
+            key={item.to}
+            end={item.to === "/"}
+            className={({ isActive }) => (isActive ? "navCard isActive" : "navCard")}
+            to={item.to}
+          >
+            <span className="navIcon" aria-hidden="true">{item.icon}</span>
+            <span className="navCardBody">
+              <span className="navCardEyebrow">{item.eyebrow}</span>
+              <span className="navCardTitle">{item.label}</span>
+            </span>
+          </NavLink>
+        ))}
       </nav>
+
+      <div className="sidebarNote">
+        <span className="eyebrow">Method</span>
+        <p>Keep habits simple, review weekly, and only raise targets after the baseline feels easy.</p>
+      </div>
+    </aside>
+  );
+}
+
+// ─── Topbar ──────────────────────────────────────────────────────────────────
+function Topbar() {
+  const location = useLocation();
+  const content = contentFor(location.pathname);
+  const greeting = getGreeting();
+
+  return (
+    <header className="topbar">
+      <div className="heroCopy">
+        <span className="greeting">{greeting}</span>
+        <h2>{content.title}</h2>
+        <p>{content.subtitle}</p>
+      </div>
+
+      <div className="heroStats" aria-label="Workspace highlights">
+        <div className="heroStat">
+          <span className="heroStatLabel">Views</span>
+          <strong>5</strong>
+        </div>
+        <div className="heroStat">
+          <span className="heroStatLabel">Mode</span>
+          <strong>Focused</strong>
+        </div>
+        <div className="heroStat">
+          <span className="heroStatLabel">Loop</span>
+          <strong>Daily</strong>
+        </div>
+      </div>
     </header>
+  );
+}
+
+// ─── App Shell ───────────────────────────────────────────────────────────────
+function AppShell() {
+  return (
+    <div className="app">
+      <div className="shell">
+        <Sidebar />
+        <div className="mainShell">
+          <Topbar />
+          <main className="content" id="view">
+            <AuthGate>
+              <Routes>
+                <Route path="/"         element={<TodayPage />} />
+                <Route path="/habits"   element={<HabitsPage />} />
+                <Route path="/projects" element={<ProjectsPage />} />
+                <Route path="/insights" element={<InsightsPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+              </Routes>
+            </AuthGate>
+          </main>
+        </div>
+      </div>
+      <ToastViewport />
+    </div>
   );
 }
 
@@ -57,23 +156,7 @@ export default function App() {
   return (
     <AppProvider>
       <ToastProvider>
-        <div className="app">
-          <div className="shell">
-            <Topbar />
-            <main className="content" id="view">
-              <AuthGate>
-                <Routes>
-                  <Route path="/" element={<TodayPage />} />
-                  <Route path="/habits" element={<HabitsPage />} />
-                  <Route path="/projects" element={<ProjectsPage />} />
-                  <Route path="/insights" element={<InsightsPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                </Routes>
-              </AuthGate>
-            </main>
-          </div>
-          <ToastViewport />
-        </div>
+        <AppShell />
       </ToastProvider>
     </AppProvider>
   );
