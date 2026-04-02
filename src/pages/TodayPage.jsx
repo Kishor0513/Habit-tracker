@@ -1,5 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-import EmptyState from '../components/EmptyState.jsx';
+import {
+	Area,
+	AreaChart,
+	Bar,
+	BarChart,
+	CartesianGrid,
+	ResponsiveContainer,
+	Tooltip,
+	XAxis,
+	YAxis,
+} from 'recharts';
 import ProductivityHub from '../components/ProductivityHub.jsx';
 import { isoToday } from '../lib/date.js';
 import {
@@ -12,68 +22,8 @@ import { computeTodaySummary, currentStreak } from '../lib/stats.js';
 import { useApp } from '../state/AppState.jsx';
 import { useToast } from '../state/ToastState.jsx';
 
-// ─── Check icon (SVG) ────────────────────────────────────────────────────────
-function CheckIcon({ done }) {
-	return (
-		<svg
-			width="18" height="18" viewBox="0 0 18 18"
-			fill="none" xmlns="http://www.w3.org/2000/svg"
-		>
-			<circle
-				cx="9" cy="9" r="8.25"
-				stroke={done ? 'transparent' : 'currentColor'}
-				strokeWidth="1.5"
-				fill={done ? 'var(--success)' : 'transparent'}
-			/>
-			{done && (
-				<path
-					d="M5.5 9.25l2.5 2.5 4.5-5"
-					stroke="#fff" strokeWidth="1.75"
-					strokeLinecap="round" strokeLinejoin="round"
-				/>
-			)}
-		</svg>
-	);
-}
-
-// ─── KPI row with progress bar ────────────────────────────────────────────────
-function Kpis({ today, dueCount, doneCount }) {
-	const pct = dueCount > 0 ? Math.round((doneCount / dueCount) * 100) : 0;
-
-	return (
-		<div className="stack" style={{ gap: 12 }}>
-			<div className="kpiGrid">
-				<div className="kpi">
-					<div className="label">Date</div>
-					<div className="value" style={{ fontSize: '1.2rem' }}>{today}</div>
-				</div>
-				<div className="kpi" style={{ '--kpi-color': 'var(--warning)' }}>
-					<div className="label">Due</div>
-					<div className="value">{dueCount}</div>
-				</div>
-				<div className="kpi" style={{ '--kpi-color': 'var(--success)' }}>
-					<div className="label">Done</div>
-					<div className="value">{doneCount}</div>
-				</div>
-			</div>
-
-			{dueCount > 0 && (
-				<div>
-					<div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-						<span className="subtle" style={{ fontSize: '0.78rem' }}>Today's progress</span>
-						<span className="subtle" style={{ fontSize: '0.78rem', color: 'var(--brand-light)' }}>{pct}%</span>
-					</div>
-					<div className="progressBar">
-						<div className="progressFill" style={{ width: `${pct}%` }} />
-					</div>
-				</div>
-			)}
-		</div>
-	);
-}
-
-// ─── Habit Row ────────────────────────────────────────────────────────────────
-function HabitRow({ habit, entry, streak, onToggle, onSetQuantity }) {
+// ─── Task Row ────────────────────────────────────────────────────────────────
+function HabitTaskRow({ habit, entry, streak, onToggle, onSetQuantity }) {
 	const done = entryMeetsTarget(habit, entry);
 	const [qty, setQty] = useState(entry?.value ?? '');
 
@@ -81,71 +31,88 @@ function HabitRow({ habit, entry, streak, onToggle, onSetQuantity }) {
 		setQty(entry?.value ?? '');
 	}, [entry?.value]);
 
-	const streakBadgeClass = streak >= 7 ? 'badge success' : streak >= 3 ? 'badge warning' : 'badge';
-
 	return (
-		<div className={`item ${done ? 'isDone' : ''}`}>
-			<div className="row between" style={{ gap: 14 }}>
-				<div className="stack" style={{ gap: 6, minWidth: 0, flex: 1 }}>
-					<div className="row" style={{ gap: 10, minWidth: 0 }}>
-						<div
-							className="dot"
-							style={{
-								background: habit.color,
-								boxShadow: `0 0 0 3px ${habit.color}30`,
-								width: 12, height: 12,
-							}}
-						/>
-						<div className="itemName">{habit.name}</div>
-						<span className={streakBadgeClass}>
-							{streak > 0 ? `🔥 ${streak}` : `— 0`}
-						</span>
-					</div>
-					<div className="subtle">{targetLabel(habit)}</div>
-				</div>
-
-				{habit.type === HabitType.binary ? (
-					<button
-						type="button"
-						className={`iconBtn ${done ? 'active' : ''}`}
-						onClick={onToggle}
-						aria-label={done ? 'Mark undone' : 'Mark done'}
-						title={done ? 'Undo' : 'Mark done'}
-					>
-						<CheckIcon done={done} />
-					</button>
-				) : (
-					<div className="row" style={{ gap: 8 }}>
-						<input
-							className="input"
-							type="number"
-							min={0}
-							step={1}
-							value={qty}
-							onChange={(e) => setQty(e.target.value)}
-							placeholder="0"
-							aria-label={`${habit.name} value`}
-							style={{ maxWidth: 90 }}
-							onKeyDown={(e) => {
-								if (e.key !== 'Enter') return;
-								const raw = qty === '' ? 0 : Number(qty);
-								onSetQuantity(raw);
-							}}
-						/>
-						<button
-							type="button"
-							className={`btn ${done ? 'success' : 'ghost'}`}
-							style={{ minWidth: 60 }}
-							onClick={() => {
-								const raw = qty === '' ? 0 : Number(qty);
-								onSetQuantity(raw);
-							}}
-						>
-							{done ? '✓ Saved' : 'Save'}
-						</button>
-					</div>
-				)}
+		<div
+			className={`taskRow ${done ? 'isDone' : ''}`}
+			onClick={(e) => {
+				if (habit.type === HabitType.binary) {
+					onToggle();
+				}
+			}}
+		>
+			<div className="taskCheckbox">
+				<svg
+					className="taskCheckboxSvg"
+					viewBox="0 0 10 10"
+					fill="none"
+				>
+					<path
+						d="M2 5L4.5 7.5L8 2"
+						strokeWidth="1.5"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					/>
+				</svg>
 			</div>
+
+			<div
+				style={{
+					display: 'flex',
+					flexDirection: 'column',
+					flex: 1,
+					minWidth: 0,
+					paddingLeft: 4,
+				}}
+			>
+				<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+					<span
+						className="taskText"
+						style={{ fontWeight: 500, fontSize: '14px' }}
+					>
+						{habit.name}
+					</span>
+					{streak >= 3 && <span className="badge warning">🔥 {streak}</span>}
+				</div>
+				<div
+					className="taskText"
+					style={{
+						fontSize: '12px',
+						color: 'var(--text-muted)',
+						marginTop: '2px',
+					}}
+				>
+					{targetLabel(habit)}
+				</div>
+			</div>
+
+			{habit.type !== HabitType.binary && (
+				<div
+					className="taskInputWrap"
+					onClick={(e) => e.stopPropagation()}
+				>
+					<input
+						className="taskInput"
+						type="number"
+						min={0}
+						step={1}
+						value={qty}
+						onChange={(e) => setQty(e.target.value)}
+						onKeyDown={(e) => {
+							if (e.key === 'Enter') {
+								const raw = qty === '' ? 0 : Number(qty);
+								onSetQuantity(raw);
+							}
+						}}
+					/>
+					<button
+						className="btn btn-bordered"
+						style={{ height: 28, fontSize: 12, padding: '0 8px' }}
+						onClick={() => onSetQuantity(qty === '' ? 0 : Number(qty))}
+					>
+						Save
+					</button>
+				</div>
+			)}
 		</div>
 	);
 }
@@ -158,6 +125,13 @@ export default function TodayPage() {
 	const [habits, setHabits] = useState([]);
 	const [entriesByKey, setEntriesByKey] = useState(new Map());
 
+	const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+	useEffect(() => {
+		const handleResize = () => setIsMobile(window.innerWidth < 768);
+		window.addEventListener('resize', handleResize);
+		return () => window.removeEventListener('resize', handleResize);
+	}, []);
+
 	useEffect(() => {
 		if (!api) return;
 		let alive = true;
@@ -169,27 +143,26 @@ export default function TodayPage() {
 				setEntriesByKey(new Map(e.map((x) => [`${x.habitId}__${x.date}`, x])));
 			})
 			.catch((err) => console.error(err));
-		return () => { alive = false; };
+		return () => {
+			alive = false;
+		};
 	}, [api, dataVersion]);
 
 	const due = useMemo(
 		() => habits.filter((h) => isDueOn(h, today)),
 		[habits, today],
 	);
-
 	const entriesByHabitToday = useMemo(() => {
 		const map = new Map();
 		for (const h of habits)
 			map.set(h.id, entriesByKey.get(`${h.id}__${today}`) ?? null);
 		return map;
 	}, [habits, entriesByKey, today]);
-
 	const summary = useMemo(
 		() => computeTodaySummary(habits, entriesByHabitToday, today),
 		[habits, entriesByHabitToday, today],
 	);
 
-	// Generate small heatmap data for the last 28 days
 	const heatmapData = useMemo(() => {
 		const cells = [];
 		for (let i = 27; i >= 0; i--) {
@@ -197,110 +170,205 @@ export default function TodayPage() {
 			d.setDate(d.getDate() - i);
 			const iso = d.toISOString().split('T')[0];
 			let count = 0;
-			for (const h of habits) {
-				if (entriesByKey.has(`${h.id}__${iso}`)) count++;
-			}
+			for (const h of habits) if (entriesByKey.has(`${h.id}__${iso}`)) count++;
 			cells.push({ iso, count });
 		}
 		return cells;
 	}, [habits, entriesByKey]);
 
-	if (!isReady) return <div className="card"><p className="subtle">Loading…</p></div>;
+	const weeklyTrendData = useMemo(() => {
+		const data = [];
+		for (let i = 6; i >= 0; i--) {
+			const date = new Date();
+			date.setDate(date.getDate() - i);
+			const iso = date.toISOString().split('T')[0];
+			let dueCount = 0;
+			let doneCount = 0;
+			for (const habit of habits) {
+				if (!isDueOn(habit, iso)) continue;
+				dueCount += 1;
+				const entry = entriesByKey.get(`${habit.id}__${iso}`) ?? null;
+				if (entryMeetsTarget(habit, entry)) doneCount += 1;
+			}
+			data.push({
+				name: date.toLocaleDateString([], { weekday: 'short' }),
+				done: doneCount,
+				due: dueCount,
+				rate: dueCount === 0 ? 0 : Math.round((doneCount / dueCount) * 100),
+			});
+		}
+		return data;
+	}, [habits, entriesByKey]);
+
+	const progressPercent =
+		summary.dueCount === 0
+			? 0
+			: Math.round((summary.doneCount / summary.dueCount) * 100);
+
+	if (!isReady)
+		return (
+			<div className="pageContent">
+				<p style={{ color: 'var(--text-muted)' }}>Loading runtime...</p>
+			</div>
+		);
 
 	return (
-		<div className="bento">
-			{/* Row 1: Focus & Stats */}
-			<div className="span-8 stack">
-				<div className="card" style={{ background: 'var(--surface-bright)', border: 'none' }}>
-					<div className="sectionHeader">
-						<div className="stack" style={{ gap: 4 }}>
-							<span className="greeting">Good morning</span>
-							<h2>Your day at a glance</h2>
-						</div>
-						<div className="row" style={{ gap: 8 }}>
-							<span className="badge brand" style={{ fontSize: '11px', padding: '6px 12px' }}>
-								{summary.doneCount}/{summary.dueCount} Complete
+		<div className="pageContent">
+			<div className="todayLayout" style={{ gridTemplateColumns: isMobile ? '1fr' : '1.2fr .8fr' }}>
+				<section>
+					<div className="premiumPanel taskPanel">
+						<div className="premiumPanelHeader taskPanelHeader">
+							<div>
+								<div className="panelEyebrow">Habits</div>
+								<h3 className="premiumPanelTitle">Execution queue</h3>
+							</div>
+							<span className="badge brand">
+								{summary.doneCount} / {summary.dueCount}
 							</span>
 						</div>
-					</div>
-					<Kpis today={today} dueCount={summary.dueCount} doneCount={summary.doneCount} />
-				</div>
-			</div>
-
-			<div className="span-4 stack">
-				<div className="card">
-					<div className="sectionHeader">
-						<h2>Consistency</h2>
-						<span className="subtle">Last 4 weeks</span>
-					</div>
-					<div className="heatmap" style={{ marginTop: 8 }}>
-						{heatmapData.map((cell, idx) => {
-							const level = cell.count === 0 ? '' : cell.count >= 3 ? 'level-4' : cell.count >= 2 ? 'level-2' : 'level-1';
-							return <div key={idx} className={`heatCell ${level}`} title={`${cell.iso}: ${cell.count} habits`} />;
-						})}
-					</div>
-					<div className="row" style={{ marginTop: 8, gap: 4 }}>
-						<span className="subtle" style={{ fontSize: '0.7rem' }}>Keep the streak alive! 🔥</span>
-					</div>
-				</div>
-			</div>
-
-			{/* Row 2: Habits vs Player */}
-			<div className="span-8">
-				{due.length === 0 ? (
-					<EmptyState
-						title="Nothing due today"
-						body="Add a habit to start tracking."
-						action={<a className="btn primary" href="#/settings">Open Settings</a>}
-					/>
-				) : (
-					<div className="card">
-						<div className="sectionHeader">
-							<h2>Daily Habits</h2>
-							<span className="subtle">{due.length} to go</span>
+						<div className="sectionProgress">
+							<div className="sectionProgressFill" style={{ width: `${progressPercent}%` }} />
 						</div>
-						<div className="list">
-							{due.map((h) => {
-								const entry = entriesByKey.get(`${h.id}__${today}`) ?? null;
-								const streak = currentStreak(h, entriesByKey, today);
-								return (
-									<HabitRow
-										key={h.id}
-										habit={h}
-										entry={entry}
-										streak={streak}
-										onToggle={async () => {
-											const done = entryMeetsTarget(h, entry);
-											if (done) await api.deleteEntry(h.id, today);
-											else await api.setEntry({ habitId: h.id, date: today, value: 1, note: '' });
-											refresh();
-										}}
-										onSetQuantity={async (value) => {
-											if (!Number.isFinite(value) || value < 0)
-												return toast.push('Please enter a valid number.');
-											await api.setEntry({ habitId: h.id, date: today, value, note: '' });
-											toast.push('Saved.');
-											refresh();
-										}}
-									/>
-								);
-							})}
+
+						<div className="taskPanelBody">
+							{due.length === 0 ? (
+								<div className="emptyPanelState">
+									System idle. Nothing scheduled for today.
+								</div>
+							) : (
+								<div className="taskList">
+									{due.map((h) => {
+										const entry = entriesByKey.get(`${h.id}__${today}`) ?? null;
+										return (
+											<HabitTaskRow
+												key={h.id}
+												habit={h}
+												entry={entry}
+												streak={currentStreak(h, entriesByKey, today)}
+												onToggle={async () => {
+													if (entryMeetsTarget(h, entry))
+														await api.deleteEntry(h.id, today);
+													else
+														await api.setEntry({
+															habitId: h.id,
+															date: today,
+															value: 1,
+															note: '',
+														});
+													refresh();
+												}}
+												onSetQuantity={async (value) => {
+													if (!Number.isFinite(value) || value < 0)
+														return toast.push('Please enter a valid number.');
+													await api.setEntry({
+														habitId: h.id,
+														date: today,
+														value,
+														note: '',
+													});
+													refresh();
+												}}
+											/>
+										);
+									})}
+								</div>
+							)}
 						</div>
 					</div>
-				)}
-			</div>
 
-			<div className="span-4 stack">
-				<ProductivityHub />
-			</div>
+					<div style={{ marginTop: '24px' }}>
+						<ProductivityHub />
+					</div>
+				</section>
 
-			{/* Floating Action Button */}
-			<a href="#/habits" className="fab" title="New Habit">
-				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-					<line x1="12" y1="5" x2="12" y2="19"></line>
-					<line x1="5" y1="12" x2="19" y2="12"></line>
-				</svg>
-			</a>
+				<section>
+					<div className="premiumPanel">
+						<div className="premiumPanelHeader">
+							<div>
+								<div className="panelEyebrow">React graphs</div>
+								<h3 className="premiumPanelTitle">Consistency in motion</h3>
+							</div>
+							<span className="badge brand">Last 7 days</span>
+						</div>
+						<p className="subtle">Built with Recharts for daily completion and workload trends.</p>
+
+						<div className="chartStack">
+							<div className="chartPanel">
+								<div className="chartPanelTitle">Completion rate</div>
+								<div className="chartFrame">
+									<ResponsiveContainer width="100%" height="100%">
+										<AreaChart data={weeklyTrendData}>
+											<defs>
+												<linearGradient id="completionFill" x1="0" y1="0" x2="0" y2="1">
+													<stop offset="0%" stopColor="#ec4899" stopOpacity={0.45} />
+													<stop offset="100%" stopColor="#ec4899" stopOpacity={0.05} />
+												</linearGradient>
+											</defs>
+											<CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
+											<XAxis dataKey="name" tickLine={false} axisLine={false} />
+											<YAxis tickLine={false} axisLine={false} width={28} />
+											<Tooltip
+												contentStyle={{
+													background: 'var(--bg-panel-solid)',
+													border: '1px solid var(--border-muted)',
+													borderRadius: 16,
+												}}
+											/>
+											<Area
+												type="monotone"
+												dataKey="rate"
+												stroke="#ec4899"
+												strokeWidth={3}
+												fill="url(#completionFill)"
+											/>
+										</AreaChart>
+									</ResponsiveContainer>
+								</div>
+							</div>
+
+							<div className="chartPanel">
+								<div className="chartPanelTitle">Done vs due</div>
+								<div className="chartFrame">
+									<ResponsiveContainer width="100%" height="100%">
+										<BarChart data={weeklyTrendData} barGap={8}>
+											<CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
+											<XAxis dataKey="name" tickLine={false} axisLine={false} />
+											<YAxis tickLine={false} axisLine={false} width={28} />
+											<Tooltip
+												contentStyle={{
+													background: 'var(--bg-panel-solid)',
+													border: '1px solid var(--border-muted)',
+													borderRadius: 16,
+												}}
+											/>
+											<Bar dataKey="due" fill="rgba(168, 85, 247, 0.35)" radius={[10, 10, 0, 0]} />
+											<Bar dataKey="done" fill="#8b5cf6" radius={[10, 10, 0, 0]} />
+										</BarChart>
+									</ResponsiveContainer>
+								</div>
+							</div>
+						</div>
+
+						<div className="heatmapLegend">
+							<span>28-day spark</span>
+							<div className="heatmapLegendScale">
+								{heatmapData.slice(-8).map((cell) => {
+									const level =
+										cell.count === 0 ? '' : cell.count >= 3 ? 'level-4' : cell.count >= 2 ? 'level-2' : 'level-1';
+									return (
+										<div
+											key={cell.iso}
+											className={`heatCell ${level}`}
+											style={{ width: '12px', height: '12px' }}
+										/>
+									);
+								})}
+							</div>
+							<span>recent activity</span>
+						</div>
+					</div>
+				</section>
+			</div>
 		</div>
 	);
 }

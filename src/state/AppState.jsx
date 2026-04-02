@@ -11,12 +11,13 @@ export function AppProvider({ children }) {
 	const [user, setUser] = useState(null);
 	const [supabaseConfigured, setSupabaseConfigured] = useState(false);
 	const [authLoading, setAuthLoading] = useState(true);
+	const [dataVersion, setDataVersion] = useState(0);
 	const [session, setSession] = useState(null);
 
 	useEffect(() => {
 		const env = getSupabaseEnv();
 		const client = createSupabase();
-		setSupabaseConfigured(env);
+		setSupabaseConfigured(Boolean(env));
 		setSupabase(client);
 
 		let alive = true;
@@ -107,11 +108,6 @@ export function AppProvider({ children }) {
 						provider: 'google',
 						options: {
 							redirectTo: window.location.origin + window.location.pathname,
-							scopes: 'https://www.googleapis.com/auth/calendar.readonly',
-							queryParams: {
-								access_type: 'offline',
-								prompt: 'consent',
-							},
 						},
 					});
 					if (error) throw error;

@@ -1,188 +1,243 @@
-import React, { useMemo } from "react";
-import { NavLink, Route, Routes, useLocation } from "react-router-dom";
-import TodayPage from "./pages/TodayPage.jsx";
-import HabitsPage from "./pages/HabitsPage.jsx";
-import ProjectsPage from "./pages/ProjectsPage.jsx";
-import InsightsPage from "./pages/InsightsPage.jsx";
-import SettingsPage from "./pages/SettingsPage.jsx";
-import { AppProvider } from "./state/AppState.jsx";
-import { ToastProvider } from "./state/ToastState.jsx";
-import LogoMark from "./components/LogoMark.jsx";
-import ToastViewport from "./components/ToastViewport.jsx";
-import AuthGate from "./components/AuthGate.jsx";
-import { useApp } from "./state/AppState.jsx";
+import { useEffect, useState } from 'react';
+import { NavLink, Route, Routes, useLocation } from 'react-router-dom';
+import AuthGate from './components/AuthGate.jsx';
+import ToastViewport from './components/ToastViewport.jsx';
+import { isoToday } from './lib/date.js';
+import HabitsPage from './pages/HabitsPage.jsx';
+import InsightsPage from './pages/InsightsPage.jsx';
+import ProjectsPage from './pages/ProjectsPage.jsx';
+import SettingsPage from './pages/SettingsPage.jsx';
+import TodayPage from './pages/TodayPage.jsx';
+import { AppProvider } from './state/AppState.jsx';
+import { ToastProvider } from './state/ToastState.jsx';
 
-// ─── Nav items with icons ────────────────────────────────────────────────────
 const NAV_ITEMS = [
-  { to: "/",         label: "Today",    eyebrow: "Daily rhythm",      icon: "⚡" },
-  { to: "/habits",   label: "Habits",   eyebrow: "System design",     icon: "🔁" },
-  { to: "/projects", label: "Projects", eyebrow: "Outcome tracking",  icon: "🎯" },
-  { to: "/insights", label: "Insights", eyebrow: "Momentum review",   icon: "📈" },
-  { to: "/settings", label: "Settings", eyebrow: "Workspace control", icon: "⚙️" },
+	{ to: '/', label: 'Today', shortLabel: 'Pulse', icon: 'pulse' },
+	{ to: '/habits', label: 'Habits', shortLabel: 'Habits', icon: 'habit' },
+	{ to: '/projects', label: 'Projects', shortLabel: 'Projects', icon: 'target' },
+	{ to: '/insights', label: 'Insights', shortLabel: 'Insights', icon: 'chart' },
+	{ to: '/settings', label: 'Settings', shortLabel: 'Settings', icon: 'settings' },
 ];
 
-// ─── Greeting / hero copy per route ──────────────────────────────────────────
-function getGreeting() {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
+function NavGlyph({ name }) {
+	switch (name) {
+		case 'pulse':
+			return (
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+					<path d="M3 12h4l2.2-5 4.4 10 2.4-5H21" strokeLinecap="round" strokeLinejoin="round" />
+				</svg>
+			);
+		case 'habit':
+			return (
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+					<path d="M7 7h10v10H7z" rx="3" />
+					<path d="M8 12h8" strokeLinecap="round" />
+					<path d="M12 8v8" strokeLinecap="round" />
+				</svg>
+			);
+		case 'target':
+			return (
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+					<circle cx="12" cy="12" r="7" />
+					<circle cx="12" cy="12" r="3" />
+					<path d="M19 5l-4.5 4.5" strokeLinecap="round" />
+				</svg>
+			);
+		case 'chart':
+			return (
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+					<path d="M4 19h16" strokeLinecap="round" />
+					<path d="M7 15l3-3 3 2 4-6" strokeLinecap="round" strokeLinejoin="round" />
+				</svg>
+			);
+		default:
+			return (
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+					<path d="M12 3.5l2.2 1.3 2.5-.2 1 2.3 2 1.5-.8 2.4.8 2.4-2 1.5-1 2.3-2.5-.2L12 20.5l-2.2-1.3-2.5.2-1-2.3-2-1.5.8-2.4-.8-2.4 2-1.5 1-2.3 2.5.2L12 3.5z" />
+					<circle cx="12" cy="12" r="2.5" />
+				</svg>
+			);
+	}
 }
 
-function contentFor(pathname) {
-  if (pathname === "/") return {
-    title: "Run your day with clarity.",
-    subtitle: "Track what matters, review momentum, and keep habits tied to real outcomes.",
-  };
-  if (pathname === "/habits") return {
-    title: "Shape routines that stick.",
-    subtitle: "Define cadence, targets, and the small rules that keep consistency alive.",
-  };
-  if (pathname === "/projects") return {
-    title: "Connect inputs to outcomes.",
-    subtitle: "Projects become clearer when linked habits are visible and measurable.",
-  };
-  if (pathname === "/insights") return {
-    title: "Read the trend first.",
-    subtitle: "Completion rates and streaks show whether your setup is sustainable or overloaded.",
-  };
-  if (pathname === "/settings") return {
-    title: "Control your workspace.",
-    subtitle: "Manage examples, backups, and local setup from one place.",
-  };
-  return { title: "Habit Tracker", subtitle: "A focused control room for habits and projects." };
+function Sidebar({ isDark, onThemeToggle }) {
+	return (
+		<aside className="sidebarArea">
+			<div className="sidebarHero">
+				<div className="sidebarEyebrow">Premium Workspace</div>
+				<div className="sidebarHeroTop">
+					<div
+						className="sidebarAvatar"
+						aria-hidden="true"
+					>
+						H
+					</div>
+					<button
+						className="themeToggleBtn"
+						onClick={onThemeToggle}
+						aria-label="Toggle dark mode"
+						title={isDark ? 'Light mode' : 'Dark mode'}
+					>
+						{isDark ? 'Light' : 'Dark'}
+					</button>
+				</div>
+				<div className="sidebarHeroCopy">
+					<div className="sidebarWorkspace">Habit Workspace</div>
+					<div className="sidebarWorkspaceMeta">
+						Precision habit tracking with focus loops, streak telemetry, and project momentum in one command center.
+					</div>
+				</div>
+				<div className="sidebarStats">
+					<div className="sidebarStat">
+						<span className="sidebarStatValue">24/7</span>
+						<span className="sidebarStatLabel">Sync ready</span>
+					</div>
+					<div className="sidebarStat">
+						<span className="sidebarStatValue">Pro</span>
+						<span className="sidebarStatLabel">Visual system</span>
+					</div>
+				</div>
+			</div>
+			<div className="navGroup">
+				<div className="navGroupLabel">Navigation</div>
+				{NAV_ITEMS.map((item) => (
+					<NavLink
+						key={item.to}
+						end={item.to === '/'}
+						className={({ isActive }) =>
+							isActive ? 'navItem isActive' : 'navItem'
+						}
+						to={item.to}
+					>
+						<span
+							className="navIcon"
+							aria-hidden="true"
+						>
+							<NavGlyph name={item.icon} />
+						</span>
+						<span>{item.label}</span>
+					</NavLink>
+				))}
+			</div>
+		</aside>
+	);
 }
 
-// ─── Sidebar ─────────────────────────────────────────────────────────────────
-function Sidebar() {
-  return (
-    <aside className="sidebar">
-      <div className="brandPanel">
-        <div className="brand">
-          <div className="logo">
-            <LogoMark />
-          </div>
-          <div className="brandText">
-            <span className="eyebrow">Habit Tracker</span>
-            <h1>Operate your routines like&nbsp;a&nbsp;system.</h1>
-          </div>
-        </div>
-      </div>
-
-      <nav className="nav" aria-label="Primary navigation">
-        {NAV_ITEMS.map((item) => (
-          <NavLink
-            key={item.to}
-            end={item.to === "/"}
-            className={({ isActive }) => (isActive ? "navCard isActive" : "navCard")}
-            to={item.to}
-          >
-            <span className="navIcon" aria-hidden="true">{item.icon}</span>
-            <span className="navCardBody">
-              <span className="navCardEyebrow">{item.eyebrow}</span>
-              <span className="navCardTitle">{item.label}</span>
-            </span>
-          </NavLink>
-        ))}
-      </nav>
-
-      <div className="sidebarNote">
-        <span className="eyebrow">Method</span>
-        <p>Keep habits simple, review weekly, and only raise targets after the baseline feels easy.</p>
-      </div>
-    </aside>
-  );
-}
-
-// ─── Topbar ──────────────────────────────────────────────────────────────────
 function Topbar() {
-  const location = useLocation();
-  const content = contentFor(location.pathname);
-  const greeting = getGreeting();
+	const location = useLocation();
+	const title =
+		NAV_ITEMS.find((n) => n.to === location.pathname)?.label || 'Page';
+	const dateLabel = isoToday();
 
-  return (
-    <header className="topbar">
-      <div className="heroCopy">
-        <span className="greeting">{greeting}</span>
-        <h2>{content.title}</h2>
-        <p>{content.subtitle}</p>
-      </div>
-
-      <div className="heroStats" aria-label="Workspace highlights">
-        <div className="heroStat">
-          <span className="heroStatLabel">Views</span>
-          <strong>5</strong>
-        </div>
-        <div className="heroStat">
-          <span className="heroStatLabel">Mode</span>
-          <strong>Focused</strong>
-        </div>
-        <div className="heroStat">
-          <span className="heroStatLabel">Loop</span>
-          <strong>Daily</strong>
-        </div>
-      </div>
-    </header>
-  );
+	return (
+		<header className="topbar">
+			<div>
+				<div className="breadcrumb">
+					<span>Habit Workspace</span>
+					<span className="breadcrumbSeparator">/</span>
+					<span className="breadcrumb active">{title}</span>
+				</div>
+				<div className="topbarTitle">{title}</div>
+			</div>
+			<div className="topbarMeta">
+				<span className="badge brand">{dateLabel}</span>
+				<span className="badge">Premium UI</span>
+				<span className="badge success">Live session</span>
+			</div>
+		</header>
+	);
 }
 
-// ─── Mobile Bottom Nav ───────────────────────────────────────────────────────
 function BottomNav() {
-  return (
-    <nav className="mobileNav" aria-label="Mobile navigation">
-      {NAV_ITEMS.map((item) => (
-        <NavLink
-          key={item.to}
-          end={item.to === "/"}
-          className={({ isActive }) => (isActive ? "navItem isActive" : "navItem")}
-          to={item.to}
-          style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, color: 'inherit' }}
-        >
-          <span style={{ fontSize: '20px' }}>{item.icon}</span>
-          <span style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</span>
-        </NavLink>
-      ))}
-    </nav>
-  );
+	return (
+		<nav
+			className="mobileNav"
+			aria-label="Mobile navigation"
+		>
+			{NAV_ITEMS.map((item) => (
+				<NavLink
+					key={item.to}
+					end={item.to === '/'}
+					className={({ isActive }) =>
+						isActive ? 'mobileNavItem isActive' : 'mobileNavItem'
+					}
+					to={item.to}
+				>
+					<span className="mobileNavItemIcon">
+						<NavGlyph name={item.icon} />
+					</span>
+					<span className="mobileNavItemLabel">{item.shortLabel}</span>
+				</NavLink>
+			))}
+		</nav>
+	);
 }
 
-// ─── App Shell ───────────────────────────────────────────────────────────────
-function AppShell() {
-  const location = useLocation();
-  const isToday = location.pathname === "/";
-
-  return (
-    <div className="app">
-      <div className="shell">
-        <Sidebar />
-        <div className="mainShell">
-          {/* Hide topbar on Today page because it has its own Greeting card in the Bento grid */}
-          {!isToday && <Topbar />}
-          <main className="content" id="view" style={isToday ? { background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 } : {}}>
-            <AuthGate>
-              <Routes>
-                <Route path="/"         element={<TodayPage />} />
-                <Route path="/habits"   element={<HabitsPage />} />
-                <Route path="/projects" element={<ProjectsPage />} />
-                <Route path="/insights" element={<InsightsPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-              </Routes>
-            </AuthGate>
-          </main>
-        </div>
-      </div>
-      <BottomNav />
-      <ToastViewport />
-    </div>
-  );
+function AppShell({ isDark, onThemeToggle }) {
+	return (
+		<div className="app">
+			<Sidebar
+				isDark={isDark}
+				onThemeToggle={onThemeToggle}
+			/>
+			<div className="mainArea">
+				<Topbar />
+				<Routes>
+					<Route
+						path="/"
+						element={<TodayPage />}
+					/>
+					<Route
+						path="/habits"
+						element={<HabitsPage />}
+					/>
+					<Route
+						path="/projects"
+						element={<ProjectsPage />}
+					/>
+					<Route
+						path="/insights"
+						element={<InsightsPage />}
+					/>
+					<Route
+						path="/settings"
+						element={<SettingsPage />}
+					/>
+				</Routes>
+			</div>
+			<BottomNav />
+		</div>
+	);
 }
 
 export default function App() {
-  return (
-    <AppProvider>
-      <ToastProvider>
-        <AppShell />
-      </ToastProvider>
-    </AppProvider>
-  );
+	const [isDark, setIsDark] = useState(() => {
+		const saved = localStorage.getItem('habitTrackerDarkMode');
+		if (saved !== null) return saved === 'true';
+		return window.matchMedia('(prefers-color-scheme: dark)').matches;
+	});
+
+	useEffect(() => {
+		localStorage.setItem('habitTrackerDarkMode', isDark);
+		document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+		if (isDark) {
+			document.documentElement.style.colorScheme = 'dark';
+		} else {
+			document.documentElement.style.colorScheme = 'light';
+		}
+	}, [isDark]);
+
+	return (
+		<ToastProvider>
+			<AppProvider>
+				<AuthGate>
+					<AppShell
+						isDark={isDark}
+						onThemeToggle={() => setIsDark(!isDark)}
+					/>
+				</AuthGate>
+				<ToastViewport />
+			</AppProvider>
+		</ToastProvider>
+	);
 }
