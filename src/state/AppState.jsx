@@ -11,12 +11,12 @@ export function AppProvider({ children }) {
 	const [user, setUser] = useState(null);
 	const [supabaseConfigured, setSupabaseConfigured] = useState(false);
 	const [authLoading, setAuthLoading] = useState(true);
-	const [dataVersion, setDataVersion] = useState(0);
+	const [session, setSession] = useState(null);
 
 	useEffect(() => {
 		const env = getSupabaseEnv();
 		const client = createSupabase();
-		setSupabaseConfigured(Boolean(env));
+		setSupabaseConfigured(env);
 		setSupabase(client);
 
 		let alive = true;
@@ -30,12 +30,10 @@ export function AppProvider({ children }) {
 				return;
 			}
 
-			const { data, error } = await client.auth.getUser();
+			const { data: { session: initialSession } } = await client.auth.getSession();
 			if (!alive) return;
-			if (error) {
-				console.warn(error);
-			}
-			const nextUser = data?.user ?? null;
+			setSession(initialSession);
+			const nextUser = initialSession?.user ?? null;
 			setUser(nextUser);
 			if (nextUser) setApi(new SupabaseHabitApi(client, nextUser.id));
 			else setApi(null);
@@ -46,6 +44,7 @@ export function AppProvider({ children }) {
 
 		const { data: sub } = client
 			? client.auth.onAuthStateChange((_event, session) => {
+					setSession(session);
 					const nextUser = session?.user ?? null;
 					setUser(nextUser);
 					if (nextUser) setApi(new SupabaseHabitApi(client, nextUser.id));
@@ -68,6 +67,7 @@ export function AppProvider({ children }) {
 			dataVersion,
 			supabaseConfigured,
 			user,
+			session,
 			authLoading,
 			auth: {
 				signInWithOtp: async (email) => {
@@ -101,6 +101,21 @@ export function AppProvider({ children }) {
 					});
 					if (error) throw error;
 				},
+				signInWithGoogle: async () => {
+					if (!supabase) throw new Error('Supabase is not configured.');
+					const { error } = await supabase.auth.signInWithOAuth({
+						provider: 'google',
+						options: {
+							redirectTo: window.location.origin + window.location.pathname,
+							scopes: 'https://www.googleapis.com/auth/calendar.readonly',
+							queryParams: {
+								access_type: 'offline',
+								prompt: 'consent',
+							},
+						},
+					});
+					if (error) throw error;
+				},
 				signOut: async () => {
 					if (!supabase) return;
 					const { error } = await supabase.auth.signOut();
@@ -108,7 +123,7 @@ export function AppProvider({ children }) {
 				},
 			},
 		}),
-		[api, dataVersion, supabaseConfigured, user, authLoading, supabase],
+		[api, dataVersion, supabaseConfigured, user, session, authLoading, supabase],
 	);
 
 	return (

@@ -126,15 +126,39 @@ function Topbar() {
   );
 }
 
+// ─── Mobile Bottom Nav ───────────────────────────────────────────────────────
+function BottomNav() {
+  return (
+    <nav className="mobileNav" aria-label="Mobile navigation">
+      {NAV_ITEMS.map((item) => (
+        <NavLink
+          key={item.to}
+          end={item.to === "/"}
+          className={({ isActive }) => (isActive ? "navItem isActive" : "navItem")}
+          to={item.to}
+          style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, color: 'inherit' }}
+        >
+          <span style={{ fontSize: '20px' }}>{item.icon}</span>
+          <span style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.label}</span>
+        </NavLink>
+      ))}
+    </nav>
+  );
+}
+
 // ─── App Shell ───────────────────────────────────────────────────────────────
 function AppShell() {
+  const location = useLocation();
+  const isToday = location.pathname === "/";
+
   return (
     <div className="app">
       <div className="shell">
         <Sidebar />
         <div className="mainShell">
-          <Topbar />
-          <main className="content" id="view">
+          {/* Hide topbar on Today page because it has its own Greeting card in the Bento grid */}
+          {!isToday && <Topbar />}
+          <main className="content" id="view" style={isToday ? { background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 } : {}}>
             <AuthGate>
               <Routes>
                 <Route path="/"         element={<TodayPage />} />
@@ -147,6 +171,7 @@ function AppShell() {
           </main>
         </div>
       </div>
+      <BottomNav />
       <ToastViewport />
     </div>
   );

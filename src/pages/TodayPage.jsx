@@ -166,7 +166,7 @@ export default function TodayPage() {
 				if (!alive) return;
 				const activeHabits = h.filter((x) => !x.archivedAt);
 				setHabits(activeHabits);
-				setEntriesByKey(new Map(e.map((x) => [x.id, x])));
+				setEntriesByKey(new Map(e.map((x) => [`${x.habitId}__${x.date}`, x])));
 			})
 			.catch((err) => console.error(err));
 		return () => { alive = false; };
@@ -176,30 +176,77 @@ export default function TodayPage() {
 		() => habits.filter((h) => isDueOn(h, today)),
 		[habits, today],
 	);
+
 	const entriesByHabitToday = useMemo(() => {
 		const map = new Map();
 		for (const h of habits)
 			map.set(h.id, entriesByKey.get(`${h.id}__${today}`) ?? null);
 		return map;
 	}, [habits, entriesByKey, today]);
+
 	const summary = useMemo(
 		() => computeTodaySummary(habits, entriesByHabitToday, today),
 		[habits, entriesByHabitToday, today],
 	);
 
+	// Generate small heatmap data for the last 28 days
+	const heatmapData = useMemo(() => {
+		const cells = [];
+		for (let i = 27; i >= 0; i--) {
+			const d = new Date();
+			d.setDate(d.getDate() - i);
+			const iso = d.toISOString().split('T')[0];
+			let count = 0;
+			for (const h of habits) {
+				if (entriesByKey.has(`${h.id}__${iso}`)) count++;
+			}
+			cells.push({ iso, count });
+		}
+		return cells;
+	}, [habits, entriesByKey]);
+
 	if (!isReady) return <div className="card"><p className="subtle">Loading…</p></div>;
 
 	return (
-		<div className="grid two">
-			<div className="stack">
-				<div className="card">
+		<div className="bento">
+			{/* Row 1: Focus & Stats */}
+			<div className="span-8 stack">
+				<div className="card" style={{ background: 'var(--surface-bright)', border: 'none' }}>
 					<div className="sectionHeader">
-						<h2>Today</h2>
-						<span className="badge brand">{summary.doneCount}/{summary.dueCount} done</span>
+						<div className="stack" style={{ gap: 4 }}>
+							<span className="greeting">Good morning</span>
+							<h2>Your day at a glance</h2>
+						</div>
+						<div className="row" style={{ gap: 8 }}>
+							<span className="badge brand" style={{ fontSize: '11px', padding: '6px 12px' }}>
+								{summary.doneCount}/{summary.dueCount} Complete
+							</span>
+						</div>
 					</div>
 					<Kpis today={today} dueCount={summary.dueCount} doneCount={summary.doneCount} />
 				</div>
+			</div>
 
+			<div className="span-4 stack">
+				<div className="card">
+					<div className="sectionHeader">
+						<h2>Consistency</h2>
+						<span className="subtle">Last 4 weeks</span>
+					</div>
+					<div className="heatmap" style={{ marginTop: 8 }}>
+						{heatmapData.map((cell, idx) => {
+							const level = cell.count === 0 ? '' : cell.count >= 3 ? 'level-4' : cell.count >= 2 ? 'level-2' : 'level-1';
+							return <div key={idx} className={`heatCell ${level}`} title={`${cell.iso}: ${cell.count} habits`} />;
+						})}
+					</div>
+					<div className="row" style={{ marginTop: 8, gap: 4 }}>
+						<span className="subtle" style={{ fontSize: '0.7rem' }}>Keep the streak alive! 🔥</span>
+					</div>
+				</div>
+			</div>
+
+			{/* Row 2: Habits vs Player */}
+			<div className="span-8">
 				{due.length === 0 ? (
 					<EmptyState
 						title="Nothing due today"
@@ -209,8 +256,8 @@ export default function TodayPage() {
 				) : (
 					<div className="card">
 						<div className="sectionHeader">
-							<h2>Habits due</h2>
-							<span className="subtle">{due.length} scheduled</span>
+							<h2>Daily Habits</h2>
+							<span className="subtle">{due.length} to go</span>
 						</div>
 						<div className="list">
 							{due.map((h) => {
@@ -243,9 +290,17 @@ export default function TodayPage() {
 				)}
 			</div>
 
-			<div className="stack">
+			<div className="span-4 stack">
 				<ProductivityHub />
 			</div>
+
+			{/* Floating Action Button */}
+			<a href="#/habits" className="fab" title="New Habit">
+				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+					<line x1="12" y1="5" x2="12" y2="19"></line>
+					<line x1="5" y1="12" x2="19" y2="12"></line>
+				</svg>
+			</a>
 		</div>
 	);
 }

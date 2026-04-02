@@ -79,7 +79,7 @@ export default function InsightsPage() {
       .then(([h, e]) => {
         if (!alive) return;
         setHabits(h.filter((x) => !x.archivedAt));
-        setEntriesByKey(new Map(e.map((x) => [x.id, x])));
+        setEntriesByKey(new Map(e.map((x) => [`${x.habitId}__${x.date}`, x])));
       })
       .catch((err) => console.error(err));
     return () => { alive = false; };
@@ -103,6 +103,23 @@ export default function InsightsPage() {
     return rate;
   }, [overall30.days, habits, entriesByKey]);
 
+  // Generate 12-month heatmap data
+  const heatmapData = useMemo(() => {
+    const days = [];
+    const today = new Date();
+    for (let i = 364; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const iso = d.toISOString().split('T')[0];
+      let count = 0;
+      for (const h of habits) {
+        if (entriesByKey.has(`${h.id}__${iso}`)) count++;
+      }
+      days.push({ iso, count });
+    }
+    return days;
+  }, [habits, entriesByKey]);
+
   if (!isReady) return <div className="card"><p className="subtle">Loading…</p></div>;
 
   if (habits.length === 0) {
@@ -115,19 +132,51 @@ export default function InsightsPage() {
     );
   }
 
-  // Rate badge class helper
   const rateBadge = (rate) => {
     const pct = rate * 100;
     return pct >= 80 ? "badge success" : pct >= 50 ? "badge warning" : "badge danger";
   };
 
   return (
-    <div className="grid two">
-      <div className="stack">
+    <div className="bento">
+      {/* Year View Heatmap */}
+      <div className="span-12 stack">
+        <div className="card" style={{ background: 'var(--surface-container)', border: 'none' }}>
+          <div className="sectionHeader">
+             <div className="stack" style={{ gap: 4 }}>
+              <span className="greeting">Consistency</span>
+              <h2>Year in preview</h2>
+             </div>
+             <span className="badge accent">365 Days</span>
+          </div>
+          <div className="heatmap" style={{ gap: 4, marginTop: 16 }}>
+            {heatmapData.map((cell, idx) => {
+              const level = cell.count === 0 ? '' : cell.count >= 4 ? 'level-4' : cell.count >= 2 ? 'level-2' : 'level-1';
+              return <div key={idx} className={`heatCell ${level}`} title={`${cell.iso}: ${cell.count} habits`} style={{ width: 12, height: 12 }} />;
+            })}
+          </div>
+          <div className="row" style={{ marginTop: 12, justifyContent: 'flex-end', gap: 12 }}>
+            <div className="row" style={{ gap: 4 }}>
+              <div className="heatCell" style={{ width: 10, height: 10 }} />
+              <span className="subtle" style={{ fontSize: '10px' }}>None</span>
+            </div>
+            <div className="row" style={{ gap: 4 }}>
+              <div className="heatCell level-1" style={{ width: 10, height: 10 }} />
+              <span className="subtle" style={{ fontSize: '10px' }}>Some</span>
+            </div>
+            <div className="row" style={{ gap: 4 }}>
+              <div className="heatCell level-4" style={{ width: 10, height: 10 }} />
+              <span className="subtle" style={{ fontSize: '10px' }}>Peak</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="span-8 stack">
         {/* KPI overview */}
         <div className="card">
           <div className="sectionHeader">
-            <h2>Insights</h2>
+            <h2>Momentum Control</h2>
             <span className="badge accent">Last 30 days</span>
           </div>
           <div className="kpiGrid">
@@ -140,8 +189,8 @@ export default function InsightsPage() {
               <div className="value">{fmtPct(overall30.rate)}</div>
             </div>
             <div className="kpi">
-              <div className="label">Active</div>
-              <div className="value">{habits.length}</div>
+              <div className="label">System Load</div>
+              <div className="value" style={{ fontSize: '1.2rem' }}>{habits.length} Habits</div>
             </div>
           </div>
         </div>
@@ -149,50 +198,50 @@ export default function InsightsPage() {
         {/* 30-day trend chart */}
         <div className="card">
           <div className="sectionHeader">
-            <h2>30-day trend</h2>
+            <h2>Trend Analysis</h2>
             <span className={rateBadge(overall30.rate)}>{fmtPct(overall30.rate)}</span>
           </div>
-          <p className="subtle">If this line is flat, simplify habits. If it's rising, scale targets slowly.</p>
-          <div className="sparkline-wrap" style={{ marginTop: 4 }}>
+          <div className="sparkline-wrap" style={{ marginTop: 12 }}>
             <Sparkline points={dailyRate.map((x) => Math.round(x * 100))} />
           </div>
+          <p className="subtle" style={{ marginTop: 12 }}>Rising trend indicates successful baseline integration. Flat or falling lines suggest habit overload.</p>
         </div>
       </div>
 
       {/* Habit streaks */}
-      <div className="card">
-        <h2>Habit streaks</h2>
-        <div className="list">
-          {habits.map((h) => {
-            const streak = currentStreak(h, entriesByKey, isoToday());
-            const stats = completionRateLastNDays([h], entriesByKey, 30);
-            const pct = Math.round(stats.rate * 100);
-            const streakClass = streak >= 7 ? "badge success" : streak >= 3 ? "badge warning" : "badge";
+      <div className="span-4 stack">
+        <div className="card" style={{ height: '100%' }}>
+          <h2>Stability index</h2>
+          <div className="list" style={{ marginTop: 12 }}>
+            {habits.map((h) => {
+              const streak = currentStreak(h, entriesByKey, isoToday());
+              const stats = completionRateLastNDays([h], entriesByKey, 30);
+              const pct = Math.round(stats.rate * 100);
+              const streakClass = streak >= 7 ? "badge success" : streak >= 3 ? "badge warning" : "badge";
 
-            return (
-              <div key={h.id} className="item">
-                <div className="row between">
-                  <div className="row" style={{ gap: 10, minWidth: 0 }}>
-                    <div
-                      className="dot"
-                      style={{
-                        background: h.color,
-                        boxShadow: `0 0 0 3px ${h.color}30`,
-                        width: 12, height: 12,
-                      }}
-                    />
-                    <div className="itemName">{h.name}</div>
-                  </div>
-                  <div className="row" style={{ gap: 8 }}>
-                    <span className={rateBadge(stats.rate)}>{pct}%</span>
-                    <span className={streakClass}>
-                      {streak > 0 ? `🔥 ${streak}` : "—"}
-                    </span>
+              return (
+                <div key={h.id} className="item">
+                  <div className="row between">
+                    <div className="row" style={{ gap: 10, minWidth: 0 }}>
+                      <div
+                        className="dot"
+                        style={{
+                          background: h.color,
+                          width: 10, height: 10,
+                        }}
+                      />
+                      <div className="itemName" style={{ fontSize: '0.85rem' }}>{h.name}</div>
+                    </div>
+                    <div className="row" style={{ gap: 6 }}>
+                      <span className={streakClass} style={{ fontSize: '9px' }}>
+                        {streak > 0 ? `🔥 ${streak}` : "—"}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
