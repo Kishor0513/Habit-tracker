@@ -18,7 +18,7 @@ import {
   radius,
 } from "../ui/components";
 
-const COLORS = ["#c65d2e", "#1f6b5c", "#db7c28", "#5278c1", "#b53f32", "#a35d8f", "#8c7a3d"];
+const COLORS = ["#8b5cf6", "#a855f7", "#ec4899", "#f472b6", "#c084fc", "#ef4444", "#7c3aed"];
 
 function HabitEditor({ initial, onCancel, onSave }) {
   const [name, setName] = useState(initial?.name ?? "");
@@ -171,8 +171,8 @@ export default function HabitsScreen() {
 
   return (
     <Screen
-      title="Design repeatable routines."
-      subtitle="Keep habits specific, visible, and easy to maintain."
+      title="Habit Systems"
+      subtitle="Build the same premium habit architecture you see on the web app."
       eyebrow="Habit architecture"
       scroll
       right={
@@ -192,7 +192,7 @@ export default function HabitsScreen() {
       ]}
     >
       <Card tone="accent">
-        <SectionTitle eyebrow="Overview" title="Your operating system" subtitle="Good habits should be obvious to start and boring to repeat." />
+        <SectionTitle eyebrow="Overview" title="Your operating system" subtitle="Make each habit obvious, measurable, and easy to repeat." />
         <View style={{ flexDirection: "row", gap: 10 }}>
           <StatCard label="Active habits" value={habits.length} accent />
           <StatCard label="Tracked window" value="14d" />

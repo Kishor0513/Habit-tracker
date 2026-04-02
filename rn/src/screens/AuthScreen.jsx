@@ -13,8 +13,8 @@ export default function AuthScreen() {
 
   return (
     <Screen
-      title="Sign in to sync."
-      subtitle="Supabase is configured, so this device can use cloud-backed data."
+      title="Premium sign in."
+      subtitle="Access the synced workspace with the same account flow used by the web app."
       eyebrow="Account access"
       scroll
       heroStats={[

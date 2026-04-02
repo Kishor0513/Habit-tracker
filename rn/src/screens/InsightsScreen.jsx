@@ -56,8 +56,8 @@ export default function InsightsScreen() {
 
   return (
     <Screen
-      title="Read the trend before reacting."
-      subtitle="Insights are useful when they help you simplify or scale at the right time."
+      title="Insights"
+      subtitle="Review momentum, consistency, and streak quality with the same premium reporting style."
       eyebrow="Performance review"
       scroll
       heroStats={[

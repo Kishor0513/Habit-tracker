@@ -105,7 +105,7 @@ export default function SettingsScreen() {
   return (
     <>
       <Screen
-        title="Control the workspace."
+        title="Settings"
         subtitle="Templates, sync, import, export, and integrations live here."
         eyebrow="Workspace control"
         scroll

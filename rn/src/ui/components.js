@@ -10,8 +10,9 @@ export function Screen({ title, subtitle, eyebrow, children, right, scroll = fal
       <View style={styles.bgOrbA} />
       <View style={styles.bgOrbB} />
       <View style={styles.hero}>
+        <View style={styles.heroGlow} />
         <View style={styles.heroCopy}>
-          <Text style={styles.eyebrow}>{eyebrow || "Habit Tracker"}</Text>
+          <Text style={styles.eyebrow}>{eyebrow || "Habit Workspace"}</Text>
           <View style={styles.heroTopRow}>
             <View style={{ flex: 1 }}>
               <Text style={styles.h1}>{title}</Text>
@@ -130,7 +131,7 @@ export function Field({
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={colors.muted}
+        placeholderTextColor={colors.faint}
         secureTextEntry={secureTextEntry}
         keyboardType={keyboardType}
         multiline={multiline}
@@ -163,7 +164,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 14,
-    gap: 16,
+    gap: 18,
   },
   bgOrbA: {
     position: "absolute",
@@ -172,8 +173,8 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 999,
-    backgroundColor: "rgba(122,168,255,0.2)",
-    opacity: 0.65,
+    backgroundColor: "rgba(168,85,247,0.18)",
+    opacity: 0.72,
   },
   bgOrbB: {
     position: "absolute",
@@ -182,10 +183,11 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 999,
-    backgroundColor: "rgba(132,216,255,0.18)",
-    opacity: 0.7,
+    backgroundColor: "rgba(236,72,153,0.14)",
+    opacity: 0.72,
   },
   hero: {
+    overflow: "hidden",
     gap: 14,
     padding: 22,
     borderRadius: radius.xl,
@@ -193,6 +195,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
     ...shadow.card,
+  },
+  heroGlow: {
+    position: "absolute",
+    width: 180,
+    height: 180,
+    borderRadius: 999,
+    right: -40,
+    top: -30,
+    backgroundColor: "rgba(244,114,182,0.12)",
   },
   heroCopy: {
     gap: 8,
@@ -206,14 +217,14 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   eyebrow: {
-    color: colors.brandStrong,
+    color: colors.faint,
     fontSize: 11,
     letterSpacing: 1.6,
     textTransform: "uppercase",
     fontWeight: "700",
   },
   h1: {
-    color: colors.text,
+    color: colors.textStrong,
     fontSize: 32,
     lineHeight: 34,
     fontWeight: "800",
@@ -236,23 +247,23 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     backgroundColor: colors.panelMuted,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.72)",
+    borderColor: "rgba(255,255,255,0.08)",
     justifyContent: "space-between",
   },
   heroStatLabel: {
-    color: colors.muted,
+    color: colors.faint,
     fontSize: 11,
     letterSpacing: 1.2,
     textTransform: "uppercase",
     fontWeight: "700",
   },
   heroStatValue: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: "700",
+    color: colors.textStrong,
+    fontSize: 24,
+    fontWeight: "800",
   },
   body: {
-    gap: 14,
+    gap: 16,
   },
   card: {
     padding: 18,
@@ -264,8 +275,8 @@ const styles = StyleSheet.create({
     ...shadow.card,
   },
   cardAccent: {
-    backgroundColor: "rgba(242,248,255,0.78)",
-    borderColor: "rgba(47,124,246,0.16)",
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderColor: colors.lineStrong,
   },
   sectionHead: {
     flexDirection: "row",
@@ -273,7 +284,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   sectionEyebrow: {
-    color: colors.brandStrong,
+    color: colors.faint,
     fontSize: 11,
     textTransform: "uppercase",
     letterSpacing: 1.2,
@@ -281,7 +292,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     marginTop: 2,
-    color: colors.text,
+    color: colors.textStrong,
     fontSize: 20,
     fontWeight: "800",
     letterSpacing: -0.5,
@@ -303,15 +314,15 @@ const styles = StyleSheet.create({
   },
   statCardAccent: {
     backgroundColor: colors.brandSoft,
-    borderColor: "rgba(198,93,46,0.18)",
+    borderColor: colors.lineStrong,
   },
   statLabel: {
-    color: colors.muted,
+    color: colors.faint,
     fontSize: 12,
     lineHeight: 16,
   },
   statValue: {
-    color: colors.text,
+    color: colors.textStrong,
     fontSize: 26,
     lineHeight: 28,
     fontWeight: "800",
@@ -323,7 +334,7 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.lineStrong,
+    borderColor: colors.line,
     backgroundColor: colors.panelMuted,
     alignItems: "center",
     justifyContent: "center",
@@ -334,22 +345,22 @@ const styles = StyleSheet.create({
   },
   btnPrimary: {
     backgroundColor: colors.brand,
-    borderColor: colors.brand,
+    borderColor: colors.brandStrong,
     ...shadow.strong,
   },
   btnDanger: {
     backgroundColor: colors.dangerSoft,
-    borderColor: "rgba(181,63,50,0.18)",
+    borderColor: "rgba(248,113,113,0.18)",
   },
   btnGhost: {
     backgroundColor: "transparent",
-    borderColor: "transparent",
+    borderColor: colors.line,
   },
   btnDisabled: {
     opacity: 0.55,
   },
   btnText: {
-    color: colors.text,
+    color: colors.textStrong,
     fontWeight: "700",
     fontSize: 14,
   },
@@ -370,10 +381,10 @@ const styles = StyleSheet.create({
   },
   pillActive: {
     backgroundColor: colors.brandSoft,
-    borderColor: "rgba(47,124,246,0.18)",
+    borderColor: colors.lineStrong,
   },
   pillText: {
-    color: colors.text,
+    color: colors.textStrong,
     fontWeight: "700",
     fontSize: 13,
   },
@@ -384,7 +395,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   fieldLabel: {
-    color: colors.muted,
+    color: colors.faint,
     fontSize: 12,
     fontWeight: "700",
     letterSpacing: 0.4,
@@ -397,8 +408,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.line,
-    backgroundColor: "rgba(255,255,255,0.7)",
-    color: colors.text,
+    backgroundColor: colors.panelSoft,
+    color: colors.textStrong,
   },
   textarea: {
     minHeight: 110,
@@ -408,7 +419,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   emptyTitle: {
-    color: colors.text,
+    color: colors.textStrong,
     fontSize: 20,
     fontWeight: "800",
     letterSpacing: -0.4,

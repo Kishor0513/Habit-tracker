@@ -101,8 +101,8 @@ export default function ProjectsScreen() {
 
   return (
     <Screen
-      title="Connect effort to outcomes."
-      subtitle="Projects stay honest when the supporting habits are visible."
+      title="Projects"
+      subtitle="Tie habits to outcomes with the same premium structure as the web app."
       eyebrow="Longer horizon"
       scroll
       right={

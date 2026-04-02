@@ -120,21 +120,21 @@ export default function TodayScreen() {
 
   return (
     <Screen
-      title="Run the day cleanly."
-      subtitle="See what is due, finish the essentials, and keep progress visible."
-      eyebrow="Calm execution"
+      title="Today’s Pulse"
+      subtitle="Run the day with the same premium control-room flow as the web app."
+      eyebrow="Daily execution"
       scroll
       heroStats={[
-        { label: "Date", value: today },
-        { label: "Due", value: summary.dueCount },
-        { label: "Done", value: summary.doneCount },
+        { label: "Completion", value: `${summary.dueCount ? Math.round((summary.doneCount / summary.dueCount) * 100) : 0}%` },
+        { label: "Due today", value: summary.dueCount },
+        { label: "Active habits", value: habits.length },
       ]}
     >
       <Card tone="accent">
         <SectionTitle
-          eyebrow="Today"
-          title="Daily scoreboard"
-          subtitle="Use this view to keep the list short and the signals honest."
+          eyebrow="Execution queue"
+          title="What needs to happen next"
+          subtitle={`${today} • ${summary.doneCount} of ${summary.dueCount} habits completed`}
         />
         <View style={{ flexDirection: "row", gap: 10 }}>
           <StatCard label="Due habits" value={summary.dueCount} accent />
@@ -143,9 +143,9 @@ export default function TodayScreen() {
       </Card>
 
       <SectionTitle
-        eyebrow="Active list"
-        title={due.length ? "What needs attention now" : "Nothing due right now"}
-        subtitle={due.length ? "Start with the easiest win and keep the pace steady." : "Add a habit in the Habits tab or review your schedule."}
+        eyebrow="Habits"
+        title={due.length ? "Execution queue" : "Nothing due right now"}
+        subtitle={due.length ? "Start with the easiest win and keep momentum visible." : "Add a habit in the Habits tab or review your schedule."}
       />
 
       {due.length === 0 ? (
