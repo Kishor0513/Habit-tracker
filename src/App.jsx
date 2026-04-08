@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import AuthGate from './components/AuthGate.jsx';
+import CommandPalette from './components/CommandPalette.jsx';
 import CircularClock from './components/CircularClock.jsx';
 import ToastViewport from './components/ToastViewport.jsx';
 import { isoToday } from './lib/date.js';
@@ -257,6 +258,7 @@ function AppShell({ isDark, onThemeToggle }) {
 				onThemeToggle={onThemeToggle}
 			/>
 			<div className="mainArea">
+				<CommandPalette />
 				<Topbar />
 				<Routes>
 					<Route

@@ -141,6 +141,11 @@ export default function ProductivityHub() {
 						<div>
 							<div className="panelEyebrow">Focus session</div>
 							<h3 className="premiumPanelTitle">Remaining time</h3>
+							{focus.selectedHabitName ? (
+								<div className="subtle" style={{ marginTop: 6 }}>
+									Linked habit: {focus.selectedHabitName}
+								</div>
+							) : null}
 						</div>
 						<span className={focus.running ? 'badge success' : 'badge'}>{sessionLabel}</span>
 					</div>

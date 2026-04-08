@@ -13,6 +13,7 @@ import {
 	spotifySeek,
 	startSpotifyLogin,
 } from '../lib/spotify.js';
+import { useApp } from './AppState.jsx';
 import { useToast } from './ToastState.jsx';
 
 const StudioStateContext = createContext(null);
@@ -33,6 +34,7 @@ function writeJson(key, value) {
 }
 
 export function StudioProvider({ children }) {
+	const { api, user, refresh } = useApp();
 	const toast = useToast();
 	const spotifyClientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID?.trim() ?? '';
 	const redirectUri = window.location.origin + window.location.pathname;
@@ -46,6 +48,8 @@ export function StudioProvider({ children }) {
 	const [running, setRunning] = useState(false);
 	const [autoFullscreen, setAutoFullscreen] = useState(true);
 	const [focusHistory, setFocusHistory] = useState(() => readJson(FOCUS_HISTORY_KEY, []));
+	const [selectedHabitId, setSelectedHabitId] = useState('');
+	const [selectedHabitName, setSelectedHabitName] = useState('');
 
 	const [spotifyMe, setSpotifyMe] = useState(null);
 	const [spotifyState, setSpotifyState] = useState(null);
@@ -78,6 +82,17 @@ export function StudioProvider({ children }) {
 						},
 						...current,
 					].slice(0, 12));
+					if (api && selectedHabitId) {
+						api.upsertHabitSession({
+							habitId: selectedHabitId,
+							userId: user?.id ?? 'local',
+							startTime: focusStartRef.current ?? new Date().toISOString(),
+							endTime: new Date().toISOString(),
+							playlistId: spotifyState?.context?.uri ?? spotifyState?.item?.album?.id ?? '',
+							success: true,
+							durationSeconds: focusMax,
+						}).then(() => refresh()).catch(() => {});
+					}
 					focusStartRef.current = null;
 					if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
 						new Notification('Focus session complete', { body: 'Your countdown reached zero.' });
@@ -89,7 +104,7 @@ export function StudioProvider({ children }) {
 			});
 		}, 1000);
 		return () => window.clearInterval(id);
-	}, [running, focusMax, toast]);
+	}, [api, focusMax, refresh, running, selectedHabitId, spotifyState, toast, user?.id]);
 
 	useEffect(() => {
 		if (!spotifyClientId || authCompletedRef.current) return;
@@ -191,6 +206,17 @@ export function StudioProvider({ children }) {
 				},
 				...current,
 			].slice(0, 12));
+			if (api && selectedHabitId) {
+				api.upsertHabitSession({
+					habitId: selectedHabitId,
+					userId: user?.id ?? 'local',
+					startTime: focusStartRef.current,
+					endTime: new Date().toISOString(),
+					playlistId: spotifyState?.context?.uri ?? spotifyState?.item?.album?.id ?? '',
+					success: false,
+					durationSeconds: focusMax - focusSeconds,
+				}).then(() => refresh()).catch(() => {});
+			}
 		}
 		applyCustomDuration(customMinutes);
 		focusStartRef.current = null;
@@ -223,6 +249,10 @@ export function StudioProvider({ children }) {
 			focusSeconds,
 			focusMax,
 			running,
+			selectedHabitId,
+			setSelectedHabitId,
+			selectedHabitName,
+			setSelectedHabitName,
 			autoFullscreen,
 			setAutoFullscreen,
 			focusHistory,
@@ -261,6 +291,8 @@ export function StudioProvider({ children }) {
 		focusHistory,
 		focusMax,
 		focusSeconds,
+		selectedHabitId,
+		selectedHabitName,
 		redirectUri,
 		running,
 		spotifyAuthed,

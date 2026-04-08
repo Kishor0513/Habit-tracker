@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { completionByWeekday, mostSkippedHabits, playlistUsageAndCompletion } from "../src/lib/analytics.js";
 import { addDays, dayOfWeek, isoToDate, dateToISO, startOfISOWeek } from "../src/lib/date.js";
 import { entryMeetsTarget, EntryStatus, HabitType, isDueOn, ScheduleKind } from "../src/lib/habits.js";
 import { currentStreak, weeklyGoalProgress } from "../src/lib/stats.js";
@@ -78,10 +79,35 @@ function testWeeklyGoal() {
   assert.equal(result.met, true);
 }
 
+function testAnalytics() {
+  const habits = [
+    { id: "h1", archivedAt: null, type: HabitType.binary, schedule: { kind: ScheduleKind.daily } },
+    { id: "h2", archivedAt: null, type: HabitType.binary, schedule: { kind: ScheduleKind.daily } },
+  ];
+  const entries = new Map([
+    ["h1__2026-03-24", { value: 1, status: EntryStatus.done }],
+    ["h2__2026-03-24", { value: 0, status: EntryStatus.skipped }],
+  ]);
+  const weekday = completionByWeekday(habits, entries, ["2026-03-24"]);
+  assert.equal(weekday.find((item) => item.weekday === 2)?.done, 1);
+
+  const skipped = mostSkippedHabits(habits, entries, ["2026-03-24"]);
+  assert.equal(skipped[0].habit.id, "h2");
+
+  const playlists = playlistUsageAndCompletion([
+    { playlistId: "playlist:1", success: true },
+    { playlistId: "playlist:1", success: false },
+    { playlistId: "playlist:2", success: true },
+  ]);
+  assert.equal(playlists[0].playlistId, "playlist:1");
+  assert.equal(playlists[0].sessions, 2);
+}
+
 testDate();
 testTargets();
 testSchedule();
 testStreak();
 testWeeklyGoal();
+testAnalytics();
 
 console.log("OK");

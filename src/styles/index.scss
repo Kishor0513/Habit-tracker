@@ -1358,6 +1358,45 @@ p {
 	animation: fadeUp 0.2s var(--bezier-snap);
 }
 
+.commandPalette {
+	width: min(680px, 92vw);
+	padding: 16px;
+	border-radius: 24px;
+	border: 1px solid var(--border-muted);
+	background: var(--bg-panel-solid);
+	box-shadow: var(--shadow-md);
+}
+
+.commandPaletteInput {
+	height: 48px;
+}
+
+.commandPaletteList {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-top: 14px;
+}
+
+.commandPaletteItem {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 14px 16px;
+	border-radius: 18px;
+	border: 1px solid var(--border-muted);
+	background: transparent;
+	color: var(--text-main);
+	cursor: pointer;
+	transition: all 0.2s var(--bezier-snap);
+}
+
+.commandPaletteItem:hover {
+	background: var(--bg-panel-hover);
+	border-color: var(--border-glow);
+}
+
 @media (max-width: 940px) {
 	.grid.two,
 	.twoCols,

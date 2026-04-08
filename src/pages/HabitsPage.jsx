@@ -81,6 +81,8 @@ function HabitEditor({ initial, onCancel, onSave }) {
   const [skipRule, setSkipRule] = useState(initial?.skipRule ?? "break");
   const [reminderEnabled, setReminderEnabled] = useState(Boolean(initial?.reminder?.enabled));
   const [reminderTime, setReminderTime] = useState(initial?.reminder?.time ?? "08:00");
+  const [priority, setPriority] = useState(initial?.priority ?? "medium");
+  const [linkedPlaylistId, setLinkedPlaylistId] = useState(initial?.linkedPlaylistId ?? "");
 
   function toggleDay(day) {
     setCustomDays((prev) => {
@@ -192,6 +194,11 @@ function HabitEditor({ initial, onCancel, onSave }) {
         <div className="card">
           <h2>Reminder & Recovery</h2>
           <div className="stack">
+            <select className="select" value={priority} onChange={(e) => setPriority(e.target.value)}>
+              <option value="high">High priority</option>
+              <option value="medium">Medium priority</option>
+              <option value="low">Low priority</option>
+            </select>
             <label className="row" style={{ gap: 10 }}>
               <input
                 type="checkbox"
@@ -213,6 +220,21 @@ function HabitEditor({ initial, onCancel, onSave }) {
             </select>
             <ColorPicker value={color} onChange={setColor} />
           </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <h2>Spotify link</h2>
+        <div className="stack">
+          <input
+            className="input"
+            value={linkedPlaylistId}
+            onChange={(e) => setLinkedPlaylistId(e.target.value)}
+            placeholder="Spotify playlist URI or ID"
+          />
+          <p className="subtle" style={{ margin: 0 }}>
+            Used for focus sessions and playlist analytics.
+          </p>
         </div>
       </div>
 
@@ -277,6 +299,8 @@ function HabitEditor({ initial, onCancel, onSave }) {
                 goalFrequency: goal,
                 color,
                 notes: notes.trim(),
+                priority,
+                linkedPlaylistId: linkedPlaylistId.trim(),
                 reminder: { enabled: reminderEnabled, time: reminderTime || "08:00" },
                 skipRule,
               },
@@ -312,6 +336,26 @@ export default function HabitsPage() {
       .catch((err) => console.error(err));
     return () => { alive = false; };
   }, [api, dataVersion]);
+
+  useEffect(() => {
+    function openNewHabit() {
+      setEditing(null);
+      setShowEditor(true);
+    }
+    function openSearch() {
+      setCategory("all");
+      window.setTimeout(() => {
+        const input = document.querySelector('input[placeholder="Search habits, categories, tags"]');
+        input?.focus?.();
+      }, 0);
+    }
+    window.addEventListener("command:add-habit", openNewHabit);
+    window.addEventListener("command:search-habits", openSearch);
+    return () => {
+      window.removeEventListener("command:add-habit", openNewHabit);
+      window.removeEventListener("command:search-habits", openSearch);
+    };
+  }, []);
 
   const categories = useMemo(() => {
     return [...new Set(habits.map((habit) => habit.category).filter(Boolean))];
@@ -424,9 +468,13 @@ export default function HabitsPage() {
                         </span>
                       ) : null}
                       {habit.reminder?.enabled ? <span className="badge accent">Reminds at {habit.reminder.time}</span> : null}
+                      <span className={habit.priority === "high" ? "badge danger" : habit.priority === "medium" ? "badge warning" : "badge"}>
+                        {habit.priority} priority
+                      </span>
                       <span className={habit.skipRule === "protect" ? "badge success" : "badge"}>
                         {habit.skipRule === "protect" ? "skip protects streak" : "skip breaks streak"}
                       </span>
+                      {habit.linkedPlaylistId ? <span className="badge accent">playlist linked</span> : null}
                     </div>
 
                     {(habit.tags ?? []).length ? (
@@ -442,6 +490,7 @@ export default function HabitsPage() {
                         {habit.notes}
                       </div>
                     ) : null}
+
                   </div>
 
                   <div className="row" style={{ gap: 8 }}>

@@ -1,4 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
+import {
+  bestPerformingHabits,
+  bestStreak,
+  completionByWeekday,
+  moodCompletionCorrelation,
+  mostSkippedHabits,
+  playlistUsageAndCompletion,
+  timeOfDaySuccessRate,
+} from "../lib/analytics.js";
 import { isoToday, lastNDays } from "../lib/date.js";
 import { isDueOn, entryMeetsTarget, habitEntryStatus, EntryStatus } from "../lib/habits.js";
 import { completionRateLastNDays, currentStreak, weeklyGoalProgress } from "../lib/stats.js";
@@ -39,16 +48,27 @@ export default function InsightsPage() {
   const { api, isReady, dataVersion } = useApp();
   const [habits, setHabits] = useState([]);
   const [entriesByKey, setEntriesByKey] = useState(new Map());
+  const [entries, setEntries] = useState([]);
+  const [dailyReviews, setDailyReviews] = useState([]);
+  const [habitSessions, setHabitSessions] = useState([]);
   const [activePanel, setActivePanel] = useState(null);
 
   useEffect(() => {
     if (!api) return;
     let alive = true;
-    Promise.all([api.listHabits(), api.listEntries()])
-      .then(([h, e]) => {
+    Promise.all([
+      api.listHabits(),
+      api.listEntries(),
+      api.listDailyReviews?.() ?? Promise.resolve([]),
+      api.listHabitSessions?.() ?? Promise.resolve([]),
+    ])
+      .then(([h, e, reviews, sessions]) => {
         if (!alive) return;
         setHabits(h.filter((x) => !x.archivedAt));
+        setEntries(e);
         setEntriesByKey(new Map(e.map((x) => [`${x.habitId}__${x.date}`, x])));
+        setDailyReviews(reviews ?? []);
+        setHabitSessions(sessions ?? []);
       })
       .catch((err) => console.error(err));
     return () => { alive = false; };
@@ -114,6 +134,17 @@ export default function InsightsPage() {
     }
     return { skipped, protectedSkips };
   }, [habits, entriesByKey]);
+
+  const weekdayPerformance = useMemo(() => completionByWeekday(habits, entriesByKey), [habits, entriesByKey]);
+  const skippedLeaders = useMemo(() => mostSkippedHabits(habits, entriesByKey).slice(0, 5), [habits, entriesByKey]);
+  const topHabits = useMemo(() => bestPerformingHabits(habits, entriesByKey).slice(0, 5), [habits, entriesByKey]);
+  const timeOfDayRates = useMemo(() => timeOfDaySuccessRate(entries), [entries]);
+  const moodCorrelation = useMemo(() => moodCompletionCorrelation(dailyReviews, entries), [dailyReviews, entries]);
+  const playlistMetrics = useMemo(() => playlistUsageAndCompletion(habitSessions), [habitSessions]);
+  const bestStreakOverall = useMemo(
+    () => habits.reduce((best, habit) => Math.max(best, bestStreak(habit, entriesByKey, isoToday())), 0),
+    [habits, entriesByKey],
+  );
 
   if (!isReady) return <div className="card"><p className="subtle">Loading…</p></div>;
 
@@ -185,6 +216,10 @@ export default function InsightsPage() {
               <div className="label">Active habits</div>
               <div className="value" style={{ fontSize: '1.2rem' }}>{habits.length}</div>
             </div>
+            <div className="kpi">
+              <div className="label">Best streak</div>
+              <div className="value" style={{ fontSize: '1.2rem' }}>{bestStreakOverall}</div>
+            </div>
           </div>
         </div>
 
@@ -220,6 +255,27 @@ export default function InsightsPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        <div className="card interactiveSurface" onClick={() => setActivePanel('advanced')}>
+          <div className="sectionHeader">
+            <h2>Advanced analytics</h2>
+            <span className="badge brand">Behavioral</span>
+          </div>
+          <div className="list" style={{ marginTop: 12 }}>
+            <div className="item">
+              <div className="itemName">Most skipped habit</div>
+              <div className="subtle" style={{ marginTop: 6 }}>{skippedLeaders[0]?.habit?.name ?? '—'}</div>
+            </div>
+            <div className="item">
+              <div className="itemName">Best performing habit</div>
+              <div className="subtle" style={{ marginTop: 6 }}>{topHabits[0]?.habit?.name ?? '—'}</div>
+            </div>
+            <div className="item">
+              <div className="itemName">Top playlist</div>
+              <div className="subtle" style={{ marginTop: 6 }}>{playlistMetrics[0]?.playlistId ?? '—'}</div>
+            </div>
           </div>
         </div>
       </div>
@@ -266,6 +322,7 @@ export default function InsightsPage() {
             activePanel === 'momentum' ? 'Momentum control' :
             activePanel === 'trend' ? 'Trend analysis' :
             activePanel === 'categories' ? 'Category performance' :
+            activePanel === 'advanced' ? 'Advanced analytics' :
             'Stability index'
           }
           onClose={() => setActivePanel(null)}
@@ -332,6 +389,79 @@ export default function InsightsPage() {
                   </div>
                 );
               })}
+            </div>
+          ) : null}
+          {activePanel === 'advanced' ? (
+            <div className="stack">
+              <div className="card">
+                <h3>Completion by weekday</h3>
+                <div className="list" style={{ marginTop: 12 }}>
+                  {weekdayPerformance.map((item) => (
+                    <div key={item.weekday} className="item">
+                      <div className="row between">
+                        <div className="itemName">Day {item.weekday}</div>
+                        <span className="badge">{fmtPct(item.rate)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="card">
+                <h3>Most skipped habits</h3>
+                <div className="list" style={{ marginTop: 12 }}>
+                  {skippedLeaders.map((item) => (
+                    <div key={item.habit.id} className="item">
+                      <div className="row between">
+                        <div className="itemName">{item.habit.name}</div>
+                        <span className="badge">{item.skips} skips</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="card">
+                <h3>Time-of-day success</h3>
+                <div className="list" style={{ marginTop: 12 }}>
+                  {timeOfDayRates.map((item) => (
+                    <div key={item.key} className="item">
+                      <div className="row between">
+                        <div className="itemName">{item.key}</div>
+                        <span className="badge">{fmtPct(item.rate)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="card">
+                <h3>Mood vs completion</h3>
+                <div className="list" style={{ marginTop: 12 }}>
+                  {moodCorrelation.length === 0 ? (
+                    <div className="subtle">Add daily reviews with mood to populate this correlation.</div>
+                  ) : moodCorrelation.map((item) => (
+                    <div key={item.mood} className="item">
+                      <div className="row between">
+                        <div className="itemName">{item.mood}</div>
+                        <span className="badge">{fmtPct(item.rate)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="card">
+                <h3>Playlist correlation</h3>
+                <div className="list" style={{ marginTop: 12 }}>
+                  {playlistMetrics.length === 0 ? (
+                    <div className="subtle">Start focus sessions to generate playlist analytics.</div>
+                  ) : playlistMetrics.map((item) => (
+                    <div key={item.playlistId} className="item">
+                      <div className="row between">
+                        <div className="itemName">{item.playlistId}</div>
+                        <span className="badge">{fmtPct(item.successRate)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           ) : null}
         </Modal>

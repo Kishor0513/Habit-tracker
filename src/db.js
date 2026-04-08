@@ -1,5 +1,5 @@
 const DB_NAME = "habit_tracker_db";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 function reqToPromise(request) {
   return new Promise((resolve, reject) => {
@@ -25,6 +25,19 @@ export async function openDb() {
     }
     if (!db.objectStoreNames.contains("settings")) {
       db.createObjectStore("settings", { keyPath: "key" });
+    }
+    if (!db.objectStoreNames.contains("habitSessions")) {
+      const store = db.createObjectStore("habitSessions", { keyPath: "id" });
+      store.createIndex("byHabitId", "habitId", { unique: false });
+      store.createIndex("byUserDate", "startTime", { unique: false });
+    }
+    if (!db.objectStoreNames.contains("dailyReviews")) {
+      const store = db.createObjectStore("dailyReviews", { keyPath: "id" });
+      store.createIndex("byDate", "date", { unique: false });
+    }
+    if (!db.objectStoreNames.contains("weeklyReviews")) {
+      const store = db.createObjectStore("weeklyReviews", { keyPath: "id" });
+      store.createIndex("byWeekStart", "weekStart", { unique: false });
     }
   };
   return reqToPromise(request);
@@ -58,4 +71,3 @@ export async function put(store, value) {
 export async function del(store, key) {
   return reqToPromise(store.delete(key));
 }
-

@@ -29,6 +29,7 @@ import {
 	weeklyGoalProgress,
 } from '../lib/stats.js';
 import { useApp } from '../state/AppState.jsx';
+import { useStudio } from '../state/StudioState.jsx';
 import { useToast } from '../state/ToastState.jsx';
 
 function HabitTaskRow({ habit, entry, streak, weeklyGoal, onToggle, onSkip, onClear, onSaveQuantity, onSaveNote }) {
@@ -131,12 +132,14 @@ function HabitTaskRow({ habit, entry, streak, weeklyGoal, onToggle, onSkip, onCl
 
 export default function TodayPage() {
 	const { api, isReady, dataVersion, refresh } = useApp();
+	const { focus, spotify } = useStudio();
 	const toast = useToast();
 	const today = isoToday();
 	const [habits, setHabits] = useState([]);
 	const [entriesByKey, setEntriesByKey] = useState(new Map());
 	const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 	const [activeModal, setActiveModal] = useState(null);
+	const [dailyReview, setDailyReview] = useState({ mood: '', notes: '', wins: '', misses: '' });
 
 	useEffect(() => {
 		const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -147,18 +150,51 @@ export default function TodayPage() {
 	useEffect(() => {
 		if (!api) return;
 		let alive = true;
-		Promise.all([api.listHabits(), api.listEntries()])
-			.then(([h, e]) => {
+		Promise.all([api.listHabits(), api.listEntries(), api.listDailyReviews?.() ?? Promise.resolve([])])
+			.then(([h, e, reviews]) => {
 				if (!alive) return;
 				const activeHabits = h.filter((x) => !x.archivedAt);
 				setHabits(activeHabits);
 				setEntriesByKey(new Map(e.map((x) => [`${x.habitId}__${x.date}`, x])));
+				const review = (reviews ?? []).find((item) => item.date === today);
+				if (review) {
+					setDailyReview({
+						mood: review.mood ?? '',
+						notes: review.notes ?? '',
+						wins: review.wins ?? '',
+						misses: review.misses ?? '',
+					});
+				}
 			})
 			.catch((err) => console.error(err));
 		return () => {
 			alive = false;
 		};
 	}, [api, dataVersion]);
+
+	useEffect(() => {
+		async function completeNextHabit() {
+			const targetHabit = due.find((habit) => {
+				const entry = entriesByHabitToday.get(habit.id);
+				return !entryMeetsTarget(habit, entry);
+			});
+			if (!targetHabit) return;
+			const entry = entriesByHabitToday.get(targetHabit.id);
+			await api.setEntry({
+				habitId: targetHabit.id,
+				date: today,
+				value: targetHabit.type === HabitType.binary ? 1 : Number(entry?.value ?? targetHabit.target ?? 0),
+				note: entry?.note ?? '',
+				status: EntryStatus.done,
+			});
+			refresh();
+		}
+		function handler() {
+			completeNextHabit().catch((error) => toast.push(error?.message ?? 'Could not complete habit.'));
+		}
+		window.addEventListener('command:complete-next-habit', handler);
+		return () => window.removeEventListener('command:complete-next-habit', handler);
+	}, [api, due, entriesByHabitToday, refresh, today, toast]);
 
 	const due = useMemo(() => habits.filter((h) => isDueOn(h, today)), [habits, today]);
 	const entriesByHabitToday = useMemo(() => {
@@ -213,6 +249,19 @@ export default function TodayPage() {
 	}, [habits, entriesByKey]);
 
 	const progressPercent = summary.dueCount === 0 ? 0 : Math.round((summary.doneCount / summary.dueCount) * 100);
+	const bestTodayStreak = due.reduce((best, habit) => Math.max(best, currentStreak(habit, entriesByKey, today)), 0);
+	const greeting = (() => {
+		const hour = new Date().getHours();
+		if (hour < 12) return 'Good morning';
+		if (hour < 18) return 'Good afternoon';
+		return 'Good evening';
+	})();
+
+	useEffect(() => {
+		if (!due.length || focus.selectedHabitId) return;
+		focus.setSelectedHabitId(due[0].id);
+		focus.setSelectedHabitName(due[0].name);
+	}, [due, focus]);
 	const completedHabits = due.filter((habit) => entryMeetsTarget(habit, entriesByHabitToday.get(habit.id)));
 	const skippedHabits = due.filter((habit) => habitEntryStatus(habit, entriesByHabitToday.get(habit.id)) === EntryStatus.skipped);
 
@@ -238,9 +287,27 @@ export default function TodayPage() {
 		);
 	}
 
-	return (
-		<div className="pageContent">
-			<div className="row" style={{ gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
+		return (
+			<div className="pageContent">
+				<div className="card">
+					<div className="sectionHeader">
+						<div>
+							<div className="greeting">{greeting}</div>
+							<h2>Daily operating system</h2>
+							<div className="subtle">
+								{spotify.spotifyState?.item?.name
+									? `Now playing: ${spotify.spotifyState.item.name}`
+									: 'Use today as the central execution, focus, and reflection view.'}
+							</div>
+						</div>
+						<div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+							<span className="badge brand">{today}</span>
+							<span className="badge success">{progressPercent}% complete</span>
+							<span className="badge warning">{bestTodayStreak} streak</span>
+						</div>
+					</div>
+				</div>
+				<div className="row" style={{ gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
 				<div className="card interactiveSurface" style={{ minWidth: 160, flex: 1 }} onClick={() => setActiveModal('due')}>
 					<div className="label">Due today</div>
 					<div className="value" style={{ fontSize: '1.6rem', marginTop: 6 }}>{summary.dueCount}</div>
@@ -351,6 +418,69 @@ export default function TodayPage() {
 
 					<div style={{ marginTop: '24px' }}>
 						<ProductivityHub />
+					</div>
+
+					<div className="card" style={{ marginTop: '24px' }}>
+						<div className="sectionHeader">
+							<div>
+								<h2>Daily review</h2>
+								<div className="subtle">Capture reflection, mood, and what to improve before the day closes.</div>
+							</div>
+							<button
+								className="btn primary"
+								type="button"
+								onClick={async () => {
+									await api.upsertDailyReview({
+										date: today,
+										...dailyReview,
+									});
+									toast.push('Daily review saved.');
+									refresh();
+								}}
+							>
+								Save review
+							</button>
+						</div>
+						<div className="grid two" style={{ marginTop: 16 }}>
+							<div className="card">
+								<h2>Mood</h2>
+								<div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+									{['happy', 'neutral', 'tired', 'focused', 'stressed'].map((mood) => (
+										<button
+											key={mood}
+											className={dailyReview.mood === mood ? 'btn primary' : 'btn ghost'}
+											type="button"
+											onClick={() => setDailyReview((current) => ({ ...current, mood }))}
+										>
+											{mood}
+										</button>
+									))}
+								</div>
+								<textarea
+									className="textarea"
+									style={{ marginTop: 12 }}
+									value={dailyReview.notes}
+									onChange={(event) => setDailyReview((current) => ({ ...current, notes: event.target.value }))}
+									placeholder="Quick journal entry"
+								/>
+							</div>
+							<div className="card">
+								<h2>Reflection</h2>
+								<textarea
+									className="textarea"
+									value={dailyReview.wins}
+									onChange={(event) => setDailyReview((current) => ({ ...current, wins: event.target.value }))}
+									placeholder="What went well?"
+								/>
+								<textarea
+									className="textarea"
+									style={{ marginTop: 12 }}
+									value={dailyReview.misses}
+									onChange={(event) => setDailyReview((current) => ({ ...current, misses: event.target.value }))}
+									placeholder="What failed or created friction?"
+								/>
+							</div>
+						</div>
 					</div>
 				</section>
 

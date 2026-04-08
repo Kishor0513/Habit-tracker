@@ -5,8 +5,9 @@ A lightweight, professional habit tracker you can run locally (no external depen
 - Daily tracking (binary + quantity habits)
 - Projects that link to habits (so real-life goals have structure)
 - Insights (streaks, completion rate, recent trends)
+- Advanced analytics (weekday, streak, skips, sessions, mood, playlist correlation)
 - Auth options: magic link and email/password (Supabase)
-- Focus Hub: live clock, monthly calendar, focus timer, and Spotify embed panel
+- Focus Hub: command palette, focus timer, Spotify playback, session history, and daily review
 - Import/export (JSON) and example templates
 
 ## Install
@@ -34,6 +35,7 @@ Important: if you’ve posted your Supabase key publicly, **rotate it** in the S
 ```bash
 VITE_SUPABASE_URL=YOUR_PROJECT_URL
 VITE_SUPABASE_ANON_KEY=YOUR_ANON_KEY
+VITE_APP_URL=http://localhost:5173
 ```
 
 Restart `npm run dev`, then sign in via the email link. Your habits/projects/entries will be stored per-user in Supabase.
@@ -57,6 +59,20 @@ Important:
 - Browser autoplay and Spotify account/device restrictions may still limit automatic playback in some sessions.
 
 If you update this project later, re-run `supabase/schema.sql`. It is idempotent and safely applies missing schema/policies (including settings storage).
+
+### Edge Functions
+
+This repo now includes Supabase Edge Function scaffolding in `supabase/functions/` for:
+
+- `spotify-refresh`
+- `weekly-analytics`
+
+Deploy with the Supabase CLI after logging in:
+
+```bash
+supabase functions deploy spotify-refresh
+supabase functions deploy weekly-analytics
+```
 
 ## How to use (real-life workflow)
 
