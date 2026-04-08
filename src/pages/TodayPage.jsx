@@ -172,6 +172,13 @@ export default function TodayPage() {
 		};
 	}, [api, dataVersion]);
 
+	const due = useMemo(() => habits.filter((h) => isDueOn(h, today)), [habits, today]);
+	const entriesByHabitToday = useMemo(() => {
+		const map = new Map();
+		for (const h of habits) map.set(h.id, entriesByKey.get(`${h.id}__${today}`) ?? null);
+		return map;
+	}, [habits, entriesByKey, today]);
+
 	useEffect(() => {
 		async function completeNextHabit() {
 			const targetHabit = due.find((habit) => {
@@ -195,13 +202,6 @@ export default function TodayPage() {
 		window.addEventListener('command:complete-next-habit', handler);
 		return () => window.removeEventListener('command:complete-next-habit', handler);
 	}, [api, due, entriesByHabitToday, refresh, today, toast]);
-
-	const due = useMemo(() => habits.filter((h) => isDueOn(h, today)), [habits, today]);
-	const entriesByHabitToday = useMemo(() => {
-		const map = new Map();
-		for (const h of habits) map.set(h.id, entriesByKey.get(`${h.id}__${today}`) ?? null);
-		return map;
-	}, [habits, entriesByKey, today]);
 
 	const summary = useMemo(() => computeTodaySummary(habits, entriesByHabitToday, today), [habits, entriesByHabitToday, today]);
 	const skippedCount = useMemo(() => {
