@@ -211,7 +211,7 @@ export default function ProjectsPage() {
             const progressClass = pct >= 80 ? "badge success" : pct >= 50 ? "badge warning" : "badge";
 
             return (
-              <div key={project.id} className="item">
+              <div key={project.id} className="item interactiveSurface" onClick={() => setActiveProject(project)}>
                 <div className="row between" style={{ gap: 14 }}>
                   <div className="stack" style={{ gap: 6, minWidth: 0, flex: 1 }}>
                     <div className="itemName" style={{ fontSize: '1rem' }}>
@@ -226,14 +226,18 @@ export default function ProjectsPage() {
                     </div>
                   </div>
                   <div className="row" style={{ gap: 8 }}>
-                    <button className="btn ghost" type="button" onClick={() => setActiveProject(project)}>
+                    <button className="btn ghost" type="button" onClick={(event) => {
+                      event.stopPropagation();
+                      setActiveProject(project);
+                    }}>
                       Open
                     </button>
                     <button
                       className="btn danger"
                       type="button"
                       style={{ padding: '7px 10px' }}
-                      onClick={async () => {
+                      onClick={async (event) => {
+                        event.stopPropagation();
                         const ok = window.confirm(`Delete project "${project.name}"?`);
                         if (!ok) return;
                         await api.deleteProject(project.id);
@@ -295,4 +299,3 @@ export default function ProjectsPage() {
     </div>
   );
 }
-

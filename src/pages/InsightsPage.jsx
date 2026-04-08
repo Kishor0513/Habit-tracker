@@ -4,6 +4,7 @@ import { isDueOn, entryMeetsTarget, habitEntryStatus, EntryStatus } from "../lib
 import { completionRateLastNDays, currentStreak, weeklyGoalProgress } from "../lib/stats.js";
 import { useApp } from "../state/AppState.jsx";
 import EmptyState from "../components/EmptyState.jsx";
+import Modal from "../components/Modal.jsx";
 
 function fmtPct(x) {
   return `${Math.round(x * 100)}%`;
@@ -38,6 +39,7 @@ export default function InsightsPage() {
   const { api, isReady, dataVersion } = useApp();
   const [habits, setHabits] = useState([]);
   const [entriesByKey, setEntriesByKey] = useState(new Map());
+  const [activePanel, setActivePanel] = useState(null);
 
   useEffect(() => {
     if (!api) return;
@@ -128,7 +130,7 @@ export default function InsightsPage() {
   return (
     <div className="bento">
       <div className="span-12 stack">
-        <div className="card" style={{ background: 'var(--surface-container)', border: 'none' }}>
+        <div className="card interactiveSurface" style={{ background: 'var(--surface-container)', border: 'none' }} onClick={() => setActivePanel('history')}>
           <div className="sectionHeader">
             <div className="stack" style={{ gap: 4 }}>
               <span className="greeting">History</span>
@@ -165,7 +167,7 @@ export default function InsightsPage() {
       </div>
 
       <div className="span-8 stack">
-        <div className="card">
+        <div className="card interactiveSurface" onClick={() => setActivePanel('momentum')}>
           <div className="sectionHeader">
             <h2>Momentum control</h2>
             <span className="badge accent">Last 30 days</span>
@@ -186,7 +188,7 @@ export default function InsightsPage() {
           </div>
         </div>
 
-        <div className="card">
+        <div className="card interactiveSurface" onClick={() => setActivePanel('trend')}>
           <div className="sectionHeader">
             <h2>Trend analysis</h2>
             <span className="badge">{fmtPct(overall30.rate)}</span>
@@ -199,7 +201,7 @@ export default function InsightsPage() {
           </p>
         </div>
 
-        <div className="card">
+        <div className="card interactiveSurface" onClick={() => setActivePanel('categories')}>
           <div className="sectionHeader">
             <h2>Category performance</h2>
             <span className="badge brand">{categoryBreakdown.length} groups</span>
@@ -223,7 +225,7 @@ export default function InsightsPage() {
       </div>
 
       <div className="span-4 stack">
-        <div className="card">
+        <div className="card interactiveSurface" onClick={() => setActivePanel('stability')}>
           <h2>Stability index</h2>
           <div className="list" style={{ marginTop: 12 }}>
             {habits.map((h) => {
@@ -256,6 +258,84 @@ export default function InsightsPage() {
           </div>
         </div>
       </div>
+
+      {activePanel ? (
+        <Modal
+          title={
+            activePanel === 'history' ? 'History details' :
+            activePanel === 'momentum' ? 'Momentum control' :
+            activePanel === 'trend' ? 'Trend analysis' :
+            activePanel === 'categories' ? 'Category performance' :
+            'Stability index'
+          }
+          onClose={() => setActivePanel(null)}
+        >
+          {activePanel === 'history' ? (
+            <div className="list">
+              {heatmapData.map((cell) => (
+                <div key={cell.iso} className="item">
+                  <div className="row between" style={{ gap: 8 }}>
+                    <div className="itemName">{cell.iso}</div>
+                    <span className="badge">{cell.done} done</span>
+                  </div>
+                  <div className="subtle" style={{ marginTop: 6 }}>{cell.skipped} skipped</div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          {activePanel === 'momentum' ? (
+            <div className="list">
+              <div className="item"><div className="itemName">14-day rate</div><div className="subtle" style={{ marginTop: 6 }}>{fmtPct(overall14.rate)}</div></div>
+              <div className="item"><div className="itemName">30-day rate</div><div className="subtle" style={{ marginTop: 6 }}>{fmtPct(overall30.rate)}</div></div>
+              <div className="item"><div className="itemName">Active habits</div><div className="subtle" style={{ marginTop: 6 }}>{habits.length}</div></div>
+            </div>
+          ) : null}
+          {activePanel === 'trend' ? (
+            <div className="list">
+              {overall30.days.map((day, index) => (
+                <div key={day} className="item">
+                  <div className="row between" style={{ gap: 8 }}>
+                    <div className="itemName">{day}</div>
+                    <span className="badge">{fmtPct(dailyRate[index])}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          {activePanel === 'categories' ? (
+            <div className="list">
+              {categoryBreakdown.map((item) => (
+                <div key={item.category} className="item">
+                  <div className="row between" style={{ gap: 8 }}>
+                    <div className="itemName">{item.category}</div>
+                    <span className="badge">{fmtPct(item.completion)}</span>
+                  </div>
+                  <div className="subtle" style={{ marginTop: 6 }}>{item.habits} habits</div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          {activePanel === 'stability' ? (
+            <div className="list">
+              {habits.map((h) => {
+                const streak = currentStreak(h, entriesByKey, isoToday());
+                const weeklyGoal = weeklyGoalProgress(h, entriesByKey);
+                return (
+                  <div key={h.id} className="item">
+                    <div className="row between" style={{ gap: 8 }}>
+                      <div className="itemName">{h.name}</div>
+                      <span className="badge">{streak > 0 ? `${streak} streak` : 'No streak'}</span>
+                    </div>
+                    <div className="subtle" style={{ marginTop: 6 }}>
+                      {weeklyGoal.target > 0 ? `${weeklyGoal.completions}/${weeklyGoal.target} this week` : 'No weekly goal'}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
+        </Modal>
+      ) : null}
     </div>
   );
 }

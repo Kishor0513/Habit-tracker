@@ -175,14 +175,13 @@ p {
 	overflow: hidden;
 }
 
-.sidebarHero {
-	padding: 22px;
+.sidebarHeader {
+	padding: 18px 18px 14px;
 	display: flex;
-	flex-direction: column;
-	gap: 18px;
-	background:
-		linear-gradient(180deg, rgba(255, 255, 255, 0.3), transparent),
-		var(--surface-container);
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	background: rgba(255, 255, 255, 0.08);
 	border-bottom: 1px solid var(--border-muted);
 }
 
@@ -197,11 +196,16 @@ p {
 	font-weight: 700;
 }
 
-.sidebarHeroTop {
+.sidebarBrand {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
 	gap: 12px;
+}
+
+.sidebarBrandText {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
 }
 
 .sidebarAvatar {
@@ -216,61 +220,17 @@ p {
 	box-shadow: 0 18px 30px rgba(124, 58, 237, 0.28);
 }
 
-.sidebarHeroCopy {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-}
-
 .sidebarWorkspace {
-	font-size: 20px;
+	font-size: 18px;
 	font-weight: 700;
-}
-
-.sidebarWorkspaceMeta {
-	font-size: 13px;
-	line-height: 1.55;
-	color: var(--text-muted);
-}
-
-.sidebarStats {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 10px;
-}
-
-.sidebarStat {
-	padding: 12px 14px;
-	border-radius: 18px;
-	background: rgba(255, 255, 255, 0.34);
-	border: 1px solid rgba(255, 255, 255, 0.35);
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-}
-
-[data-theme='dark'] .sidebarStat {
-	background: rgba(255, 255, 255, 0.05);
-	border-color: rgba(255, 255, 255, 0.1);
-}
-
-.sidebarStatValue {
-	font-size: 16px;
-	font-weight: 700;
-}
-
-.sidebarStatLabel {
-	font-size: 11px;
-	text-transform: uppercase;
-	letter-spacing: 0.08em;
-	color: var(--text-faint);
 }
 
 .navGroup {
-	padding: 18px 12px;
+	padding: 16px 12px;
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
+	flex: 1;
 }
 
 .navItem {
@@ -317,6 +277,25 @@ p {
 .mobileNavItemIcon svg {
 	width: 18px;
 	height: 18px;
+}
+
+.sidebarFooter {
+	padding: 14px 18px 18px;
+	border-top: 1px solid var(--border-muted);
+	color: var(--text-faint);
+}
+
+.sidebarFooterLine {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-muted);
+}
+
+.sidebarFooterMeta {
+	margin-top: 4px;
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
 }
 
 .mainArea {
@@ -377,14 +356,53 @@ p {
 	gap: 8px;
 }
 
+.topbarSpotify {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	max-width: 320px;
+	padding: 10px 14px;
+	border-radius: 20px;
+	border: 1px solid var(--border-muted);
+	background: rgba(255, 255, 255, 0.32);
+	backdrop-filter: blur(18px);
+}
+
+[data-theme='dark'] .topbarSpotify {
+	background: rgba(255, 255, 255, 0.04);
+}
+
+.topbarSpotifyInfo {
+	min-width: 0;
+}
+
+.topbarSpotifyLabel {
+	font-size: 10px;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	color: var(--text-faint);
+}
+
+.topbarSpotifyTrack {
+	margin-top: 4px;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--text-main);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
 .topbarClock {
-	min-width: 172px;
-	padding: 12px 16px;
+	min-width: 220px;
+	padding: 10px 14px;
 	border-radius: 20px;
 	border: 1px solid var(--border-muted);
 	background: rgba(255, 255, 255, 0.34);
 	backdrop-filter: blur(20px);
-	text-align: right;
+	display: flex;
+	align-items: center;
+	gap: 12px;
 }
 
 [data-theme='dark'] .topbarClock {
@@ -468,6 +486,16 @@ p {
 
 .panel:hover,
 .card:hover {
+	border-color: var(--border-glow);
+	box-shadow: var(--shadow-md);
+	transform: translateY(-1px);
+}
+
+.interactiveSurface {
+	cursor: pointer;
+}
+
+.interactiveSurface:hover {
 	border-color: var(--border-glow);
 	box-shadow: var(--shadow-md);
 	transform: translateY(-1px);
@@ -661,6 +689,11 @@ p {
 	gap: 12px;
 }
 
+.watchClockCard.compact {
+	flex-direction: row;
+	gap: 0;
+}
+
 .clockFaceWrap {
 	position: relative;
 	width: 220px;
@@ -669,6 +702,21 @@ p {
 	border-radius: 50%;
 	background: transparent;
 	box-shadow: none;
+}
+
+.watchClockCard.compact .clockFaceWrap {
+	width: 54px;
+	height: 54px;
+	padding: 0;
+}
+
+.watchClockCard.compact .clockCenterMark svg {
+	width: 16px;
+	height: 16px;
+}
+
+.watchClockCard.compact .watchTick {
+	stroke-width: 2;
 }
 
 .clockCenterMark {
@@ -2012,9 +2060,13 @@ p {
 
 .focusStudioGrid {
 	display: grid;
-	grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+	grid-template-columns: 1fr;
 	gap: 18px;
 	align-items: stretch;
+}
+
+.focusStudioGrid.isActive {
+	grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
 }
 
 .focusCountdownCard,
@@ -2084,6 +2136,24 @@ p {
 	margin-top: 14px;
 	color: var(--text-muted);
 	font-size: 13px;
+}
+
+.focusHistoryGrid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 14px;
+	margin-top: 18px;
+}
+
+.focusHistoryCard {
+	padding: 16px;
+	border-radius: 20px;
+	border: 1px solid var(--border-muted);
+	background: rgba(255,255,255,0.18);
+}
+
+[data-theme='dark'] .focusHistoryCard {
+	background: rgba(255,255,255,0.03);
 }
 
 .glassPlayerHeader {
@@ -2244,13 +2314,17 @@ p {
 }
 
 @media (max-width: 1100px) {
-	.focusStudioGrid,
+	.focusStudioGrid.isActive,
 	.focusFullscreenShell {
 		grid-template-columns: 1fr;
 	}
 }
 
 @media (max-width: 768px) {
+	.topbarSpotify {
+		display: none;
+	}
+
 	.topbarClock {
 		min-width: 0;
 		padding: 10px 12px;
@@ -2268,6 +2342,10 @@ p {
 	.glassPlayer,
 	.focusFullscreenTimer {
 		padding: 18px;
+	}
+
+	.focusHistoryGrid {
+		grid-template-columns: 1fr;
 	}
 
 	.countdownMachine {

@@ -388,7 +388,14 @@ export default function HabitsPage() {
             const goalLabel = habitGoalLabel(habit);
 
             return (
-              <div key={habit.id} className="item">
+              <div
+                key={habit.id}
+                className="item interactiveSurface"
+                onClick={() => {
+                  setEditing(habit);
+                  setShowEditor(true);
+                }}
+              >
                 <div className="row between" style={{ gap: 14, alignItems: "flex-start" }}>
                   <div className="stack" style={{ gap: 8, minWidth: 0, flex: 1 }}>
                     <div className="row" style={{ gap: 10, minWidth: 0, flexWrap: "wrap" }}>
@@ -441,14 +448,19 @@ export default function HabitsPage() {
                     <button
                       className="btn ghost"
                       type="button"
-                      onClick={() => { setEditing(habit); setShowEditor(true); }}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setEditing(habit);
+                        setShowEditor(true);
+                      }}
                     >
                       Edit
                     </button>
                     <button
                       className="btn danger"
                       type="button"
-                      onClick={async () => {
+                      onClick={async (event) => {
+                        event.stopPropagation();
                         await api.archiveHabit(habit.id);
                         toast.push("Archived.");
                         refresh();

@@ -19,6 +19,7 @@ export default function CircularClock({
 	now = new Date(),
 	title = 'System time',
 	subtitle = '',
+	compact = false,
 }) {
 	const hours = now.getHours() % 12;
 	const minutes = now.getMinutes();
@@ -49,7 +50,7 @@ export default function CircularClock({
 	];
 
 	return (
-		<div className="watchClockCard">
+		<div className={`watchClockCard ${compact ? 'compact' : ''}`}>
 			<div className="clockFaceWrap">
 				<svg
 					className="watchFace"
@@ -105,10 +106,12 @@ export default function CircularClock({
 				</div>
 			</div>
 
-			<div className="watchCaption">
-				<div className="watchCaptionTitle">{title}</div>
-				{subtitle ? <div className="watchCaptionSubtitle">{subtitle}</div> : null}
-			</div>
+			{compact ? null : (
+				<div className="watchCaption">
+					<div className="watchCaptionTitle">{title}</div>
+					{subtitle ? <div className="watchCaptionSubtitle">{subtitle}</div> : null}
+				</div>
+			)}
 		</div>
 	);
 }

@@ -11,6 +11,7 @@ import {
 	YAxis,
 } from 'recharts';
 import ProductivityHub from '../components/ProductivityHub.jsx';
+import Modal from '../components/Modal.jsx';
 import { isoToday } from '../lib/date.js';
 import {
 	entryMeetsTarget,
@@ -135,6 +136,7 @@ export default function TodayPage() {
 	const [habits, setHabits] = useState([]);
 	const [entriesByKey, setEntriesByKey] = useState(new Map());
 	const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+	const [activeModal, setActiveModal] = useState(null);
 
 	useEffect(() => {
 		const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -211,6 +213,22 @@ export default function TodayPage() {
 	}, [habits, entriesByKey]);
 
 	const progressPercent = summary.dueCount === 0 ? 0 : Math.round((summary.doneCount / summary.dueCount) * 100);
+	const completedHabits = due.filter((habit) => entryMeetsTarget(habit, entriesByHabitToday.get(habit.id)));
+	const skippedHabits = due.filter((habit) => habitEntryStatus(habit, entriesByHabitToday.get(habit.id)) === EntryStatus.skipped);
+
+	const modalTitle = activeModal === 'due'
+		? 'Due today'
+		: activeModal === 'completed'
+			? 'Completed today'
+			: activeModal === 'skipped'
+				? 'Skipped today'
+				: activeModal === 'rate'
+					? 'Completion summary'
+					: activeModal === 'queue'
+						? 'Execution queue details'
+						: activeModal === 'graphs'
+							? '7-day trend details'
+							: '';
 
 	if (!isReady) {
 		return (
@@ -223,19 +241,19 @@ export default function TodayPage() {
 	return (
 		<div className="pageContent">
 			<div className="row" style={{ gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
-				<div className="card" style={{ minWidth: 160, flex: 1 }}>
+				<div className="card interactiveSurface" style={{ minWidth: 160, flex: 1 }} onClick={() => setActiveModal('due')}>
 					<div className="label">Due today</div>
 					<div className="value" style={{ fontSize: '1.6rem', marginTop: 6 }}>{summary.dueCount}</div>
 				</div>
-				<div className="card" style={{ minWidth: 160, flex: 1 }}>
+				<div className="card interactiveSurface" style={{ minWidth: 160, flex: 1 }} onClick={() => setActiveModal('completed')}>
 					<div className="label">Completed</div>
 					<div className="value" style={{ fontSize: '1.6rem', marginTop: 6 }}>{summary.doneCount}</div>
 				</div>
-				<div className="card" style={{ minWidth: 160, flex: 1 }}>
+				<div className="card interactiveSurface" style={{ minWidth: 160, flex: 1 }} onClick={() => setActiveModal('skipped')}>
 					<div className="label">Skipped</div>
 					<div className="value" style={{ fontSize: '1.6rem', marginTop: 6 }}>{skippedCount}</div>
 				</div>
-				<div className="card" style={{ minWidth: 160, flex: 1 }}>
+				<div className="card interactiveSurface" style={{ minWidth: 160, flex: 1 }} onClick={() => setActiveModal('rate')}>
 					<div className="label">Completion rate</div>
 					<div className="value" style={{ fontSize: '1.6rem', marginTop: 6 }}>{progressPercent}%</div>
 				</div>
@@ -243,7 +261,7 @@ export default function TodayPage() {
 
 			<div className="todayLayout" style={{ gridTemplateColumns: isMobile ? '1fr' : '1.2fr .8fr' }}>
 				<section>
-					<div className="premiumPanel taskPanel">
+					<div className="premiumPanel taskPanel interactiveSurface" onClick={() => setActiveModal('queue')}>
 						<div className="premiumPanelHeader taskPanelHeader">
 							<div>
 								<div className="panelEyebrow">Habits</div>
@@ -257,7 +275,7 @@ export default function TodayPage() {
 							<div className="sectionProgressFill" style={{ width: `${progressPercent}%` }} />
 						</div>
 
-						<div className="taskPanelBody">
+						<div className="taskPanelBody" onClick={(event) => event.stopPropagation()}>
 							{due.length === 0 ? (
 								<div className="emptyPanelState">System idle. Nothing scheduled for today.</div>
 							) : (
@@ -337,7 +355,7 @@ export default function TodayPage() {
 				</section>
 
 				<section>
-					<div className="premiumPanel">
+					<div className="premiumPanel interactiveSurface" onClick={() => setActiveModal('graphs')}>
 						<div className="premiumPanelHeader">
 							<div>
 								<div className="panelEyebrow">React graphs</div>
@@ -400,6 +418,81 @@ export default function TodayPage() {
 					</div>
 				</section>
 			</div>
+
+			{activeModal ? (
+				<Modal title={modalTitle} onClose={() => setActiveModal(null)}>
+					{activeModal === 'due' ? (
+						<div className="list">
+							{due.length === 0 ? <div className="subtle">No habits are due today.</div> : due.map((habit) => (
+								<div key={habit.id} className="item">
+									<div className="itemName">{habit.name}</div>
+									<div className="subtle" style={{ marginTop: 6 }}>{scheduleLabel(habit)}</div>
+								</div>
+							))}
+						</div>
+					) : null}
+					{activeModal === 'completed' ? (
+						<div className="list">
+							{completedHabits.length === 0 ? <div className="subtle">Nothing completed yet today.</div> : completedHabits.map((habit) => (
+								<div key={habit.id} className="item">
+									<div className="itemName">{habit.name}</div>
+									<div className="subtle" style={{ marginTop: 6 }}>Completed against {targetLabel(habit)}</div>
+								</div>
+							))}
+						</div>
+					) : null}
+					{activeModal === 'skipped' ? (
+						<div className="list">
+							{skippedHabits.length === 0 ? <div className="subtle">No habits skipped today.</div> : skippedHabits.map((habit) => (
+								<div key={habit.id} className="item">
+									<div className="itemName">{habit.name}</div>
+									<div className="subtle" style={{ marginTop: 6 }}>{habit.skipRule === 'protect' ? 'Skip protects streak' : 'Skip breaks streak'}</div>
+								</div>
+							))}
+						</div>
+					) : null}
+					{activeModal === 'rate' ? (
+						<div className="stack">
+							<div className="card">
+								<div className="label">Completion rate</div>
+								<div className="value" style={{ fontSize: '2rem', marginTop: 6 }}>{progressPercent}%</div>
+							</div>
+							<div className="subtle">Based on {summary.doneCount} completed habits out of {summary.dueCount} due today.</div>
+						</div>
+					) : null}
+					{activeModal === 'queue' ? (
+						<div className="list">
+							{due.map((habit) => {
+								const entry = entriesByHabitToday.get(habit.id);
+								return (
+									<div key={habit.id} className="item">
+										<div className="row between" style={{ gap: 8 }}>
+											<div className="itemName">{habit.name}</div>
+											<span className="badge">{habitEntryStatus(habit, entry)}</span>
+										</div>
+										<div className="subtle" style={{ marginTop: 6 }}>{targetLabel(habit)} · {scheduleLabel(habit)}</div>
+									</div>
+								);
+							})}
+						</div>
+					) : null}
+					{activeModal === 'graphs' ? (
+						<div className="list">
+							{weeklyTrendData.map((day) => (
+								<div key={day.name} className="item">
+									<div className="row between" style={{ gap: 8 }}>
+										<div className="itemName">{day.name}</div>
+										<span className="badge">{day.rate}%</span>
+									</div>
+									<div className="subtle" style={{ marginTop: 6 }}>
+										Done {day.done} of {day.due}, skipped {day.skipped}
+									</div>
+								</div>
+							))}
+						</div>
+					) : null}
+				</Modal>
+			) : null}
 		</div>
 	);
 }

@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { TEMPLATE_PACKS } from '../seed.js';
+import Modal from '../components/Modal.jsx';
 import { useApp } from '../state/AppState.jsx';
 import { useToast } from '../state/ToastState.jsx';
 
@@ -41,6 +43,7 @@ async function importData(api, data) {
 export default function SettingsPage() {
 	const { api, isReady, refresh, user, supabaseConfigured, auth } = useApp();
 	const toast = useToast();
+	const [activePanel, setActivePanel] = useState(null);
 
 	if (!isReady) return <div className="card">Loading…</div>;
 
@@ -70,7 +73,7 @@ export default function SettingsPage() {
 			</div>
 
 			{supabaseConfigured ? (
-				<div className="card">
+				<div className="card interactiveSurface" onClick={() => setActivePanel('account')}>
 					<h2>Account</h2>
 					<div className="row" style={{ gap: 12, alignItems: 'center' }}>
 						<div className="badge accent">{user?.email ?? user?.id}</div>
@@ -78,7 +81,8 @@ export default function SettingsPage() {
 							className="btn ghost"
 							type="button"
 							style={{ padding: '6px 12px', fontSize: '0.85rem' }}
-							onClick={async () => {
+							onClick={async (event) => {
+								event.stopPropagation();
 								try {
 									await auth.signOut();
 									toast.push('Signed out.');
@@ -93,7 +97,7 @@ export default function SettingsPage() {
 				</div>
 			) : null}
 
-			<div className="card">
+			<div className="card interactiveSurface" onClick={() => setActivePanel('notifications')}>
 				<h2>Notifications</h2>
 				<div className="stack">
 					<div className="subtle">
@@ -113,7 +117,8 @@ export default function SettingsPage() {
 							<button
 								className="btn ghost"
 								type="button"
-								onClick={async () => {
+								onClick={async (event) => {
+									event.stopPropagation();
 									const permission = await Notification.requestPermission();
 									await api.setSetting('reminders', { permission, updatedAt: new Date().toISOString() });
 									toast.push(`Notification permission: ${permission}.`);
@@ -127,11 +132,11 @@ export default function SettingsPage() {
 				</div>
 			</div>
 
-			<div className="card">
+			<div className="card interactiveSurface" onClick={() => setActivePanel('packs')}>
 				<h2>Example packs</h2>
 				<div className="list">
 					{TEMPLATE_PACKS.map((pack) => (
-						<div key={pack.id} className="item">
+						<div key={pack.id} className="item interactiveSurface" onClick={() => setActivePanel(`pack:${pack.id}`)}>
 							<div className="row between" style={{ gap: 14 }}>
 								<div className="stack" style={{ gap: 6, minWidth: 0, flex: 1 }}>
 									<div className="itemName">{pack.name}</div>
@@ -144,7 +149,10 @@ export default function SettingsPage() {
 								<button
 									className="btn primary"
 									type="button"
-									onClick={() => loadPack(pack)}
+									onClick={(event) => {
+										event.stopPropagation();
+										loadPack(pack);
+									}}
 								>
 									Load pack
 								</button>
@@ -154,13 +162,14 @@ export default function SettingsPage() {
 				</div>
 			</div>
 
-			<div className="card">
+			<div className="card interactiveSurface" onClick={() => setActivePanel('data')}>
 				<h2>Data management</h2>
 				<div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
 					<button
 						className="btn ghost"
 						type="button"
-						onClick={async () => {
+						onClick={async (event) => {
+							event.stopPropagation();
 							const payload = await exportData(api);
 							const blob = new Blob([JSON.stringify(payload, null, 2)], {
 								type: 'application/json',
@@ -180,7 +189,8 @@ export default function SettingsPage() {
 					<button
 						className="btn ghost"
 						type="button"
-						onClick={() => {
+						onClick={(event) => {
+							event.stopPropagation();
 							const input = document.createElement('input');
 							input.type = 'file';
 							input.accept = 'application/json';
@@ -204,7 +214,8 @@ export default function SettingsPage() {
 					<button
 						className="btn danger"
 						type="button"
-						onClick={async () => {
+						onClick={async (event) => {
+							event.stopPropagation();
 							const ok = window.confirm(
 								'This wipes all local data for this app in this browser. This cannot be undone. Continue?',
 							);
@@ -227,6 +238,79 @@ export default function SettingsPage() {
 						: 'Data is stored locally in your browser (IndexedDB). Export regularly to prevent data loss.'}
 				</p>
 			</div>
+
+			{activePanel ? (
+				<Modal
+					title={
+						activePanel === 'account' ? 'Account' :
+						activePanel === 'notifications' ? 'Notifications' :
+						activePanel === 'packs' ? 'Example packs' :
+						activePanel === 'data' ? 'Data management' :
+						TEMPLATE_PACKS.find((pack) => `pack:${pack.id}` === activePanel)?.name ?? 'Settings'
+					}
+					onClose={() => setActivePanel(null)}
+				>
+					{activePanel === 'account' ? (
+						<div className="stack">
+							<div className="card">
+								<div className="label">Signed in as</div>
+								<div className="value" style={{ marginTop: 8 }}>{user?.email ?? user?.id}</div>
+							</div>
+						</div>
+					) : null}
+					{activePanel === 'notifications' ? (
+						<div className="stack">
+							<div className="card">
+								<div className="label">Browser notifications</div>
+								<div className="subtle" style={{ marginTop: 8 }}>
+									Enable notifications here, then set reminder times inside each habit.
+								</div>
+							</div>
+						</div>
+					) : null}
+					{activePanel === 'packs' ? (
+						<div className="list">
+							{TEMPLATE_PACKS.map((pack) => (
+								<div key={pack.id} className="item">
+									<div className="itemName">{pack.name}</div>
+									<div className="subtle" style={{ marginTop: 6 }}>{pack.description}</div>
+								</div>
+							))}
+						</div>
+					) : null}
+					{activePanel === 'data' ? (
+						<div className="stack">
+							<div className="card">
+								<div className="label">Export / Import / Reset</div>
+								<div className="subtle" style={{ marginTop: 8 }}>
+									Export backups, import previous data, or reset the local application storage.
+								</div>
+							</div>
+						</div>
+					) : null}
+					{activePanel.startsWith('pack:') ? (
+						(() => {
+							const pack = TEMPLATE_PACKS.find((item) => `pack:${item.id}` === activePanel);
+							if (!pack) return null;
+							return (
+								<div className="stack">
+									<div className="card">
+										<div className="itemName">{pack.name}</div>
+										<div className="subtle" style={{ marginTop: 8 }}>{pack.description}</div>
+										<div className="row" style={{ gap: 8, marginTop: 12 }}>
+											<span className="badge">Habits: {pack.habits.length}</span>
+											<span className="badge accent">Projects: {pack.projects.length}</span>
+										</div>
+									</div>
+									<button className="btn primary" type="button" onClick={() => { loadPack(pack); setActivePanel(null); }}>
+										Load pack
+									</button>
+								</div>
+							);
+						})()
+					) : null}
+				</Modal>
+			) : null}
 		</div>
 	);
 }

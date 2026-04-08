@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import AuthGate from './components/AuthGate.jsx';
+import CircularClock from './components/CircularClock.jsx';
 import ToastViewport from './components/ToastViewport.jsx';
 import { isoToday } from './lib/date.js';
 import { isDueOn } from './lib/habits.js';
@@ -10,6 +11,7 @@ import ProjectsPage from './pages/ProjectsPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import TodayPage from './pages/TodayPage.jsx';
 import { AppProvider, useApp } from './state/AppState.jsx';
+import { StudioProvider, useStudio } from './state/StudioState.jsx';
 import { ToastProvider } from './state/ToastState.jsx';
 
 const NAV_ITEMS = [
@@ -64,40 +66,27 @@ function NavGlyph({ name }) {
 function Sidebar({ isDark, onThemeToggle }) {
 	return (
 		<aside className="sidebarArea">
-			<div className="sidebarHero">
-				<div className="sidebarEyebrow">Daily System</div>
-				<div className="sidebarHeroTop">
+			<div className="sidebarHeader">
+				<div className="sidebarBrand">
 					<div
 						className="sidebarAvatar"
 						aria-hidden="true"
 					>
 						H
 					</div>
-					<button
-						className="themeToggleBtn"
-						onClick={onThemeToggle}
-						aria-label="Toggle dark mode"
-						title={isDark ? 'Light mode' : 'Dark mode'}
-					>
-						{isDark ? 'Light' : 'Dark'}
-					</button>
-				</div>
-				<div className="sidebarHeroCopy">
-					<div className="sidebarWorkspace">Habit Workspace</div>
-					<div className="sidebarWorkspaceMeta">
-						A focused workspace for habits, projects, reminders, and immersive work sessions.
+					<div className="sidebarBrandText">
+						<div className="sidebarEyebrow">Habit</div>
+						<div className="sidebarWorkspace">Workspace</div>
 					</div>
 				</div>
-				<div className="sidebarStats">
-					<div className="sidebarStat">
-						<span className="sidebarStatValue">Focus</span>
-						<span className="sidebarStatLabel">Countdown mode</span>
-					</div>
-					<div className="sidebarStat">
-						<span className="sidebarStatValue">Glass</span>
-						<span className="sidebarStatLabel">Adaptive layout</span>
-					</div>
-				</div>
+				<button
+					className="themeToggleBtn"
+					onClick={onThemeToggle}
+					aria-label="Toggle dark mode"
+					title={isDark ? 'Light mode' : 'Dark mode'}
+				>
+					{isDark ? 'Light' : 'Dark'}
+				</button>
 			</div>
 			<div className="navGroup">
 				<div className="navGroupLabel">Workspace</div>
@@ -120,6 +109,10 @@ function Sidebar({ isDark, onThemeToggle }) {
 					</NavLink>
 				))}
 			</div>
+			<div className="sidebarFooter">
+				<div className="sidebarFooterLine">Build steady systems.</div>
+				<div className="sidebarFooterMeta">Habit Tracker</div>
+			</div>
 		</aside>
 	);
 }
@@ -127,6 +120,7 @@ function Sidebar({ isDark, onThemeToggle }) {
 function Topbar() {
 	const location = useLocation();
 	const [now, setNow] = useState(() => new Date());
+	const { spotify } = useStudio();
 	const title =
 		NAV_ITEMS.find((n) => n.to === location.pathname)?.label || 'Page';
 	const dateLabel = isoToday();
@@ -146,6 +140,8 @@ function Topbar() {
 		month: 'short',
 		day: 'numeric',
 	});
+	const trackName = spotify.spotifyState?.item?.name || 'Spotify idle';
+	const isPlaying = Boolean(spotify.spotifyState?.is_playing || spotify.spotifyState?.paused === false);
 
 	return (
 		<header className="topbar">
@@ -158,9 +154,28 @@ function Topbar() {
 				<div className="topbarTitle">{title}</div>
 			</div>
 			<div className="topbarMeta">
+				<div className="topbarSpotify">
+					<div className="topbarSpotifyInfo">
+						<div className="topbarSpotifyLabel">Spotify</div>
+						<div className="topbarSpotifyTrack">{trackName}</div>
+					</div>
+					<button
+						className="btn ghost"
+						type="button"
+						onClick={() => {
+							if (!spotify.spotifyAuthed) spotify.connect();
+							else spotify.playPause();
+						}}
+					>
+						{!spotify.spotifyAuthed ? 'Connect' : isPlaying ? 'Pause' : 'Play'}
+					</button>
+				</div>
 				<div className="topbarClock">
-					<div className="topbarClockTime">{timeLabel}</div>
-					<div className="topbarClockDate">{longDate} · {dateLabel}</div>
+					<CircularClock now={now} compact />
+					<div>
+						<div className="topbarClockTime">{timeLabel}</div>
+						<div className="topbarClockDate">{longDate} · {dateLabel}</div>
+					</div>
 				</div>
 			</div>
 		</header>
@@ -292,10 +307,12 @@ export default function App() {
 		<ToastProvider>
 			<AppProvider>
 				<AuthGate>
-					<AppShell
-						isDark={isDark}
-						onThemeToggle={() => setIsDark(!isDark)}
-					/>
+					<StudioProvider>
+						<AppShell
+							isDark={isDark}
+							onThemeToggle={() => setIsDark(!isDark)}
+						/>
+					</StudioProvider>
 				</AuthGate>
 				<ToastViewport />
 			</AppProvider>
