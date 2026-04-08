@@ -2,8 +2,6 @@
 
 A **premium macOS-inspired productivity system** combining habit tracking, advanced analytics, Spotify integration, and focus sessions. Built with React, Supabase, and designed for deep personal productivity workflows.
 
-**See [PREMIUM_FEATURES.md](/PREMIUM_FEATURES.md) for detailed feature documentation.**
-
 ---
 
 ## ✨ Key Features
@@ -77,7 +75,7 @@ A **premium macOS-inspired productivity system** combining habit tracking, advan
 - **PlaylistAnalyticsCard**: Spotify playlist performance metrics
 - **InsightCard**: Styled insight cards with action buttons
 
-### 🎯 Today Dashboard (`EnhancedTodayPage.jsx`)
+### 🎯 Today Dashboard (`TodayPage.jsx`)
 
 **Premium dashboard as your main productivity hub**
 
@@ -205,6 +203,14 @@ A **premium macOS-inspired productivity system** combining habit tracking, advan
 - **Spotify**: Connect/disconnect status + reconnection
 - **Data Management**: One-click JSON export
 
+### 🆕 April 2026 UI Redesign
+
+- Reworked Today view with a stronger hero panel and status pills
+- Added a dedicated KPI strip for clearer daily scanning
+- Refined desktop/mobile composition with CSS-driven responsive layout
+- Updated chart palette and panel contrast for improved readability
+- Tuned spacing and visual rhythm across cards and sections
+
 ---
 
 ## 🚀 Quick Start
@@ -280,6 +286,7 @@ Copy from `.env.example` to start.
 src/
 ├── components/              # Reusable UI components
 │   ├── AnalyticsDashboard.jsx      # Charts & metrics
+│   ├── CommandPalette.jsx          # Active command palette in App shell
 │   ├── FocusMode.jsx               # Focus timer UI
 │   ├── ReviewModals.jsx            # Daily/weekly reviews
 │   ├── SearchAndFilter.jsx         # Search & filtering
@@ -288,10 +295,11 @@ src/
 │   ├── EnhancedCommandPalette.jsx  # Command palette (⌘+K)
 │   └── ...
 ├── pages/                          # Route pages
-│   ├── EnhancedTodayPage.jsx       # Premium dashboard
-│   ├── EnhancedInsightsPage.jsx    # Advanced analytics
-│   ├── EnhancedSettingsPage.jsx    # Settings
-│   └── ...
+│   ├── TodayPage.jsx               # Premium daily execution dashboard
+│   ├── HabitsPage.jsx              # Habit management
+│   ├── ProjectsPage.jsx            # Project tracking
+│   ├── InsightsPage.jsx            # Analytics views
+│   └── SettingsPage.jsx            # User preferences and integrations
 ├── lib/                            # Utilities
 │   ├── analytics.js                # Analytics calculations
 │   ├── date.js                     # Date utilities
@@ -450,8 +458,8 @@ MIT - Open source and free to use
 
 ## 📞 Need Help?
 
-- Check [PREMIUM_FEATURES.md](/PREMIUM_FEATURES.md) for detailed documentation
 - Review component examples in `src/components/`
+- Start with `src/pages/TodayPage.jsx` for the main dashboard flow
 - Check `.env.example` for required variables
 - Inspect browser console for errors
 
