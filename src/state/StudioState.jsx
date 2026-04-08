@@ -25,7 +25,6 @@ import { useToast } from './ToastState.jsx';
 
 const StudioStateContext = createContext(null);
 const FOCUS_HISTORY_KEY = 'habit_tracker_focus_history_v1';
-const SPOTIFY_HISTORY_KEY = 'habit_tracker_spotify_history_v1';
 
 function readJson(key, fallback) {
 	try {
@@ -47,7 +46,8 @@ export function StudioProvider({ children }) {
 	const redirectUri = window.location.origin + window.location.pathname;
 	const authCompletedRef = useRef(false);
 	const focusStartRef = useRef(null);
-	const lastTrackIdRef = useRef(null);
+	const spotifyRefreshInFlightRef = useRef(null);
+	const spotifyRateLimitUntilRef = useRef(0);
 
 	const [customMinutes, setCustomMinutes] = useState('45');
 	const [focusSeconds, setFocusSeconds] = useState(45 * 60);
@@ -66,17 +66,14 @@ export function StudioProvider({ children }) {
 		Boolean(getStoredSpotifyAuth()),
 	);
 	const [spotifyError, setSpotifyError] = useState('');
-	const [spotifyHistory, setSpotifyHistory] = useState(() =>
-		readJson(SPOTIFY_HISTORY_KEY, []),
-	);
 
 	useEffect(() => {
 		writeJson(FOCUS_HISTORY_KEY, focusHistory);
 	}, [focusHistory]);
 
 	useEffect(() => {
-		writeJson(SPOTIFY_HISTORY_KEY, spotifyHistory);
-	}, [spotifyHistory]);
+		localStorage.removeItem('habit_tracker_spotify_history_v1');
+	}, []);
 
 	useEffect(() => {
 		if (!running) return;
@@ -173,9 +170,7 @@ export function StudioProvider({ children }) {
 		async function refreshSpotify() {
 			try {
 				await ensureSpotifyAccessToken(spotifyClientId);
-				const state = await spotifyGetPlaybackState(spotifyClientId).catch(
-					() => null,
-				);
+				const state = await refreshSpotifyState().catch(() => null);
 				let me = cachedMe;
 				if (!hasFetchedProfile || !cachedMe) {
 					me = await spotifyGetMe(spotifyClientId);
@@ -184,8 +179,7 @@ export function StudioProvider({ children }) {
 				}
 				if (!active) return;
 				setSpotifyMe(me);
-				setSpotifyState(state);
-				setSpotifyError('');
+				if (state) setSpotifyState(state);
 				scheduleNext(BASE_DELAY_MS);
 			} catch (error) {
 				if (!active) return;
@@ -204,25 +198,6 @@ export function StudioProvider({ children }) {
 			if (pollTimer) window.clearTimeout(pollTimer);
 		};
 	}, [spotifyAuthed, spotifyClientId]);
-
-	useEffect(() => {
-		const currentTrack = spotifyState?.item;
-		if (!currentTrack?.id || currentTrack.id === lastTrackIdRef.current) return;
-		lastTrackIdRef.current = currentTrack.id;
-		setSpotifyHistory((current) =>
-			[
-				{
-					id: currentTrack.id,
-					name: currentTrack.name,
-					artist:
-						currentTrack.artists?.map((artist) => artist.name).join(', ') ?? '',
-					playedAt: new Date().toISOString(),
-					artwork: currentTrack.album?.images?.[0]?.url ?? '',
-				},
-				...current.filter((item) => item.id !== currentTrack.id),
-			].slice(0, 12),
-		);
-	}, [spotifyState]);
 
 	function applyCustomDuration(minutesValue) {
 		const parsed = Number.parseInt(minutesValue, 10);
@@ -288,18 +263,46 @@ export function StudioProvider({ children }) {
 	}
 
 	async function refreshSpotifyState() {
-		try {
-			const state = await spotifyGetPlaybackState(spotifyClientId);
-			setSpotifyState(state);
-			setSpotifyError('');
-		} catch (error) {
-			setSpotifyError(error?.message ?? 'Spotify sync failed.');
+		const now = Date.now();
+		if (spotifyRateLimitUntilRef.current > now) {
+			const waitMs = spotifyRateLimitUntilRef.current - now;
+			const waitSec = Math.max(1, Math.ceil(waitMs / 1000));
+			const error = new Error(
+				`Spotify is temporarily rate-limited. Retry after ${waitSec}s.`,
+			);
+			error.status = 429;
+			error.retryAfterMs = waitMs;
+			setSpotifyError(error.message);
+			throw error;
 		}
+
+		if (spotifyRefreshInFlightRef.current) return spotifyRefreshInFlightRef.current;
+
+		spotifyRefreshInFlightRef.current = (async () => {
+			try {
+				const state = await spotifyGetPlaybackState(spotifyClientId);
+				setSpotifyState(state);
+				setSpotifyError('');
+				return state;
+			} catch (error) {
+				if (error?.status === 429) {
+					const waitMs = Math.max(15000, Number(error?.retryAfterMs) || 30000);
+					spotifyRateLimitUntilRef.current = Date.now() + waitMs;
+				}
+				setSpotifyError(error?.message ?? 'Spotify sync failed.');
+				throw error;
+			} finally {
+				spotifyRefreshInFlightRef.current = null;
+			}
+		})();
+
+		return spotifyRefreshInFlightRef.current;
 	}
 
 	async function withSpotify(action) {
 		try {
 			await action();
+			await new Promise((resolve) => window.setTimeout(resolve, 350));
 			await refreshSpotifyState();
 		} catch (error) {
 			toast.push(error?.message ?? 'Spotify action failed.');
@@ -334,10 +337,12 @@ export function StudioProvider({ children }) {
 				spotifyState,
 				spotifyAuthed,
 				spotifyError,
-				spotifyHistory,
 				connect: () =>
 					startSpotifyLogin({ clientId: spotifyClientId, redirectUri }),
-				refresh: refreshSpotifyState,
+				refresh: () =>
+					refreshSpotifyState().catch((error) => {
+						toast.push(error?.message ?? 'Spotify sync failed.');
+					}),
 				playPause: () =>
 					withSpotify(async () => {
 						const isPlaying = Boolean(
@@ -369,9 +374,9 @@ export function StudioProvider({ children }) {
 			spotifyAuthed,
 			spotifyClientId,
 			spotifyError,
-			spotifyHistory,
 			spotifyMe,
 			spotifyState,
+			toast,
 		],
 	);
 

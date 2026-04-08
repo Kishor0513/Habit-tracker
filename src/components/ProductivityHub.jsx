@@ -372,39 +372,6 @@ export default function ProductivityHub() {
 								)}
 							</div>
 						</div>
-
-						<div className="focusHistoryCard">
-							<div className="panelEyebrow">Track history</div>
-							<div
-								className="list"
-								style={{ marginTop: 12 }}
-							>
-								{spotify.spotifyHistory.length === 0 ? (
-									<div className="subtle">No Spotify history yet.</div>
-								) : (
-									spotify.spotifyHistory.slice(0, 5).map((item) => (
-										<div
-											key={`${item.id}-${item.playedAt}`}
-											className="item"
-										>
-											<div className="itemName">{item.name}</div>
-											<div
-												className="subtle"
-												style={{ marginTop: 4 }}
-											>
-												{item.artist}
-											</div>
-											<div
-												className="subtle"
-												style={{ marginTop: 6 }}
-											>
-												{formatStamp(item.playedAt)}
-											</div>
-										</div>
-									))
-								)}
-							</div>
-						</div>
 					</div>
 				</div>
 			</div>
