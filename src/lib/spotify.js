@@ -68,7 +68,9 @@ export async function startSpotifyLogin({ clientId, redirectUri }) {
 		].join(' '),
 	});
 
-	console.info(`[Spotify] Starting OAuth login with Redirect URI: ${redirectUri}`);
+	console.info(
+		`[Spotify] Starting OAuth login with Redirect URI: ${redirectUri}`,
+	);
 
 	window.location.assign(`${AUTHORIZE_ENDPOINT}?${params.toString()}`);
 }
@@ -165,22 +167,43 @@ async function spotifyApiRequest(clientId, method, endpoint, body) {
 	});
 
 	if (!res.ok && res.status !== 204) {
+		const retryAfterRaw = res.headers.get('retry-after');
+		const retryAfterSec = Number.parseInt(retryAfterRaw ?? '', 10);
+		const retryAfterMs =
+			Number.isFinite(retryAfterSec) && retryAfterSec > 0
+				? retryAfterSec * 1000
+				: null;
+
 		let message = `Spotify API error (${res.status})`;
 		try {
 			const json = await res.json();
-			message = json?.error?.message ? `${message}: ${json.error.message}` : message;
+			message = json?.error?.message
+				? `${message}: ${json.error.message}`
+				: message;
 		} catch (_e) {
 			// fallback
 		}
-		
+
+		if (res.status === 429) {
+			const waitHint = retryAfterMs
+				? ` Retry after ${Math.ceil(retryAfterMs / 1000)}s.`
+				: '';
+			message += ` - Spotify rate limit reached.${waitHint}`;
+		}
+
 		if (res.status === 403) {
-			message += ' - This usually means a Spotify Premium account is required for this action.';
+			message +=
+				' - This usually means a Spotify Premium account is required for this action.';
 		}
 		if (res.status === 404) {
-			message += ' - Resource not found. Ensure your Spotify playback is active on a device.';
+			message +=
+				' - Resource not found. Ensure your Spotify playback is active on a device.';
 		}
-		
-		throw new Error(message);
+
+		const error = new Error(message);
+		error.status = res.status;
+		error.retryAfterMs = retryAfterMs;
+		throw error;
 	}
 
 	if (res.status === 204) return null;

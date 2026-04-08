@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import {
+	createContext,
+	useContext,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react';
 import {
 	clearSpotifyAuth,
 	completeSpotifyAuthFromUrl,
@@ -47,15 +54,21 @@ export function StudioProvider({ children }) {
 	const [focusMax, setFocusMax] = useState(45 * 60);
 	const [running, setRunning] = useState(false);
 	const [autoFullscreen, setAutoFullscreen] = useState(true);
-	const [focusHistory, setFocusHistory] = useState(() => readJson(FOCUS_HISTORY_KEY, []));
+	const [focusHistory, setFocusHistory] = useState(() =>
+		readJson(FOCUS_HISTORY_KEY, []),
+	);
 	const [selectedHabitId, setSelectedHabitId] = useState('');
 	const [selectedHabitName, setSelectedHabitName] = useState('');
 
 	const [spotifyMe, setSpotifyMe] = useState(null);
 	const [spotifyState, setSpotifyState] = useState(null);
-	const [spotifyAuthed, setSpotifyAuthed] = useState(Boolean(getStoredSpotifyAuth()));
+	const [spotifyAuthed, setSpotifyAuthed] = useState(
+		Boolean(getStoredSpotifyAuth()),
+	);
 	const [spotifyError, setSpotifyError] = useState('');
-	const [spotifyHistory, setSpotifyHistory] = useState(() => readJson(SPOTIFY_HISTORY_KEY, []));
+	const [spotifyHistory, setSpotifyHistory] = useState(() =>
+		readJson(SPOTIFY_HISTORY_KEY, []),
+	);
 
 	useEffect(() => {
 		writeJson(FOCUS_HISTORY_KEY, focusHistory);
@@ -72,30 +85,43 @@ export function StudioProvider({ children }) {
 				if (prev <= 1) {
 					window.clearInterval(id);
 					setRunning(false);
-					setFocusHistory((current) => [
-						{
-							id: crypto.randomUUID(),
-							startedAt: focusStartRef.current ?? new Date().toISOString(),
-							finishedAt: new Date().toISOString(),
-							minutes: Math.round(focusMax / 60),
-							status: 'completed',
-						},
-						...current,
-					].slice(0, 12));
+					setFocusHistory((current) =>
+						[
+							{
+								id: crypto.randomUUID(),
+								startedAt: focusStartRef.current ?? new Date().toISOString(),
+								finishedAt: new Date().toISOString(),
+								minutes: Math.round(focusMax / 60),
+								status: 'completed',
+							},
+							...current,
+						].slice(0, 12),
+					);
 					if (api && selectedHabitId) {
-						api.upsertHabitSession({
-							habitId: selectedHabitId,
-							userId: user?.id ?? 'local',
-							startTime: focusStartRef.current ?? new Date().toISOString(),
-							endTime: new Date().toISOString(),
-							playlistId: spotifyState?.context?.uri ?? spotifyState?.item?.album?.id ?? '',
-							success: true,
-							durationSeconds: focusMax,
-						}).then(() => refresh()).catch(() => {});
+						api
+							.upsertHabitSession({
+								habitId: selectedHabitId,
+								userId: user?.id ?? 'local',
+								startTime: focusStartRef.current ?? new Date().toISOString(),
+								endTime: new Date().toISOString(),
+								playlistId:
+									spotifyState?.context?.uri ??
+									spotifyState?.item?.album?.id ??
+									'',
+								success: true,
+								durationSeconds: focusMax,
+							})
+							.then(() => refresh())
+							.catch(() => {});
 					}
 					focusStartRef.current = null;
-					if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-						new Notification('Focus session complete', { body: 'Your countdown reached zero.' });
+					if (
+						typeof Notification !== 'undefined' &&
+						Notification.permission === 'granted'
+					) {
+						new Notification('Focus session complete', {
+							body: 'Your countdown reached zero.',
+						});
 					}
 					toast.push('Focus session complete.');
 					return 0;
@@ -104,7 +130,16 @@ export function StudioProvider({ children }) {
 			});
 		}, 1000);
 		return () => window.clearInterval(id);
-	}, [api, focusMax, refresh, running, selectedHabitId, spotifyState, toast, user?.id]);
+	}, [
+		api,
+		focusMax,
+		refresh,
+		running,
+		selectedHabitId,
+		spotifyState,
+		toast,
+		user?.id,
+	]);
 
 	useEffect(() => {
 		if (!spotifyClientId || authCompletedRef.current) return;
@@ -124,29 +159,49 @@ export function StudioProvider({ children }) {
 	useEffect(() => {
 		if (!spotifyClientId || !spotifyAuthed) return;
 		let active = true;
+		let pollTimer = null;
+		let hasFetchedProfile = false;
+		let cachedMe = null;
+		const BASE_DELAY_MS = 12000;
+
+		function scheduleNext(delayMs = BASE_DELAY_MS) {
+			if (!active) return;
+			if (pollTimer) window.clearTimeout(pollTimer);
+			pollTimer = window.setTimeout(refreshSpotify, delayMs);
+		}
 
 		async function refreshSpotify() {
 			try {
 				await ensureSpotifyAccessToken(spotifyClientId);
-				const [me, state] = await Promise.all([
-					spotifyGetMe(spotifyClientId),
-					spotifyGetPlaybackState(spotifyClientId).catch(() => null),
-				]);
+				const state = await spotifyGetPlaybackState(spotifyClientId).catch(
+					() => null,
+				);
+				let me = cachedMe;
+				if (!hasFetchedProfile || !cachedMe) {
+					me = await spotifyGetMe(spotifyClientId);
+					cachedMe = me;
+					hasFetchedProfile = true;
+				}
 				if (!active) return;
 				setSpotifyMe(me);
 				setSpotifyState(state);
 				setSpotifyError('');
+				scheduleNext(BASE_DELAY_MS);
 			} catch (error) {
 				if (!active) return;
 				setSpotifyError(error?.message ?? 'Spotify sync failed.');
+				const retryDelay =
+					error?.status === 429
+						? Math.max(15000, Number(error?.retryAfterMs) || 30000)
+						: BASE_DELAY_MS;
+				scheduleNext(retryDelay);
 			}
 		}
 
 		refreshSpotify();
-		const id = window.setInterval(refreshSpotify, 5000);
 		return () => {
 			active = false;
-			window.clearInterval(id);
+			if (pollTimer) window.clearTimeout(pollTimer);
 		};
 	}, [spotifyAuthed, spotifyClientId]);
 
@@ -154,16 +209,19 @@ export function StudioProvider({ children }) {
 		const currentTrack = spotifyState?.item;
 		if (!currentTrack?.id || currentTrack.id === lastTrackIdRef.current) return;
 		lastTrackIdRef.current = currentTrack.id;
-		setSpotifyHistory((current) => [
-			{
-				id: currentTrack.id,
-				name: currentTrack.name,
-				artist: currentTrack.artists?.map((artist) => artist.name).join(', ') ?? '',
-				playedAt: new Date().toISOString(),
-				artwork: currentTrack.album?.images?.[0]?.url ?? '',
-			},
-			...current.filter((item) => item.id !== currentTrack.id),
-		].slice(0, 12));
+		setSpotifyHistory((current) =>
+			[
+				{
+					id: currentTrack.id,
+					name: currentTrack.name,
+					artist:
+						currentTrack.artists?.map((artist) => artist.name).join(', ') ?? '',
+					playedAt: new Date().toISOString(),
+					artwork: currentTrack.album?.images?.[0]?.url ?? '',
+				},
+				...current.filter((item) => item.id !== currentTrack.id),
+			].slice(0, 12),
+		);
 	}, [spotifyState]);
 
 	function applyCustomDuration(minutesValue) {
@@ -185,7 +243,8 @@ export function StudioProvider({ children }) {
 			const ok = applyCustomDuration(customMinutes);
 			if (!ok) return false;
 		}
-		if (!focusStartRef.current) focusStartRef.current = new Date().toISOString();
+		if (!focusStartRef.current)
+			focusStartRef.current = new Date().toISOString();
 		setRunning(true);
 		return true;
 	}
@@ -196,26 +255,32 @@ export function StudioProvider({ children }) {
 
 	function resetSession() {
 		if (focusStartRef.current && focusSeconds > 0 && focusSeconds < focusMax) {
-			setFocusHistory((current) => [
-				{
-					id: crypto.randomUUID(),
-					startedAt: focusStartRef.current,
-					finishedAt: new Date().toISOString(),
-					minutes: Math.round(focusMax / 60),
-					status: 'stopped',
-				},
-				...current,
-			].slice(0, 12));
+			setFocusHistory((current) =>
+				[
+					{
+						id: crypto.randomUUID(),
+						startedAt: focusStartRef.current,
+						finishedAt: new Date().toISOString(),
+						minutes: Math.round(focusMax / 60),
+						status: 'stopped',
+					},
+					...current,
+				].slice(0, 12),
+			);
 			if (api && selectedHabitId) {
-				api.upsertHabitSession({
-					habitId: selectedHabitId,
-					userId: user?.id ?? 'local',
-					startTime: focusStartRef.current,
-					endTime: new Date().toISOString(),
-					playlistId: spotifyState?.context?.uri ?? spotifyState?.item?.album?.id ?? '',
-					success: false,
-					durationSeconds: focusMax - focusSeconds,
-				}).then(() => refresh()).catch(() => {});
+				api
+					.upsertHabitSession({
+						habitId: selectedHabitId,
+						userId: user?.id ?? 'local',
+						startTime: focusStartRef.current,
+						endTime: new Date().toISOString(),
+						playlistId:
+							spotifyState?.context?.uri ?? spotifyState?.item?.album?.id ?? '',
+						success: false,
+						durationSeconds: focusMax - focusSeconds,
+					})
+					.then(() => refresh())
+					.catch(() => {});
 			}
 		}
 		applyCustomDuration(customMinutes);
@@ -242,68 +307,79 @@ export function StudioProvider({ children }) {
 		}
 	}
 
-	const value = useMemo(() => ({
-		focus: {
-			customMinutes,
-			setCustomMinutes,
-			focusSeconds,
-			focusMax,
-			running,
-			selectedHabitId,
-			setSelectedHabitId,
-			selectedHabitName,
-			setSelectedHabitName,
+	const value = useMemo(
+		() => ({
+			focus: {
+				customMinutes,
+				setCustomMinutes,
+				focusSeconds,
+				focusMax,
+				running,
+				selectedHabitId,
+				setSelectedHabitId,
+				selectedHabitName,
+				setSelectedHabitName,
+				autoFullscreen,
+				setAutoFullscreen,
+				focusHistory,
+				applyCustomDuration,
+				startSession,
+				pauseSession,
+				resetSession,
+			},
+			spotify: {
+				clientId: spotifyClientId,
+				redirectUri,
+				spotifyMe,
+				spotifyState,
+				spotifyAuthed,
+				spotifyError,
+				spotifyHistory,
+				connect: () =>
+					startSpotifyLogin({ clientId: spotifyClientId, redirectUri }),
+				refresh: refreshSpotifyState,
+				playPause: () =>
+					withSpotify(async () => {
+						const isPlaying = Boolean(
+							spotifyState?.is_playing || spotifyState?.paused === false,
+						);
+						if (isPlaying) await spotifyPause(spotifyClientId);
+						else await spotifyPlay(spotifyClientId);
+					}),
+				next: () => withSpotify(() => spotifyNext(spotifyClientId)),
+				previous: () => withSpotify(() => spotifyPrevious(spotifyClientId)),
+				seek: (positionMs) =>
+					withSpotify(() => spotifySeek(spotifyClientId, positionMs)),
+				disconnect: () => {
+					clearSpotifyAuth();
+					window.location.reload();
+				},
+			},
+		}),
+		[
 			autoFullscreen,
-			setAutoFullscreen,
+			customMinutes,
 			focusHistory,
-			applyCustomDuration,
-			startSession,
-			pauseSession,
-			resetSession,
-		},
-		spotify: {
-			clientId: spotifyClientId,
+			focusMax,
+			focusSeconds,
+			selectedHabitId,
+			selectedHabitName,
 			redirectUri,
-			spotifyMe,
-			spotifyState,
+			running,
 			spotifyAuthed,
+			spotifyClientId,
 			spotifyError,
 			spotifyHistory,
-			connect: () => startSpotifyLogin({ clientId: spotifyClientId, redirectUri }),
-			refresh: refreshSpotifyState,
-			playPause: () =>
-				withSpotify(async () => {
-					const isPlaying = Boolean(spotifyState?.is_playing || spotifyState?.paused === false);
-					if (isPlaying) await spotifyPause(spotifyClientId);
-					else await spotifyPlay(spotifyClientId);
-				}),
-			next: () => withSpotify(() => spotifyNext(spotifyClientId)),
-			previous: () => withSpotify(() => spotifyPrevious(spotifyClientId)),
-			seek: (positionMs) => withSpotify(() => spotifySeek(spotifyClientId, positionMs)),
-			disconnect: () => {
-				clearSpotifyAuth();
-				window.location.reload();
-			},
-		},
-	}), [
-		autoFullscreen,
-		customMinutes,
-		focusHistory,
-		focusMax,
-		focusSeconds,
-		selectedHabitId,
-		selectedHabitName,
-		redirectUri,
-		running,
-		spotifyAuthed,
-		spotifyClientId,
-		spotifyError,
-		spotifyHistory,
-		spotifyMe,
-		spotifyState,
-	]);
+			spotifyMe,
+			spotifyState,
+		],
+	);
 
-	return <StudioStateContext.Provider value={value}>{children}</StudioStateContext.Provider>;
+	return (
+		<StudioStateContext.Provider value={value}>
+			{children}
+		</StudioStateContext.Provider>
+	);
 }
 
 export function useStudio() {
