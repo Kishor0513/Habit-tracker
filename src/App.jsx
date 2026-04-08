@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import AuthGate from './components/AuthGate.jsx';
 import CommandPalette from './components/CommandPalette.jsx';
@@ -6,14 +6,15 @@ import CircularClock from './components/CircularClock.jsx';
 import ToastViewport from './components/ToastViewport.jsx';
 import { isoToday } from './lib/date.js';
 import { isDueOn } from './lib/habits.js';
-import HabitsPage from './pages/HabitsPage.jsx';
-import InsightsPage from './pages/InsightsPage.jsx';
-import ProjectsPage from './pages/ProjectsPage.jsx';
-import SettingsPage from './pages/SettingsPage.jsx';
-import TodayPage from './pages/TodayPage.jsx';
 import { AppProvider, useApp } from './state/AppState.jsx';
 import { StudioProvider, useStudio } from './state/StudioState.jsx';
 import { ToastProvider } from './state/ToastState.jsx';
+
+const TodayPage = lazy(() => import('./pages/TodayPage.jsx'));
+const HabitsPage = lazy(() => import('./pages/HabitsPage.jsx'));
+const ProjectsPage = lazy(() => import('./pages/ProjectsPage.jsx'));
+const InsightsPage = lazy(() => import('./pages/InsightsPage.jsx'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage.jsx'));
 
 const NAV_ITEMS = [
 	{ to: '/', label: 'Today', shortLabel: 'Pulse', icon: 'pulse' },
@@ -208,6 +209,16 @@ function BottomNav() {
 	);
 }
 
+function RouteFallback() {
+	return (
+		<div className="pageContent">
+			<div className="card">
+				<div className="subtle">Loading workspace...</div>
+			</div>
+		</div>
+	);
+}
+
 function ReminderEngine() {
 	const { api, isReady, dataVersion } = useApp();
 
@@ -260,28 +271,30 @@ function AppShell({ isDark, onThemeToggle }) {
 			<div className="mainArea">
 				<CommandPalette />
 				<Topbar />
-				<Routes>
-					<Route
-						path="/"
-						element={<TodayPage />}
-					/>
-					<Route
-						path="/habits"
-						element={<HabitsPage />}
-					/>
-					<Route
-						path="/projects"
-						element={<ProjectsPage />}
-					/>
-					<Route
-						path="/insights"
-						element={<InsightsPage />}
-					/>
-					<Route
-						path="/settings"
-						element={<SettingsPage />}
-					/>
-				</Routes>
+				<Suspense fallback={<RouteFallback />}>
+					<Routes>
+						<Route
+							path="/"
+							element={<TodayPage />}
+						/>
+						<Route
+							path="/habits"
+							element={<HabitsPage />}
+						/>
+						<Route
+							path="/projects"
+							element={<ProjectsPage />}
+						/>
+						<Route
+							path="/insights"
+							element={<InsightsPage />}
+						/>
+						<Route
+							path="/settings"
+							element={<SettingsPage />}
+						/>
+					</Routes>
+				</Suspense>
 			</div>
 			<BottomNav />
 		</div>
