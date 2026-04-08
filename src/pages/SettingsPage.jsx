@@ -3,10 +3,11 @@ import { useApp } from '../state/AppState.jsx';
 import { useToast } from '../state/ToastState.jsx';
 
 async function exportData(api) {
-	const [habits, entries, projects] = await Promise.all([
+	const [habits, entries, projects, reminderSettings] = await Promise.all([
 		api.listHabits(),
 		api.listEntries(),
 		api.listProjects(),
+		api.getSetting('reminders'),
 	]);
 	return {
 		version: 1,
@@ -14,6 +15,7 @@ async function exportData(api) {
 		habits,
 		entries,
 		projects,
+		settings: reminderSettings ? [reminderSettings] : [],
 	};
 }
 
@@ -22,6 +24,7 @@ async function importData(api, data) {
 	const habits = Array.isArray(data.habits) ? data.habits : [];
 	const entries = Array.isArray(data.entries) ? data.entries : [];
 	const projects = Array.isArray(data.projects) ? data.projects : [];
+	const settings = Array.isArray(data.settings) ? data.settings : [];
 	for (const h of habits) await api.upsertHabit(h);
 	for (const e of entries)
 		await api.setEntry({
@@ -29,8 +32,10 @@ async function importData(api, data) {
 			date: e.date,
 			value: e.value ?? 0,
 			note: e.note ?? '',
+			status: e.status,
 		});
 	for (const p of projects) await api.upsertProject(p);
+	for (const setting of settings) await api.setSetting(setting.key, setting.value);
 }
 
 export default function SettingsPage() {
@@ -87,6 +92,40 @@ export default function SettingsPage() {
 					</div>
 				</div>
 			) : null}
+
+			<div className="card">
+				<h2>Notifications</h2>
+				<div className="stack">
+					<div className="subtle">
+						Browser reminders fire while this app is open. Enable notifications and set reminder times per habit.
+					</div>
+					<div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+						<span className="badge accent">
+							{typeof Notification === 'undefined'
+								? 'Unsupported'
+								: Notification.permission === 'granted'
+									? 'Allowed'
+									: Notification.permission === 'denied'
+										? 'Blocked'
+										: 'Not requested'}
+						</span>
+						{typeof Notification !== 'undefined' ? (
+							<button
+								className="btn ghost"
+								type="button"
+								onClick={async () => {
+									const permission = await Notification.requestPermission();
+									await api.setSetting('reminders', { permission, updatedAt: new Date().toISOString() });
+									toast.push(`Notification permission: ${permission}.`);
+									refresh();
+								}}
+							>
+								Request permission
+							</button>
+						) : null}
+					</div>
+				</div>
+			</div>
 
 			<div className="card">
 				<h2>Example packs</h2>

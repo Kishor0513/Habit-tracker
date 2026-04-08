@@ -6,13 +6,14 @@ export default function AuthGate({ children }) {
 	const { supabaseConfigured, user, auth, authLoading } = useApp();
 	const toast = useToast();
 	const [email, setEmail] = useState('');
+	const [password, setPassword] = useState('');
 	const [busy, setBusy] = useState(false);
 
 	const canContinue = !supabaseConfigured || Boolean(user);
 
 	const help = useMemo(() => {
 		if (!supabaseConfigured) return 'Supabase is not configured.';
-		return 'Enter your email or continue with Google to access your workspace.';
+		return 'Sign in with Google, email link, or email and password to access your workspace.';
 	}, [supabaseConfigured]);
 
 	if (canContinue) return children;
@@ -96,6 +97,50 @@ export default function AuthGate({ children }) {
 						value={email}
 						onChange={(e) => setEmail(e.target.value)}
 					/>
+					<input
+						className="input"
+						type="password"
+						placeholder="Password..."
+						value={password}
+						onChange={(e) => setPassword(e.target.value)}
+					/>
+					<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+						<button
+							className="btn btn-primary"
+							style={{ width: '100%', height: '36px' }}
+							disabled={!email.trim() || !password || busy}
+							onClick={async () => {
+								try {
+									setBusy(true);
+									await auth.signInWithPassword(email.trim(), password);
+								} catch (e) {
+									toast.push(e?.message ?? 'Password sign-in failed.');
+								} finally {
+									setBusy(false);
+								}
+							}}
+						>
+							Sign in
+						</button>
+						<button
+							className="btn ghost"
+							style={{ width: '100%', height: '36px' }}
+							disabled={!email.trim() || !password || busy}
+							onClick={async () => {
+								try {
+									setBusy(true);
+									await auth.signUpWithPassword(email.trim(), password);
+									toast.push('Account created. Check your email if confirmation is required.');
+								} catch (e) {
+									toast.push(e?.message ?? 'Sign-up failed.');
+								} finally {
+									setBusy(false);
+								}
+							}}
+						>
+							Create account
+						</button>
+					</div>
 					<button
 						className="btn btn-primary"
 						style={{ width: '100%', height: '32px' }}
@@ -110,6 +155,24 @@ export default function AuthGate({ children }) {
 						}}
 					>
 						Email Login
+					</button>
+					<button
+						className="btn ghost"
+						style={{ width: '100%', height: '32px' }}
+						disabled={!email.trim() || busy}
+						onClick={async () => {
+							try {
+								setBusy(true);
+								await auth.resetPassword(email.trim());
+								toast.push('Password reset email sent.');
+							} catch (e) {
+								toast.push(e?.message ?? 'Password reset failed.');
+							} finally {
+								setBusy(false);
+							}
+						}}
+					>
+						Forgot password?
 					</button>
 				</div>
 			</div>

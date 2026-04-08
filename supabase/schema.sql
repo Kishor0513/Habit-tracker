@@ -13,6 +13,11 @@ create table if not exists public.habits (
   target integer not null default 1,
   schedule jsonb not null default '{"kind":"daily"}'::jsonb,
   notes text not null default '',
+  category text not null default '',
+  tags jsonb not null default '[]'::jsonb,
+  goal_frequency integer not null default 0,
+  reminder jsonb not null default '{"enabled":false,"time":"08:00"}'::jsonb,
+  skip_rule text not null default 'break' check (skip_rule in ('break', 'protect')),
   archived_at timestamptz null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -27,10 +32,18 @@ create table if not exists public.entries (
   date date not null,
   value numeric not null default 0,
   note text not null default '',
+  status text not null default 'pending' check (status in ('pending', 'done', 'skipped')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (user_id, habit_id, date)
 );
+
+alter table public.habits add column if not exists category text not null default '';
+alter table public.habits add column if not exists tags jsonb not null default '[]'::jsonb;
+alter table public.habits add column if not exists goal_frequency integer not null default 0;
+alter table public.habits add column if not exists reminder jsonb not null default '{"enabled":false,"time":"08:00"}'::jsonb;
+alter table public.habits add column if not exists skip_rule text not null default 'break';
+alter table public.entries add column if not exists status text not null default 'pending';
 
 create index if not exists entries_user_id_idx on public.entries(user_id);
 create index if not exists entries_habit_id_idx on public.entries(habit_id);
@@ -139,4 +152,3 @@ create policy "settings_update_own" on public.settings for update
 drop policy if exists "settings_delete_own" on public.settings;
 create policy "settings_delete_own" on public.settings for delete
   using (auth.uid() = user_id);
-

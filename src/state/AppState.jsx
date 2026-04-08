@@ -102,6 +102,13 @@ export function AppProvider({ children }) {
 					});
 					if (error) throw error;
 				},
+				resetPassword: async (email) => {
+					if (!supabase) throw new Error('Supabase is not configured.');
+					const { error } = await supabase.auth.resetPasswordForEmail(email, {
+						redirectTo: window.location.origin + window.location.pathname,
+					});
+					if (error) throw error;
+				},
 				signInWithGoogle: async () => {
 					if (!supabase) throw new Error('Supabase is not configured.');
 					const { error } = await supabase.auth.signInWithOAuth({

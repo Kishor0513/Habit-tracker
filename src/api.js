@@ -1,6 +1,7 @@
 import { del, get, getAll, openDb, put, tx } from "./db.js";
 import { uid } from "./lib/ids.js";
 import { isoToday } from "./lib/date.js";
+import { EntryStatus, normalizeSchedule } from "./lib/habits.js";
 
 function nowIso() {
   return new Date().toISOString();
@@ -28,8 +29,13 @@ export class HabitApi {
       color: habit.color ?? "#7c5cff",
       unit: habit.unit ?? "",
       target: habit.target ?? 1,
-      schedule: habit.schedule ?? { kind: "daily" },
+      schedule: normalizeSchedule(habit.schedule, habit.createdAt ?? nowIso()),
       notes: habit.notes ?? "",
+      category: habit.category?.trim() ?? "",
+      tags: Array.isArray(habit.tags) ? habit.tags.filter(Boolean) : [],
+      goalFrequency: Math.max(0, Number(habit.goalFrequency ?? 0)),
+      reminder: habit.reminder ?? { enabled: false, time: "08:00" },
+      skipRule: habit.skipRule ?? "break",
       createdAt: habit.createdAt ?? nowIso(),
       archivedAt: habit.archivedAt ?? null,
       updatedAt: nowIso(),
@@ -59,7 +65,7 @@ export class HabitApi {
     return tx(this.db, "entries", "readonly", async ({ entries }) => get(entries, id));
   }
 
-  async setEntry({ habitId, date, value, note }) {
+  async setEntry({ habitId, date, value, note, status }) {
     const id = this.entryId(habitId, date);
     return tx(this.db, "entries", "readwrite", async ({ entries }) => {
       const existing = await get(entries, id);
@@ -69,6 +75,7 @@ export class HabitApi {
         date,
         value,
         note: note ?? "",
+        status: status ?? existing?.status ?? (Number(value ?? 0) > 0 ? EntryStatus.done : EntryStatus.pending),
         updatedAt: nowIso(),
         createdAt: existing?.createdAt ?? nowIso(),
       };

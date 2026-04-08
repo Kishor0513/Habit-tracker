@@ -3,12 +3,13 @@ import { NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import AuthGate from './components/AuthGate.jsx';
 import ToastViewport from './components/ToastViewport.jsx';
 import { isoToday } from './lib/date.js';
+import { isDueOn } from './lib/habits.js';
 import HabitsPage from './pages/HabitsPage.jsx';
 import InsightsPage from './pages/InsightsPage.jsx';
 import ProjectsPage from './pages/ProjectsPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import TodayPage from './pages/TodayPage.jsx';
-import { AppProvider } from './state/AppState.jsx';
+import { AppProvider, useApp } from './state/AppState.jsx';
 import { ToastProvider } from './state/ToastState.jsx';
 
 const NAV_ITEMS = [
@@ -173,9 +174,51 @@ function BottomNav() {
 	);
 }
 
+function ReminderEngine() {
+	const { api, isReady, dataVersion } = useApp();
+
+	useEffect(() => {
+		if (!isReady || !api || typeof Notification === 'undefined') return;
+		let timer = null;
+		let cancelled = false;
+
+		async function checkReminders() {
+			if (Notification.permission !== 'granted') return;
+			const habits = (await api.listHabits()).filter((habit) => {
+				return !habit.archivedAt && habit.reminder?.enabled && habit.reminder?.time && isDueOn(habit, isoToday());
+			});
+			const now = new Date();
+			const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+			for (const habit of habits) {
+				if (habit.reminder.time !== currentTime) continue;
+				const key = `${habit.id}__${isoToday()}__${currentTime}`;
+				if (localStorage.getItem(key)) continue;
+				new Notification(`Habit reminder: ${habit.name}`, {
+					body: habit.category ? `${habit.category} habit is due today.` : 'This habit is due today.',
+				});
+				localStorage.setItem(key, '1');
+			}
+		}
+
+		checkReminders().catch((error) => console.error(error));
+		timer = window.setInterval(() => {
+			if (cancelled) return;
+			checkReminders().catch((error) => console.error(error));
+		}, 30000);
+
+		return () => {
+			cancelled = true;
+			if (timer) window.clearInterval(timer);
+		};
+	}, [api, isReady, dataVersion]);
+
+	return null;
+}
+
 function AppShell({ isDark, onThemeToggle }) {
 	return (
 		<div className="app">
+			<ReminderEngine />
 			<Sidebar
 				isDark={isDark}
 				onThemeToggle={onThemeToggle}

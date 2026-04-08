@@ -1,5 +1,5 @@
 import { addDays, isoToday, lastNDays } from "./date.js";
-import { entryMeetsTarget, isDueOn } from "./habits.js";
+import { entryMeetsTarget, EntryStatus, habitEntryStatus, isDueOn } from "./habits.js";
 
 export function computeTodaySummary(habits, entriesByHabitId, todayIso = isoToday()) {
   const due = habits.filter((h) => isDueOn(h, todayIso));
@@ -32,6 +32,12 @@ export function currentStreak(habit, entriesByKey, endIso = isoToday(), lookback
       continue;
     }
     const entry = entriesByKey.get(`${habit.id}__${cursor}`);
+    const status = habitEntryStatus(habit, entry);
+    if (status === EntryStatus.skipped && habit.skipRule === "protect") {
+      streak += 1;
+      cursor = addDays(cursor, -1);
+      continue;
+    }
     if (!entryMeetsTarget(habit, entry)) break;
     streak += 1;
     cursor = addDays(cursor, -1);
@@ -39,3 +45,15 @@ export function currentStreak(habit, entriesByKey, endIso = isoToday(), lookback
   return streak;
 }
 
+export function weeklyGoalProgress(habit, entriesByKey, days = lastNDays(7)) {
+  const completions = days.reduce((count, day) => {
+    const entry = entriesByKey.get(`${habit.id}__${day}`);
+    return count + (entryMeetsTarget(habit, entry) ? 1 : 0);
+  }, 0);
+  const target = Math.max(0, Number(habit.goalFrequency ?? 0));
+  return {
+    completions,
+    target,
+    met: target > 0 ? completions >= target : false,
+  };
+}

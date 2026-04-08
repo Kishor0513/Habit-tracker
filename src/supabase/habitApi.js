@@ -1,3 +1,5 @@
+import { EntryStatus, normalizeSchedule } from '../lib/habits.js';
+
 function must(ok, error) {
 	if (ok) return;
 	throw error ?? new Error('Supabase error');
@@ -10,6 +12,12 @@ function nowIso() {
 function normalizeHabit(row) {
 	return {
 		...row,
+		category: row.category ?? '',
+		tags: row.tags ?? [],
+		goalFrequency: row.goal_frequency ?? 0,
+		reminder: row.reminder ?? { enabled: false, time: '08:00' },
+		skipRule: row.skip_rule ?? 'break',
+		schedule: normalizeSchedule(row.schedule, row.created_at ?? row.createdAt),
 		archivedAt: row.archived_at ?? null,
 		createdAt: row.created_at ?? null,
 		updatedAt: row.updated_at ?? null,
@@ -27,6 +35,7 @@ function normalizeEntry(row) {
 		...row,
 		id: entryCompatId(habitId, date),
 		habitId,
+		status: row.status ?? EntryStatus.pending,
 	};
 }
 
@@ -77,8 +86,13 @@ export class SupabaseHabitApi {
 			color: habit.color ?? '#7c5cff',
 			unit: habit.unit ?? '',
 			target: habit.target ?? 1,
-			schedule: habit.schedule ?? { kind: 'daily' },
+			schedule: normalizeSchedule(habit.schedule, habit.createdAt ?? nowIso()),
 			notes: habit.notes ?? '',
+			category: habit.category?.trim() ?? '',
+			tags: Array.isArray(habit.tags) ? habit.tags.filter(Boolean) : [],
+			goal_frequency: Math.max(0, Number(habit.goalFrequency ?? 0)),
+			reminder: habit.reminder ?? { enabled: false, time: '08:00' },
+			skip_rule: habit.skipRule ?? 'break',
 			archived_at: habit.archivedAt ?? habit.archived_at ?? null,
 			updated_at: nowIso(),
 		};
@@ -127,13 +141,14 @@ export class SupabaseHabitApi {
 		return normalizeEntry(data);
 	}
 
-	async setEntry({ habitId, date, value, note }) {
+	async setEntry({ habitId, date, value, note, status }) {
 		const payload = {
 			user_id: this.userId,
 			habit_id: habitId,
 			date,
 			value,
 			note: note ?? '',
+			status: status ?? (Number(value ?? 0) > 0 ? EntryStatus.done : EntryStatus.pending),
 			updated_at: nowIso(),
 		};
 		const { data, error } = await this.supabase
