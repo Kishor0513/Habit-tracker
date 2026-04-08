@@ -51,7 +51,7 @@ export default function AuthGate({ children }) {
 							marginBottom: '12px',
 						}}
 					>
-						Premium workspace
+						Workspace access
 					</div>
 					<h2 style={{ fontSize: '28px', marginBottom: '8px' }}>Log In</h2>
 					<p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>{help}</p>

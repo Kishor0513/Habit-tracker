@@ -65,7 +65,7 @@ function Sidebar({ isDark, onThemeToggle }) {
 	return (
 		<aside className="sidebarArea">
 			<div className="sidebarHero">
-				<div className="sidebarEyebrow">Premium Workspace</div>
+				<div className="sidebarEyebrow">Daily System</div>
 				<div className="sidebarHeroTop">
 					<div
 						className="sidebarAvatar"
@@ -85,22 +85,22 @@ function Sidebar({ isDark, onThemeToggle }) {
 				<div className="sidebarHeroCopy">
 					<div className="sidebarWorkspace">Habit Workspace</div>
 					<div className="sidebarWorkspaceMeta">
-						Precision habit tracking with focus loops, streak telemetry, and project momentum in one command center.
+						A focused workspace for habits, projects, reminders, and immersive work sessions.
 					</div>
 				</div>
 				<div className="sidebarStats">
 					<div className="sidebarStat">
-						<span className="sidebarStatValue">24/7</span>
-						<span className="sidebarStatLabel">Sync ready</span>
+						<span className="sidebarStatValue">Focus</span>
+						<span className="sidebarStatLabel">Countdown mode</span>
 					</div>
 					<div className="sidebarStat">
-						<span className="sidebarStatValue">Pro</span>
-						<span className="sidebarStatLabel">Visual system</span>
+						<span className="sidebarStatValue">Glass</span>
+						<span className="sidebarStatLabel">Adaptive layout</span>
 					</div>
 				</div>
 			</div>
 			<div className="navGroup">
-				<div className="navGroupLabel">Navigation</div>
+				<div className="navGroupLabel">Workspace</div>
 				{NAV_ITEMS.map((item) => (
 					<NavLink
 						key={item.to}
@@ -126,9 +126,26 @@ function Sidebar({ isDark, onThemeToggle }) {
 
 function Topbar() {
 	const location = useLocation();
+	const [now, setNow] = useState(() => new Date());
 	const title =
 		NAV_ITEMS.find((n) => n.to === location.pathname)?.label || 'Page';
 	const dateLabel = isoToday();
+
+	useEffect(() => {
+		const id = window.setInterval(() => setNow(new Date()), 1000);
+		return () => window.clearInterval(id);
+	}, []);
+
+	const timeLabel = now.toLocaleTimeString([], {
+		hour: '2-digit',
+		minute: '2-digit',
+		second: '2-digit',
+	});
+	const longDate = now.toLocaleDateString([], {
+		weekday: 'short',
+		month: 'short',
+		day: 'numeric',
+	});
 
 	return (
 		<header className="topbar">
@@ -141,9 +158,10 @@ function Topbar() {
 				<div className="topbarTitle">{title}</div>
 			</div>
 			<div className="topbarMeta">
-				<span className="badge brand">{dateLabel}</span>
-				<span className="badge">Premium UI</span>
-				<span className="badge success">Live session</span>
+				<div className="topbarClock">
+					<div className="topbarClockTime">{timeLabel}</div>
+					<div className="topbarClockDate">{longDate} · {dateLabel}</div>
+				</div>
 			</div>
 		</header>
 	);

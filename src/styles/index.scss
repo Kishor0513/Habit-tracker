@@ -2,91 +2,91 @@ $sans: 'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif;
 $mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
 
 :root {
-	--bg: #f7f2ff;
-	--bg-app: #f7f2ff;
-	--bg-app-secondary: #f0e7ff;
-	--bg-sidebar: rgba(252, 248, 255, 0.72);
-	--bg-panel: rgba(255, 252, 255, 0.84);
-	--bg-panel-solid: #fffaff;
-	--bg-panel-hover: rgba(249, 242, 255, 0.96);
-	--bg-2: #ebe0ff;
+	--bg: #edf4f7;
+	--bg-app: #edf4f7;
+	--bg-app-secondary: #dce9ef;
+	--bg-sidebar: rgba(244, 249, 251, 0.68);
+	--bg-panel: rgba(251, 254, 255, 0.72);
+	--bg-panel-solid: rgba(255, 255, 255, 0.92);
+	--bg-panel-hover: rgba(245, 251, 254, 0.96);
+	--bg-2: #d7e7ee;
 	--surface-container:
-		linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(242, 233, 255, 0.88) 56%, rgba(255, 231, 247, 0.84) 100%);
+		linear-gradient(150deg, rgba(255, 255, 255, 0.9) 0%, rgba(233, 244, 248, 0.84) 54%, rgba(226, 236, 229, 0.82) 100%);
 
-	--border-muted: rgba(109, 40, 217, 0.12);
-	--border-glow: rgba(236, 72, 153, 0.26);
-	--border: rgba(139, 92, 246, 0.18);
+	--border-muted: rgba(32, 88, 112, 0.14);
+	--border-glow: rgba(232, 119, 74, 0.28);
+	--border: rgba(58, 130, 160, 0.18);
 
-	--text-main: #251338;
-	--text: #44265f;
-	--text-muted: #6f5a8d;
-	--text-faint: #a08bbf;
+	--text-main: #16303f;
+	--text: #29495b;
+	--text-muted: #5f7988;
+	--text-faint: #8ea3af;
 
-	--accent-base: #c026d3;
-	--accent-glow: #ec4899;
-	--accent-soft: rgba(192, 38, 211, 0.12);
+	--accent-base: #e8774a;
+	--accent-glow: #f0a35d;
+	--accent-soft: rgba(232, 119, 74, 0.12);
 
-	--brand: #7c3aed;
-	--brand-mid: #a855f7;
-	--brand-strong: #ec4899;
+	--brand: #247ba0;
+	--brand-mid: #4096b8;
+	--brand-strong: #1b4d67;
 
 	--danger: #dc2626;
-	--warning: #f97316;
+	--warning: #c96c3f;
 	--success: #15803d;
 
 	--radius-sm: 12px;
 	--radius-md: 22px;
 	--radius-lg: 30px;
 
-	--shadow-sm: 0 14px 34px rgba(76, 29, 149, 0.08);
-	--shadow-md: 0 28px 60px rgba(76, 29, 149, 0.14);
-	--shadow-glow: 0 0 0 4px rgba(192, 38, 211, 0.12);
+	--shadow-sm: 0 16px 36px rgba(26, 66, 88, 0.1);
+	--shadow-md: 0 30px 70px rgba(26, 66, 88, 0.16);
+	--shadow-glow: 0 0 0 4px rgba(36, 123, 160, 0.12);
 
 	--bezier-snap: cubic-bezier(0.2, 0.75, 0.2, 1);
 }
 
 [data-theme='dark'] {
-	--bg: #12081d;
-	--bg-app: #12081d;
-	--bg-app-secondary: #1a1026;
-	--bg-sidebar: rgba(24, 12, 34, 0.82);
-	--bg-panel: rgba(29, 16, 43, 0.8);
-	--bg-panel-solid: #211332;
-	--bg-panel-hover: rgba(39, 24, 58, 0.96);
-	--bg-2: #2d1a45;
+	--bg: #09131a;
+	--bg-app: #09131a;
+	--bg-app-secondary: #10202a;
+	--bg-sidebar: rgba(12, 24, 31, 0.82);
+	--bg-panel: rgba(15, 28, 36, 0.78);
+	--bg-panel-solid: #132733;
+	--bg-panel-hover: rgba(22, 39, 50, 0.94);
+	--bg-2: #183646;
 	--surface-container:
-		linear-gradient(145deg, rgba(42, 20, 65, 0.92) 0%, rgba(27, 14, 41, 0.94) 58%, rgba(61, 17, 61, 0.92) 100%);
+		linear-gradient(145deg, rgba(16, 36, 48, 0.92) 0%, rgba(11, 23, 31, 0.94) 58%, rgba(38, 45, 32, 0.88) 100%);
 
-	--border-muted: rgba(196, 181, 253, 0.18);
-	--border-glow: rgba(244, 114, 182, 0.34);
-	--border: rgba(167, 139, 250, 0.24);
+	--border-muted: rgba(125, 172, 194, 0.18);
+	--border-glow: rgba(240, 163, 93, 0.28);
+	--border: rgba(96, 166, 196, 0.24);
 
-	--text-main: #faf5ff;
-	--text: #eedcff;
-	--text-muted: #cbb4ea;
-	--text-faint: #a98ac9;
+	--text-main: #f2fbff;
+	--text: #d2ecf5;
+	--text-muted: #a8c3cf;
+	--text-faint: #7e9aa7;
 
-	--accent-base: #d946ef;
-	--accent-glow: #f472b6;
-	--accent-soft: rgba(217, 70, 239, 0.18);
+	--accent-base: #f0a35d;
+	--accent-glow: #ffcb7b;
+	--accent-soft: rgba(240, 163, 93, 0.18);
 
-	--brand: #a855f7;
-	--brand-mid: #c084fc;
-	--brand-strong: #f472b6;
+	--brand: #61b2d1;
+	--brand-mid: #89cde4;
+	--brand-strong: #b0deea;
 
 	--danger: #f87171;
-	--warning: #fb7185;
+	--warning: #f0a35d;
 	--success: #4ade80;
 
 	--shadow-sm: 0 18px 40px rgba(0, 0, 0, 0.24);
 	--shadow-md: 0 32px 80px rgba(0, 0, 0, 0.34);
-	--shadow-glow: 0 0 0 4px rgba(217, 70, 239, 0.18);
+	--shadow-glow: 0 0 0 4px rgba(97, 178, 209, 0.18);
 }
 
 [data-theme='dark'] body {
 	background:
-		radial-gradient(circle at 15% 12%, rgba(168, 85, 247, 0.18), transparent 30%),
-		radial-gradient(circle at 86% 10%, rgba(236, 72, 153, 0.16), transparent 32%),
+		radial-gradient(circle at 15% 12%, rgba(97, 178, 209, 0.16), transparent 30%),
+		radial-gradient(circle at 86% 10%, rgba(240, 163, 93, 0.12), transparent 32%),
 		linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 38%),
 		var(--bg-app);
 }
@@ -111,12 +111,12 @@ body {
 	background:
 		radial-gradient(
 			circle at 15% 12%,
-			rgba(168, 85, 247, 0.14),
+			rgba(64, 150, 184, 0.14),
 			transparent 30%
 		),
 		radial-gradient(
 			circle at 86% 10%,
-			rgba(236, 72, 153, 0.14),
+			rgba(232, 119, 74, 0.14),
 			transparent 32%
 		),
 		linear-gradient(180deg, rgba(255, 255, 255, 0.35), transparent 38%),
@@ -168,8 +168,8 @@ p {
 	display: flex;
 	flex-direction: column;
 	border: 1px solid var(--border-muted);
-	background: var(--bg-sidebar);
-	backdrop-filter: blur(24px);
+	background: linear-gradient(180deg, rgba(255,255,255,0.26), rgba(255,255,255,0.08)), var(--bg-sidebar);
+	backdrop-filter: blur(26px);
 	border-radius: 28px;
 	box-shadow: var(--shadow-sm);
 	overflow: hidden;
@@ -326,13 +326,13 @@ p {
 	overflow-y: auto;
 	border: 1px solid var(--border-muted);
 	border-radius: 32px;
-	background: rgba(255, 251, 247, 0.62);
-	backdrop-filter: blur(20px);
+	background: linear-gradient(180deg, rgba(255,255,255,0.24), rgba(255,255,255,0.06)), rgba(255, 251, 247, 0.52);
+	backdrop-filter: blur(24px);
 	box-shadow: var(--shadow-sm);
 }
 
 [data-theme='dark'] .mainArea {
-	background: rgba(20, 12, 31, 0.88);
+	background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)), rgba(10, 18, 24, 0.88);
 }
 
 .topbar {
@@ -345,12 +345,12 @@ p {
 	align-items: center;
 	justify-content: space-between;
 	border-bottom: 1px solid var(--border-muted);
-	background: rgba(255, 249, 243, 0.78);
-	backdrop-filter: blur(14px);
+	background: rgba(255, 255, 255, 0.42);
+	backdrop-filter: blur(18px);
 }
 
 [data-theme='dark'] .topbar {
-	background: rgba(27, 16, 41, 0.9);
+	background: rgba(10, 20, 28, 0.82);
 }
 
 .breadcrumb {
@@ -375,6 +375,33 @@ p {
 	display: flex;
 	align-items: center;
 	gap: 8px;
+}
+
+.topbarClock {
+	min-width: 172px;
+	padding: 12px 16px;
+	border-radius: 20px;
+	border: 1px solid var(--border-muted);
+	background: rgba(255, 255, 255, 0.34);
+	backdrop-filter: blur(20px);
+	text-align: right;
+}
+
+[data-theme='dark'] .topbarClock {
+	background: rgba(255, 255, 255, 0.04);
+}
+
+.topbarClockTime {
+	font-family: $mono;
+	font-size: 1.15rem;
+	font-weight: 700;
+	color: var(--text-main);
+}
+
+.topbarClockDate {
+	margin-top: 4px;
+	font-size: 11px;
+	color: var(--text-muted);
 }
 
 .topbarTitle {
@@ -1969,5 +1996,298 @@ p {
 	}
 	100% {
 		background-position: 1000px 0;
+	}
+}
+
+.focusStudio {
+	position: relative;
+	overflow: hidden;
+	padding: 24px;
+	border-radius: 30px;
+	border: 1px solid rgba(255, 255, 255, 0.28);
+	background:
+		linear-gradient(180deg, rgba(255,255,255,0.26), rgba(255,255,255,0.08)),
+		var(--surface-container);
+}
+
+.focusStudioGrid {
+	display: grid;
+	grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+	gap: 18px;
+	align-items: stretch;
+}
+
+.focusCountdownCard,
+.glassPlayer {
+	padding: 22px;
+	border-radius: 26px;
+	border: 1px solid var(--border-muted);
+	background: rgba(255, 255, 255, 0.26);
+	backdrop-filter: blur(24px);
+	box-shadow: var(--shadow-sm);
+}
+
+[data-theme='dark'] .focusCountdownCard,
+[data-theme='dark'] .glassPlayer {
+	background: rgba(255, 255, 255, 0.04);
+}
+
+.countdownMachine {
+	margin: 18px 0;
+	padding: 28px;
+	border-radius: 28px;
+	border: 1px solid rgba(255, 255, 255, 0.28);
+	background:
+		radial-gradient(circle at top left, rgba(255,255,255,0.22), transparent 36%),
+		linear-gradient(135deg, rgba(18, 42, 56, 0.95) 0%, rgba(13, 28, 38, 0.96) 100%);
+	color: #f3fbff;
+	box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 24px 42px rgba(11, 28, 38, 0.24);
+}
+
+.countdownMachineLabel {
+	font-size: 11px;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	opacity: 0.72;
+}
+
+.countdownMachineValue {
+	margin-top: 10px;
+	font-family: $mono;
+	font-size: clamp(3rem, 8vw, 5.8rem);
+	font-weight: 700;
+	letter-spacing: -0.04em;
+	line-height: 0.98;
+}
+
+.countdownMachineSubtle {
+	margin-top: 10px;
+	color: rgba(243, 251, 255, 0.72);
+}
+
+.focusPresetRow,
+.focusCustomRow,
+.spotifySessionControls {
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.focusCustomRow {
+	margin-top: 14px;
+}
+
+.sessionToggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	margin-top: 14px;
+	color: var(--text-muted);
+	font-size: 13px;
+}
+
+.glassPlayerHeader {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 18px;
+}
+
+.spotifyShowcase {
+	display: grid;
+	grid-template-columns: 112px minmax(0, 1fr);
+	gap: 16px;
+	align-items: center;
+}
+
+.spotifyShowcase.immersive {
+	grid-template-columns: 160px minmax(0, 1fr);
+}
+
+.spotifyShowcaseArtwork {
+	width: 112px;
+	height: 112px;
+	border-radius: 22px;
+	overflow: hidden;
+	background: linear-gradient(140deg, var(--brand) 0%, var(--accent-glow) 100%);
+	display: grid;
+	place-items: center;
+	color: #fff;
+	font-size: 2.5rem;
+	box-shadow: 0 20px 34px rgba(23, 63, 84, 0.22);
+}
+
+.spotifyShowcase.immersive .spotifyShowcaseArtwork {
+	width: 160px;
+	height: 160px;
+}
+
+.spotifyShowcaseArtwork img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.spotifyShowcaseCopy {
+	min-width: 0;
+}
+
+.spotifyTrackName {
+	font-size: 1.1rem;
+	font-weight: 700;
+	color: var(--text-main);
+}
+
+.spotifyArtistName {
+	margin-top: 6px;
+	font-size: 0.92rem;
+	color: var(--text-muted);
+}
+
+.spotifyTimelineBar {
+	height: 8px;
+	margin-top: 18px;
+	border-radius: 999px;
+	background: rgba(0, 0, 0, 0.08);
+	overflow: hidden;
+	cursor: pointer;
+}
+
+[data-theme='dark'] .spotifyTimelineBar {
+	background: rgba(255, 255, 255, 0.1);
+}
+
+.spotifyTimelineFill {
+	height: 100%;
+	border-radius: inherit;
+	background: linear-gradient(90deg, var(--brand) 0%, var(--accent-glow) 100%);
+}
+
+.spotifyTimelineMeta {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 8px;
+	font-size: 12px;
+	color: var(--text-muted);
+	font-family: $mono;
+}
+
+.focusFullscreenOverlay {
+	position: absolute;
+	inset: 0;
+	z-index: 20;
+	display: grid;
+	place-items: center;
+}
+
+.focusFullscreenBackdrop {
+	position: absolute;
+	inset: 0;
+	background:
+		radial-gradient(circle at 20% 20%, rgba(64, 150, 184, 0.28), transparent 28%),
+		radial-gradient(circle at 80% 15%, rgba(232, 119, 74, 0.22), transparent 30%),
+		linear-gradient(180deg, rgba(7, 16, 22, 0.88), rgba(7, 16, 22, 0.96));
+}
+
+.focusFullscreenShell {
+	position: relative;
+	z-index: 1;
+	width: min(1200px, 100%);
+	padding: 36px;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
+	gap: 28px;
+}
+
+.focusFullscreenTimer {
+	padding: 32px;
+	border-radius: 32px;
+	border: 1px solid rgba(255,255,255,0.14);
+	background: rgba(255, 255, 255, 0.06);
+	backdrop-filter: blur(24px);
+	color: #f2fbff;
+}
+
+.focusFullscreenValue {
+	margin-top: 16px;
+	font-family: $mono;
+	font-size: clamp(4.4rem, 14vw, 10rem);
+	font-weight: 700;
+	line-height: 0.92;
+	letter-spacing: -0.05em;
+}
+
+.focusFullscreenMeta {
+	display: flex;
+	gap: 18px;
+	flex-wrap: wrap;
+	margin: 16px 0 22px;
+	color: rgba(242, 251, 255, 0.72);
+}
+
+.glassPlayer.immersive {
+	background: rgba(255,255,255,0.08);
+	border-color: rgba(255,255,255,0.16);
+	color: #f2fbff;
+}
+
+.glassPlayer.immersive .spotifyTrackName,
+.glassPlayer.immersive .premiumPanelTitle {
+	color: #f2fbff;
+}
+
+.glassPlayer.immersive .spotifyArtistName,
+.glassPlayer.immersive .subtle,
+.glassPlayer.immersive .spotifyTimelineMeta {
+	color: rgba(242, 251, 255, 0.72);
+}
+
+@media (max-width: 1100px) {
+	.focusStudioGrid,
+	.focusFullscreenShell {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 768px) {
+	.topbarClock {
+		min-width: 0;
+		padding: 10px 12px;
+	}
+
+	.topbarClockTime {
+		font-size: 0.96rem;
+	}
+
+	.focusStudio {
+		padding: 16px;
+	}
+
+	.focusCountdownCard,
+	.glassPlayer,
+	.focusFullscreenTimer {
+		padding: 18px;
+	}
+
+	.countdownMachine {
+		padding: 20px;
+	}
+
+	.spotifyShowcase,
+	.spotifyShowcase.immersive {
+		grid-template-columns: 1fr;
+	}
+
+	.spotifyShowcaseArtwork,
+	.spotifyShowcase.immersive .spotifyShowcaseArtwork {
+		width: 100%;
+		max-width: 220px;
+		height: auto;
+		aspect-ratio: 1;
+	}
+
+	.focusFullscreenShell {
+		padding: 16px;
 	}
 }
