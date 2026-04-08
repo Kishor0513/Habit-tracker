@@ -407,8 +407,6 @@ export default function ProductivityHub() {
 						</div>
 					</div>
 				</div>
-
-				{focus.running && !isFullscreen ? <SpotifyPanel /> : null}
 			</div>
 
 			{isFullscreen ? (
