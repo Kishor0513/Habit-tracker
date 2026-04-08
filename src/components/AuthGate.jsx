@@ -43,7 +43,7 @@ export default function AuthGate({ children }) {
 
 	const help = useMemo(() => {
 		if (!supabaseConfigured) return 'Supabase is not configured.';
-		return 'Sign in with Google, email link, or email and password to access your workspace.';
+		return 'Use email and password to sign in or create an account. Email login is separate below.';
 	}, [supabaseConfigured]);
 
 	if (canContinue) return children;
@@ -90,32 +90,32 @@ export default function AuthGate({ children }) {
 					<p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>{help}</p>
 				</div>
 
-				<div
-					style={{
-						display: 'flex',
-						alignItems: 'center',
-						margin: '20px 0',
-						color: 'var(--border)',
-					}}
-				>
+				<div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 					<div
-						style={{ flex: 1, height: '1px', background: 'var(--border)' }}
-					/>
-					<span
 						style={{
-							padding: '0 10px',
-							fontSize: '12px',
-							color: 'var(--text-faint)',
+							display: 'flex',
+							alignItems: 'center',
+							margin: '4px 0 8px',
+							color: 'var(--border)',
 						}}
 					>
-						OR
-					</span>
-					<div
-						style={{ flex: 1, height: '1px', background: 'var(--border)' }}
-					/>
-				</div>
+						<div
+							style={{ flex: 1, height: '1px', background: 'var(--border)' }}
+						/>
+						<span
+							style={{
+								padding: '0 10px',
+								fontSize: '12px',
+								color: 'var(--text-faint)',
+							}}
+						>
+							PASSWORD ACCESS
+						</span>
+						<div
+							style={{ flex: 1, height: '1px', background: 'var(--border)' }}
+						/>
+					</div>
 
-				<div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 					<input
 						className="input"
 						type="email"
@@ -178,24 +178,6 @@ export default function AuthGate({ children }) {
 						</button>
 					</div>
 					<button
-						className="btn btn-primary"
-						style={{ width: '100%', height: '32px' }}
-						disabled={!email.trim() || busy}
-						onClick={async () => {
-							try {
-								setBusy(true);
-								await auth.signInWithOtp(email.trim());
-								toast.push('Check your email for a sign-in link.');
-							} catch (e) {
-								toast.push(getAuthErrorMessage(e, 'Magic link failed.'));
-							} finally {
-								setBusy(false);
-							}
-						}}
-					>
-						Email Login
-					</button>
-					<button
 						className="btn ghost"
 						style={{ width: '100%', height: '32px' }}
 						disabled={!email.trim() || busy}
@@ -212,6 +194,50 @@ export default function AuthGate({ children }) {
 						}}
 					>
 						Forgot password?
+					</button>
+
+					<div
+						style={{
+							display: 'flex',
+							alignItems: 'center',
+							margin: '14px 0 8px',
+							color: 'var(--border)',
+						}}
+					>
+						<div
+							style={{ flex: 1, height: '1px', background: 'var(--border)' }}
+						/>
+						<span
+							style={{
+								padding: '0 10px',
+								fontSize: '12px',
+								color: 'var(--text-faint)',
+							}}
+						>
+							EMAIL LOGIN
+						</span>
+						<div
+							style={{ flex: 1, height: '1px', background: 'var(--border)' }}
+						/>
+					</div>
+
+					<button
+						className="btn btn-primary"
+						style={{ width: '100%', height: '32px' }}
+						disabled={!email.trim() || busy}
+						onClick={async () => {
+							try {
+								setBusy(true);
+								await auth.signInWithOtp(email.trim());
+								toast.push('Check your email for a sign-in link.');
+							} catch (e) {
+								toast.push(getAuthErrorMessage(e, 'Magic link failed.'));
+							} finally {
+								setBusy(false);
+							}
+						}}
+					>
+						Email Login
 					</button>
 				</div>
 			</div>

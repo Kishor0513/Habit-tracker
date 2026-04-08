@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useToast } from '../state/ToastState.jsx';
 import { useStudio } from '../state/StudioState.jsx';
+import { useToast } from '../state/ToastState.jsx';
 
 function formatTime(totalSeconds) {
 	const minutes = Math.floor(totalSeconds / 60);
@@ -26,14 +26,19 @@ function SpotifyPanel({ immersive = false }) {
 	const { spotify } = useStudio();
 	const albumImg = spotify.spotifyState?.item?.album?.images?.[0]?.url ?? null;
 	const artistName =
-		spotify.spotifyState?.item?.artists?.map((artist) => artist.name).join(', ') ||
+		spotify.spotifyState?.item?.artists
+			?.map((artist) => artist.name)
+			.join(', ') ||
 		spotify.spotifyMe?.display_name ||
 		'Connect Spotify to bring your session soundtrack into the workspace.';
 	const trackName = spotify.spotifyState?.item?.name || 'No track selected';
-	const isPlaying = Boolean(spotify.spotifyState?.is_playing || spotify.spotifyState?.paused === false);
+	const isPlaying = Boolean(
+		spotify.spotifyState?.is_playing || spotify.spotifyState?.paused === false,
+	);
 	const progressMs = spotify.spotifyState?.progress_ms ?? 0;
 	const durationMs = spotify.spotifyState?.item?.duration_ms ?? 0;
-	const progressPct = durationMs > 0 ? Math.min(100, (progressMs / durationMs) * 100) : 0;
+	const progressPct =
+		durationMs > 0 ? Math.min(100, (progressMs / durationMs) * 100) : 0;
 
 	return (
 		<div className={`glassPlayer ${immersive ? 'immersive' : ''}`}>
@@ -42,12 +47,18 @@ function SpotifyPanel({ immersive = false }) {
 					<div className="panelEyebrow">Session soundtrack</div>
 					<h3 className="premiumPanelTitle">Spotify</h3>
 				</div>
-				<span className={isPlaying ? 'badge success' : 'badge'}>{isPlaying ? 'Playing' : 'Ready'}</span>
+				<span className={isPlaying ? 'badge success' : 'badge'}>
+					{isPlaying ? 'Playing' : 'Ready'}
+				</span>
 			</div>
 
 			{!spotify.spotifyAuthed ? (
 				<div className="spotifyConnect">
-					<button className="btn primary" style={{ width: '100%' }} onClick={spotify.connect}>
+					<button
+						className="btn primary"
+						style={{ width: '100%' }}
+						onClick={spotify.connect}
+					>
 						Connect Spotify
 					</button>
 				</div>
@@ -55,12 +66,26 @@ function SpotifyPanel({ immersive = false }) {
 				<>
 					<div className={`spotifyShowcase ${immersive ? 'immersive' : ''}`}>
 						<div className="spotifyShowcaseArtwork">
-							{albumImg ? <img src={albumImg} alt={trackName} /> : <span>♪</span>}
+							{albumImg ? (
+								<img
+									src={albumImg}
+									alt={trackName}
+								/>
+							) : (
+								<span>♪</span>
+							)}
 						</div>
 						<div className="spotifyShowcaseCopy">
 							<div className="spotifyTrackName">{trackName}</div>
 							<div className="spotifyArtistName">{artistName}</div>
-							{spotify.spotifyError ? <div className="subtle" style={{ color: 'var(--warning)' }}>{spotify.spotifyError}</div> : null}
+							{spotify.spotifyError ? (
+								<div
+									className="subtle"
+									style={{ color: 'var(--warning)' }}
+								>
+									{spotify.spotifyError}
+								</div>
+							) : null}
 						</div>
 					</div>
 
@@ -69,11 +94,17 @@ function SpotifyPanel({ immersive = false }) {
 						onClick={(event) => {
 							if (!durationMs) return;
 							const rect = event.currentTarget.getBoundingClientRect();
-							const ratio = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+							const ratio = Math.min(
+								1,
+								Math.max(0, (event.clientX - rect.left) / rect.width),
+							);
 							spotify.seek(durationMs * ratio);
 						}}
 					>
-						<div className="spotifyTimelineFill" style={{ width: `${progressPct}%` }} />
+						<div
+							className="spotifyTimelineFill"
+							style={{ width: `${progressPct}%` }}
+						/>
 					</div>
 					<div className="spotifyTimelineMeta">
 						<span>{formatMs(progressMs)}</span>
@@ -81,14 +112,47 @@ function SpotifyPanel({ immersive = false }) {
 					</div>
 
 					<div className="spotifySessionControls">
-						<button className="btn ghost" type="button" onClick={spotify.previous}>Previous</button>
-						<button className="btn primary" type="button" onClick={spotify.playPause}>{isPlaying ? 'Pause' : 'Play'}</button>
-						<button className="btn ghost" type="button" onClick={spotify.next}>Next</button>
+						<button
+							className="btn ghost"
+							type="button"
+							onClick={spotify.previous}
+						>
+							Previous
+						</button>
+						<button
+							className="btn primary"
+							type="button"
+							onClick={spotify.playPause}
+						>
+							{isPlaying ? 'Pause' : 'Play'}
+						</button>
+						<button
+							className="btn ghost"
+							type="button"
+							onClick={spotify.next}
+						>
+							Next
+						</button>
 					</div>
 
-					<div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-						<button className="btn ghost" type="button" onClick={spotify.refresh}>Refresh Spotify</button>
-						<button className="btn ghost" type="button" onClick={spotify.disconnect}>Disconnect</button>
+					<div
+						className="row"
+						style={{ gap: 8, flexWrap: 'wrap' }}
+					>
+						<button
+							className="btn ghost"
+							type="button"
+							onClick={spotify.refresh}
+						>
+							Refresh Spotify
+						</button>
+						<button
+							className="btn ghost"
+							type="button"
+							onClick={spotify.disconnect}
+						>
+							Disconnect
+						</button>
 					</div>
 				</>
 			)}
@@ -102,16 +166,21 @@ export default function ProductivityHub() {
 	const fullscreenRef = useRef(null);
 	const [isFullscreen, setIsFullscreen] = useState(false);
 
-	const progressPct = focus.focusMax === 0 ? 0 : Math.max(0, (focus.focusSeconds / focus.focusMax) * 100);
+	const progressPct =
+		focus.focusMax === 0
+			? 0
+			: Math.max(0, (focus.focusSeconds / focus.focusMax) * 100);
 	const sessionLabel = useMemo(() => {
 		if (focus.focusSeconds === 0) return 'Finished';
 		return focus.running ? 'Running' : 'Paused';
 	}, [focus.focusSeconds, focus.running]);
 
 	useEffect(() => {
-		const onFullscreenChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
+		const onFullscreenChange = () =>
+			setIsFullscreen(Boolean(document.fullscreenElement));
 		document.addEventListener('fullscreenchange', onFullscreenChange);
-		return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+		return () =>
+			document.removeEventListener('fullscreenchange', onFullscreenChange);
 	}, []);
 
 	async function enterFullscreen() {
@@ -134,7 +203,10 @@ export default function ProductivityHub() {
 	}
 
 	return (
-		<div className="focusStudio glass-card" ref={fullscreenRef}>
+		<div
+			className="focusStudio glass-card"
+			ref={fullscreenRef}
+		>
 			<div className={`focusStudioGrid ${focus.running ? 'isActive' : ''}`}>
 				<div className="focusCountdownCard">
 					<div className="premiumPanelHeader">
@@ -142,24 +214,35 @@ export default function ProductivityHub() {
 							<div className="panelEyebrow">Focus session</div>
 							<h3 className="premiumPanelTitle">Remaining time</h3>
 							{focus.selectedHabitName ? (
-								<div className="subtle" style={{ marginTop: 6 }}>
+								<div
+									className="subtle"
+									style={{ marginTop: 6 }}
+								>
 									Linked habit: {focus.selectedHabitName}
 								</div>
 							) : null}
 						</div>
-						<span className={focus.running ? 'badge success' : 'badge'}>{sessionLabel}</span>
+						<span className={focus.running ? 'badge success' : 'badge'}>
+							{sessionLabel}
+						</span>
 					</div>
 
 					<div className="countdownMachine">
 						<div className="countdownMachineLabel">Countdown machine</div>
-						<div className="countdownMachineValue">{formatTime(focus.focusSeconds)}</div>
+						<div className="countdownMachineValue">
+							{formatTime(focus.focusSeconds)}
+						</div>
 						<div className="countdownMachineSubtle">
-							{Math.round(progressPct)}% left of {Math.round(focus.focusMax / 60)} minutes
+							{Math.round(progressPct)}% left of{' '}
+							{Math.round(focus.focusMax / 60)} minutes
 						</div>
 					</div>
 
 					<div className="focusBar">
-						<div className="focusBarFill" style={{ width: `${progressPct}%` }} />
+						<div
+							className="focusBarFill"
+							style={{ width: `${progressPct}%` }}
+						/>
 					</div>
 
 					<div className="focusPresetRow">
@@ -188,17 +271,26 @@ export default function ProductivityHub() {
 							onChange={(event) => focus.setCustomMinutes(event.target.value)}
 							placeholder="Custom minutes"
 						/>
-						<button className="btn ghost" type="button" onClick={() => focus.applyCustomDuration(focus.customMinutes)}>
+						<button
+							className="btn ghost"
+							type="button"
+							onClick={() => focus.applyCustomDuration(focus.customMinutes)}
+						>
 							Set duration
 						</button>
 					</div>
 
-					<div className="row" style={{ gap: 10, flexWrap: 'wrap' }}>
+					<div
+						className="row"
+						style={{ gap: 10, flexWrap: 'wrap' }}
+					>
 						<label className="sessionToggle">
 							<input
 								type="checkbox"
 								checked={focus.autoFullscreen}
-								onChange={(event) => focus.setAutoFullscreen(event.target.checked)}
+								onChange={(event) =>
+									focus.setAutoFullscreen(event.target.checked)
+								}
 							/>
 							<span>Open in fullscreen on start</span>
 						</label>
@@ -219,8 +311,20 @@ export default function ProductivityHub() {
 						>
 							{focus.running ? 'Pause session' : 'Start session'}
 						</button>
-						<button className="btn ghost" type="button" onClick={focus.resetSession}>Reset</button>
-						<button className="btn ghost" type="button" onClick={() => (isFullscreen ? exitFullscreen() : enterFullscreen())}>
+						<button
+							className="btn ghost"
+							type="button"
+							onClick={focus.resetSession}
+						>
+							Reset
+						</button>
+						<button
+							className="btn ghost"
+							type="button"
+							onClick={() =>
+								isFullscreen ? exitFullscreen() : enterFullscreen()
+							}
+						>
 							{isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
 						</button>
 					</div>
@@ -228,19 +332,41 @@ export default function ProductivityHub() {
 					<div className="focusHistoryGrid">
 						<div className="focusHistoryCard">
 							<div className="panelEyebrow">Session history</div>
-							<div className="list" style={{ marginTop: 12 }}>
+							<div
+								className="list"
+								style={{ marginTop: 12 }}
+							>
 								{focus.focusHistory.length === 0 ? (
 									<div className="subtle">No focus history yet.</div>
 								) : (
 									focus.focusHistory.slice(0, 5).map((item) => (
-										<div key={item.id} className="item">
-											<div className="row between" style={{ gap: 10 }}>
-												<div className="subtle">{formatStamp(item.finishedAt)}</div>
-												<span className={item.status === 'completed' ? 'badge success' : 'badge warning'}>
+										<div
+											key={item.id}
+											className="item"
+										>
+											<div
+												className="row between"
+												style={{ gap: 10 }}
+											>
+												<div className="subtle">
+													{formatStamp(item.finishedAt)}
+												</div>
+												<span
+													className={
+														item.status === 'completed'
+															? 'badge success'
+															: 'badge warning'
+													}
+												>
 													{item.status}
 												</span>
 											</div>
-											<div className="itemName" style={{ marginTop: 6 }}>{item.minutes} minute session</div>
+											<div
+												className="itemName"
+												style={{ marginTop: 6 }}
+											>
+												{item.minutes} minute session
+											</div>
 										</div>
 									))
 								)}
@@ -249,15 +375,31 @@ export default function ProductivityHub() {
 
 						<div className="focusHistoryCard">
 							<div className="panelEyebrow">Track history</div>
-							<div className="list" style={{ marginTop: 12 }}>
+							<div
+								className="list"
+								style={{ marginTop: 12 }}
+							>
 								{spotify.spotifyHistory.length === 0 ? (
 									<div className="subtle">No Spotify history yet.</div>
 								) : (
 									spotify.spotifyHistory.slice(0, 5).map((item) => (
-										<div key={`${item.id}-${item.playedAt}`} className="item">
+										<div
+											key={`${item.id}-${item.playedAt}`}
+											className="item"
+										>
 											<div className="itemName">{item.name}</div>
-											<div className="subtle" style={{ marginTop: 4 }}>{item.artist}</div>
-											<div className="subtle" style={{ marginTop: 6 }}>{formatStamp(item.playedAt)}</div>
+											<div
+												className="subtle"
+												style={{ marginTop: 4 }}
+											>
+												{item.artist}
+											</div>
+											<div
+												className="subtle"
+												style={{ marginTop: 6 }}
+											>
+												{formatStamp(item.playedAt)}
+											</div>
 										</div>
 									))
 								)}
@@ -266,7 +408,7 @@ export default function ProductivityHub() {
 					</div>
 				</div>
 
-				{focus.running ? <SpotifyPanel /> : null}
+				{focus.running && !isFullscreen ? <SpotifyPanel /> : null}
 			</div>
 
 			{isFullscreen ? (
@@ -275,13 +417,20 @@ export default function ProductivityHub() {
 					<div className="focusFullscreenShell">
 						<div className="focusFullscreenTimer">
 							<div className="panelEyebrow">Focus mode</div>
-							<div className="focusFullscreenValue">{formatTime(focus.focusSeconds)}</div>
+							<div className="focusFullscreenValue">
+								{formatTime(focus.focusSeconds)}
+							</div>
 							<div className="focusFullscreenMeta">
-								<span>{focus.running ? 'Session running' : 'Paused session'}</span>
+								<span>
+									{focus.running ? 'Session running' : 'Paused session'}
+								</span>
 								<span>{Math.round(focus.focusMax / 60)} minute session</span>
 							</div>
 							<div className="focusBar">
-								<div className="focusBarFill" style={{ width: `${progressPct}%` }} />
+								<div
+									className="focusBarFill"
+									style={{ width: `${progressPct}%` }}
+								/>
 							</div>
 						</div>
 						<SpotifyPanel immersive />
