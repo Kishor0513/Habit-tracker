@@ -31,7 +31,9 @@ export function AppProvider({ children }) {
 				return;
 			}
 
-			const { data: { session: initialSession } } = await client.auth.getSession();
+			const {
+				data: { session: initialSession },
+			} = await client.auth.getSession();
 			if (!alive) return;
 			setSession(initialSession);
 			const nextUser = initialSession?.user ?? null;
@@ -109,16 +111,6 @@ export function AppProvider({ children }) {
 					});
 					if (error) throw error;
 				},
-				signInWithGoogle: async () => {
-					if (!supabase) throw new Error('Supabase is not configured.');
-					const { error } = await supabase.auth.signInWithOAuth({
-						provider: 'google',
-						options: {
-							redirectTo: window.location.origin + window.location.pathname,
-						},
-					});
-					if (error) throw error;
-				},
 				signOut: async () => {
 					if (!supabase) return;
 					const { error } = await supabase.auth.signOut();
@@ -126,7 +118,15 @@ export function AppProvider({ children }) {
 				},
 			},
 		}),
-		[api, dataVersion, supabaseConfigured, user, session, authLoading, supabase],
+		[
+			api,
+			dataVersion,
+			supabaseConfigured,
+			user,
+			session,
+			authLoading,
+			supabase,
+		],
 	);
 
 	return (

@@ -2,6 +2,36 @@ import { useMemo, useState } from 'react';
 import { useApp } from '../state/AppState.jsx';
 import { useToast } from '../state/ToastState.jsx';
 
+function getAuthErrorMessage(error, fallback) {
+	const message = String(error?.message ?? '').toLowerCase();
+
+	if (
+		message.includes('redirect_uri') ||
+		message.includes('redirect url') ||
+		message.includes('invalid redirect')
+	) {
+		return 'The redirect URL is not allowed in Supabase. Add your local and production app URLs in Authentication > URL Configuration.';
+	}
+
+	if (message.includes('email not confirmed')) {
+		return 'Account created, but email confirmation is required before sign-in. Check your inbox or disable confirmation for local testing.';
+	}
+
+	if (message.includes('invalid login credentials')) {
+		return 'The email or password is incorrect, or the account has not been confirmed yet.';
+	}
+
+	if (message.includes('user already registered')) {
+		return 'That email is already registered. Try signing in or using the password reset link.';
+	}
+
+	if (message.includes('supabase is not configured')) {
+		return 'Supabase env vars are missing. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then restart the dev server.';
+	}
+
+	return error?.message ?? fallback;
+}
+
 export default function AuthGate({ children }) {
 	const { supabaseConfigured, user, auth, authLoading } = useApp();
 	const toast = useToast();
@@ -20,7 +50,10 @@ export default function AuthGate({ children }) {
 
 	if (authLoading) {
 		return (
-			<div className="app" style={{ alignItems: 'center', justifyContent: 'center' }}>
+			<div
+				className="app"
+				style={{ alignItems: 'center', justifyContent: 'center' }}
+			>
 				<p style={{ color: 'var(--text-muted)' }}>Loading workspace...</p>
 			</div>
 		);
@@ -56,37 +89,30 @@ export default function AuthGate({ children }) {
 					<h2 style={{ fontSize: '28px', marginBottom: '8px' }}>Log In</h2>
 					<p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>{help}</p>
 				</div>
-				
-				<button 
-					className="btn" 
-					style={{ 
-						width: '100%', height: '36px', 
-						background: 'var(--bg-panel-solid)', color: 'var(--text-main)', 
-						border: '1px solid var(--border-muted)', 
-						display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-						fontWeight: 500
-					}}
-					onClick={async () => {
-						try {
-							setBusy(true);
-							await auth.signInWithGoogle();
-						} catch (e) { toast.push(e?.message ?? 'Google Sign-in failed.'); }
-						finally { setBusy(false); }
+
+				<div
+					style={{
+						display: 'flex',
+						alignItems: 'center',
+						margin: '20px 0',
+						color: 'var(--border)',
 					}}
 				>
-					<svg width="16" height="16" viewBox="0 0 18 18">
-						<path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
-						<path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
-						<path d="M3.964 10.706c-.18-.54-.282-1.117-.282-1.706s.102-1.166.282-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z" fill="#FBBC05"/>
-						<path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.443 2.048.957 4.962L3.964 7.294C4.672 5.167 6.656 3.58 9 3.58z" fill="#EA4335"/>
-					</svg>
-					Continue with Google
-				</button>
-				
-				<div style={{ display: 'flex', alignItems: 'center', margin: '20px 0', color: 'var(--border)' }}>
-					<div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
-					<span style={{ padding: '0 10px', fontSize: '12px', color: 'var(--text-faint)' }}>OR</span>
-					<div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
+					<div
+						style={{ flex: 1, height: '1px', background: 'var(--border)' }}
+					/>
+					<span
+						style={{
+							padding: '0 10px',
+							fontSize: '12px',
+							color: 'var(--text-faint)',
+						}}
+					>
+						OR
+					</span>
+					<div
+						style={{ flex: 1, height: '1px', background: 'var(--border)' }}
+					/>
 				</div>
 
 				<div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -104,7 +130,13 @@ export default function AuthGate({ children }) {
 						value={password}
 						onChange={(e) => setPassword(e.target.value)}
 					/>
-					<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+					<div
+						style={{
+							display: 'grid',
+							gridTemplateColumns: '1fr 1fr',
+							gap: '10px',
+						}}
+					>
 						<button
 							className="btn btn-primary"
 							style={{ width: '100%', height: '36px' }}
@@ -114,7 +146,9 @@ export default function AuthGate({ children }) {
 									setBusy(true);
 									await auth.signInWithPassword(email.trim(), password);
 								} catch (e) {
-									toast.push(e?.message ?? 'Password sign-in failed.');
+									toast.push(
+										getAuthErrorMessage(e, 'Password sign-in failed.'),
+									);
 								} finally {
 									setBusy(false);
 								}
@@ -130,9 +164,11 @@ export default function AuthGate({ children }) {
 								try {
 									setBusy(true);
 									await auth.signUpWithPassword(email.trim(), password);
-									toast.push('Account created. Check your email if confirmation is required.');
+									toast.push(
+										'Account created. Check your email if confirmation is required.',
+									);
 								} catch (e) {
-									toast.push(e?.message ?? 'Sign-up failed.');
+									toast.push(getAuthErrorMessage(e, 'Sign-up failed.'));
 								} finally {
 									setBusy(false);
 								}
@@ -150,8 +186,11 @@ export default function AuthGate({ children }) {
 								setBusy(true);
 								await auth.signInWithOtp(email.trim());
 								toast.push('Check your email for a sign-in link.');
-							} catch (e) { toast.push(e?.message ?? 'Magic link failed.'); }
-							finally { setBusy(false); }
+							} catch (e) {
+								toast.push(getAuthErrorMessage(e, 'Magic link failed.'));
+							} finally {
+								setBusy(false);
+							}
 						}}
 					>
 						Email Login
@@ -166,7 +205,7 @@ export default function AuthGate({ children }) {
 								await auth.resetPassword(email.trim());
 								toast.push('Password reset email sent.');
 							} catch (e) {
-								toast.push(e?.message ?? 'Password reset failed.');
+								toast.push(getAuthErrorMessage(e, 'Password reset failed.'));
 							} finally {
 								setBusy(false);
 							}
