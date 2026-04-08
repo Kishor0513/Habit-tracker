@@ -1,10 +1,9 @@
-node_modules
-dist
+node_modules/
+dist/
 .env
 .DS_Store
-.expo
-.expo-shared
-rn/.env
-rn/.expo
+.env.local
+.vscode/
+*.log
 src/styles/index.css
 src/styles/index.css.map
