@@ -2,41 +2,41 @@ $sans: 'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif;
 $mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
 
 :root {
-	--bg: #eff4f2;
-	--bg-app: #eff4f2;
-	--bg-app-secondary: #dbe8e3;
-	--bg-sidebar: rgba(244, 249, 246, 0.78);
-	--bg-panel: rgba(250, 255, 252, 0.78);
-	--bg-panel-solid: rgba(255, 255, 255, 0.94);
-	--bg-panel-hover: rgba(246, 252, 249, 0.98);
-	--bg-2: #d2e3dc;
+	--bg: #f5efe3;
+	--bg-app: #f5efe3;
+	--bg-app-secondary: #e8dcc8;
+	--bg-sidebar: rgba(252, 247, 238, 0.82);
+	--bg-panel: rgba(255, 250, 242, 0.82);
+	--bg-panel-solid: rgba(255, 253, 248, 0.95);
+	--bg-panel-hover: rgba(255, 252, 246, 0.99);
+	--bg-2: #dbc9ae;
 	--surface-container: linear-gradient(
 		145deg,
-		rgba(255, 255, 255, 0.92) 0%,
-		rgba(236, 247, 241, 0.9) 52%,
-		rgba(223, 235, 231, 0.88) 100%
+		rgba(255, 253, 248, 0.95) 0%,
+		rgba(245, 235, 218, 0.92) 54%,
+		rgba(230, 216, 194, 0.9) 100%
 	);
 
-	--border-muted: rgba(33, 79, 78, 0.14);
-	--border-glow: rgba(243, 137, 84, 0.34);
-	--border: rgba(64, 124, 118, 0.2);
+	--border-muted: rgba(49, 68, 95, 0.14);
+	--border-glow: rgba(219, 107, 79, 0.34);
+	--border: rgba(58, 89, 126, 0.24);
 
-	--text-main: #112e2f;
-	--text: #234546;
-	--text-muted: #577475;
-	--text-faint: #88a1a2;
+	--text-main: #1f2d3f;
+	--text: #334b67;
+	--text-muted: #5e738f;
+	--text-faint: #8597ad;
 
-	--accent-base: #f38954;
-	--accent-glow: #f7bb66;
-	--accent-soft: rgba(243, 137, 84, 0.14);
+	--accent-base: #db6b4f;
+	--accent-glow: #f0b06e;
+	--accent-soft: rgba(219, 107, 79, 0.16);
 
-	--brand: #1f8a83;
-	--brand-mid: #39aba0;
-	--brand-strong: #125650;
+	--brand: #2f6fae;
+	--brand-mid: #4e91d2;
+	--brand-strong: #1f4f84;
 
 	--danger: #dc2626;
-	--warning: #c96c3f;
-	--success: #15803d;
+	--warning: #c17734;
+	--success: #2c8c55;
 
 	--radius-sm: 12px;
 	--radius-md: 22px;
@@ -44,43 +44,43 @@ $mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
 
 	--shadow-sm: 0 14px 34px rgba(18, 52, 51, 0.12);
 	--shadow-md: 0 28px 74px rgba(16, 46, 44, 0.2);
-	--shadow-glow: 0 0 0 4px rgba(31, 138, 131, 0.14);
+	--shadow-glow: 0 0 0 4px rgba(47, 111, 174, 0.14);
 
 	--bezier-snap: cubic-bezier(0.2, 0.75, 0.2, 1);
 }
 
 [data-theme='dark'] {
-	--bg: #081516;
-	--bg-app: #081516;
-	--bg-app-secondary: #0d2323;
-	--bg-sidebar: rgba(10, 25, 25, 0.86);
-	--bg-panel: rgba(13, 31, 31, 0.82);
-	--bg-panel-solid: #112a2a;
-	--bg-panel-hover: rgba(20, 44, 44, 0.94);
-	--bg-2: #173838;
+	--bg: #0d1520;
+	--bg-app: #0d1520;
+	--bg-app-secondary: #142233;
+	--bg-sidebar: rgba(14, 24, 37, 0.88);
+	--bg-panel: rgba(18, 29, 43, 0.84);
+	--bg-panel-solid: #162639;
+	--bg-panel-hover: rgba(24, 38, 56, 0.95);
+	--bg-2: #203650;
 	--surface-container: linear-gradient(
 		145deg,
-		rgba(14, 36, 36, 0.94) 0%,
-		rgba(10, 24, 24, 0.96) 58%,
-		rgba(40, 38, 28, 0.88) 100%
+		rgba(19, 33, 49, 0.95) 0%,
+		rgba(14, 24, 38, 0.97) 60%,
+		rgba(41, 35, 27, 0.9) 100%
 	);
 
-	--border-muted: rgba(133, 181, 176, 0.2);
-	--border-glow: rgba(247, 187, 102, 0.32);
-	--border: rgba(102, 170, 164, 0.24);
+	--border-muted: rgba(135, 166, 201, 0.24);
+	--border-glow: rgba(240, 176, 110, 0.32);
+	--border: rgba(115, 152, 191, 0.28);
 
-	--text-main: #e9fbf6;
-	--text: #cde9e4;
-	--text-muted: #9ec2bd;
-	--text-faint: #769894;
+	--text-main: #e8f2ff;
+	--text: #c9dcf4;
+	--text-muted: #9fb7d3;
+	--text-faint: #7e96b2;
 
-	--accent-base: #f7bb66;
-	--accent-glow: #ffd38d;
-	--accent-soft: rgba(247, 187, 102, 0.2);
+	--accent-base: #f0b06e;
+	--accent-glow: #ffd6a3;
+	--accent-soft: rgba(240, 176, 110, 0.2);
 
-	--brand: #59b6ae;
-	--brand-mid: #86d5cc;
-	--brand-strong: #afe8df;
+	--brand: #69aef4;
+	--brand-mid: #8ec2ff;
+	--brand-strong: #b7d9ff;
 
 	--danger: #f87171;
 	--warning: #f0a35d;
@@ -88,19 +88,19 @@ $mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
 
 	--shadow-sm: 0 18px 42px rgba(0, 0, 0, 0.28);
 	--shadow-md: 0 34px 84px rgba(0, 0, 0, 0.38);
-	--shadow-glow: 0 0 0 4px rgba(89, 182, 174, 0.2);
+	--shadow-glow: 0 0 0 4px rgba(105, 174, 244, 0.2);
 }
 
 [data-theme='dark'] body {
 	background:
 		radial-gradient(
 			circle at 15% 12%,
-			rgba(97, 178, 209, 0.16),
+			rgba(96, 160, 228, 0.18),
 			transparent 30%
 		),
 		radial-gradient(
 			circle at 86% 10%,
-			rgba(240, 163, 93, 0.12),
+			rgba(240, 176, 110, 0.12),
 			transparent 32%
 		),
 		linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 38%),
@@ -127,17 +127,17 @@ body {
 	background:
 		radial-gradient(
 			circle at 16% 8%,
-			rgba(31, 138, 131, 0.16),
+			rgba(47, 111, 174, 0.16),
 			transparent 34%
 		),
 		radial-gradient(
 			circle at 90% 12%,
-			rgba(243, 137, 84, 0.16),
+			rgba(219, 107, 79, 0.16),
 			transparent 32%
 		),
 		radial-gradient(
 			circle at 48% 104%,
-			rgba(147, 200, 168, 0.14),
+			rgba(240, 176, 110, 0.14),
 			transparent 42%
 		),
 		linear-gradient(180deg, rgba(255, 255, 255, 0.4), transparent 36%),
@@ -401,16 +401,17 @@ p {
 .topbarMeta {
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: 12px;
 }
 
 .topbarSpotify {
 	display: flex;
 	align-items: center;
 	gap: 12px;
-	max-width: 320px;
-	padding: 10px 14px;
-	border-radius: 18px;
+	min-width: clamp(280px, 30vw, 420px);
+	max-width: clamp(320px, 35vw, 460px);
+	padding: 12px 16px;
+	border-radius: 20px;
 	border: 1px solid var(--border-muted);
 	background: rgba(255, 255, 255, 0.45);
 	backdrop-filter: blur(18px);
@@ -425,7 +426,7 @@ p {
 }
 
 .topbarSpotifyLabel {
-	font-size: 10px;
+	font-size: 11px;
 	text-transform: uppercase;
 	letter-spacing: 0.12em;
 	color: var(--text-faint);
@@ -433,8 +434,8 @@ p {
 
 .topbarSpotifyTrack {
 	margin-top: 4px;
-	font-size: 13px;
-	font-weight: 600;
+	font-size: 14px;
+	font-weight: 700;
 	color: var(--text-main);
 	white-space: nowrap;
 	overflow: hidden;
@@ -442,7 +443,7 @@ p {
 }
 
 .topbarClock {
-	min-width: 220px;
+	min-width: 240px;
 	padding: 10px 14px;
 	border-radius: 18px;
 	border: 1px solid var(--border-muted);
@@ -2339,7 +2340,7 @@ p {
 
 .focusHistoryGrid {
 	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
+	grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
 	gap: 14px;
 	margin-top: 18px;
 }
@@ -2349,10 +2350,17 @@ p {
 	border-radius: 20px;
 	border: 1px solid var(--border-muted);
 	background: rgba(255, 255, 255, 0.18);
+	min-height: 220px;
 }
 
 [data-theme='dark'] .focusHistoryCard {
 	background: rgba(255, 255, 255, 0.03);
+}
+
+.focusHistoryCard .list {
+	max-height: 300px;
+	overflow-y: auto;
+	padding-right: 4px;
 }
 
 .glassPlayerHeader {

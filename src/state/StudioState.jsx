@@ -39,6 +39,19 @@ function writeJson(key, value) {
 	localStorage.setItem(key, JSON.stringify(value));
 }
 
+function mapSessionToHistoryItem(session) {
+	const durationSeconds = Number(session?.durationSeconds ?? 0);
+	const fallbackStart = session?.startTime ?? new Date().toISOString();
+	const fallbackEnd = session?.endTime ?? fallbackStart;
+	return {
+		id: session?.id ?? crypto.randomUUID(),
+		startedAt: fallbackStart,
+		finishedAt: fallbackEnd,
+		minutes: Math.max(1, Math.round(durationSeconds / 60)),
+		status: session?.success ? 'completed' : 'stopped',
+	};
+}
+
 export function StudioProvider({ children }) {
 	const { api, user, refresh } = useApp();
 	const toast = useToast();
@@ -74,6 +87,30 @@ export function StudioProvider({ children }) {
 	useEffect(() => {
 		localStorage.removeItem('habit_tracker_spotify_history_v1');
 	}, []);
+
+	useEffect(() => {
+		if (!api?.listHabitSessions) return;
+		let alive = true;
+		api
+			.listHabitSessions()
+			.then((sessions) => {
+				if (!alive || !Array.isArray(sessions) || sessions.length === 0) return;
+				setFocusHistory(
+					sessions
+						.map(mapSessionToHistoryItem)
+						.sort(
+							(a, b) =>
+								new Date(b.finishedAt).getTime() -
+								new Date(a.finishedAt).getTime(),
+						)
+						.slice(0, 12),
+				);
+			})
+			.catch(() => {});
+		return () => {
+			alive = false;
+		};
+	}, [api, user?.id]);
 
 	useEffect(() => {
 		if (!running) return;
@@ -229,14 +266,15 @@ export function StudioProvider({ children }) {
 	}
 
 	function resetSession() {
-		if (focusStartRef.current && focusSeconds > 0 && focusSeconds < focusMax) {
+		const elapsedSeconds = Math.max(0, focusMax - focusSeconds);
+		if (focusStartRef.current && elapsedSeconds >= 60) {
 			setFocusHistory((current) =>
 				[
 					{
 						id: crypto.randomUUID(),
 						startedAt: focusStartRef.current,
 						finishedAt: new Date().toISOString(),
-						minutes: Math.round(focusMax / 60),
+						minutes: Math.max(1, Math.round(elapsedSeconds / 60)),
 						status: 'stopped',
 					},
 					...current,
@@ -252,7 +290,7 @@ export function StudioProvider({ children }) {
 						playlistId:
 							spotifyState?.context?.uri ?? spotifyState?.item?.album?.id ?? '',
 						success: false,
-						durationSeconds: focusMax - focusSeconds,
+						durationSeconds: elapsedSeconds,
 					})
 					.then(() => refresh())
 					.catch(() => {});

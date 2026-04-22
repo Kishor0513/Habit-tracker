@@ -5,6 +5,22 @@ function must(ok, error) {
 	throw error ?? new Error('Supabase error');
 }
 
+function isMissingColumnError(error) {
+	const message = String(error?.message ?? error?.details ?? '').toLowerCase();
+	return (
+		error?.code === '42703' ||
+		(message.includes('column') && message.includes('does not exist'))
+	);
+}
+
+function extractMissingColumn(error) {
+	const text = String(error?.message ?? error?.details ?? '');
+	const match = text.match(
+		/column\s+"?([a-zA-Z0-9_]+)"?\s+does\s+not\s+exist/i,
+	);
+	return match?.[1] ?? null;
+}
+
 function nowIso() {
 	return new Date().toISOString();
 }
@@ -106,13 +122,34 @@ export class SupabaseHabitApi {
 			updated_at: nowIso(),
 		};
 
-		const { data, error } = await this.supabase
-			.from('habits')
-			.upsert(payload)
-			.select('*')
-			.single();
-		must(!error, error);
-		return normalizeHabit(data);
+		const runUpsert = async (nextPayload) => {
+			return this.supabase
+				.from('habits')
+				.upsert(nextPayload, { onConflict: 'id' })
+				.select('*')
+				.single();
+		};
+
+		let currentPayload = { ...payload };
+		let attempted = new Set();
+		let result = await runUpsert(currentPayload);
+
+		while (result.error && isMissingColumnError(result.error)) {
+			const missingColumn = extractMissingColumn(result.error);
+			if (
+				!missingColumn ||
+				!(missingColumn in currentPayload) ||
+				attempted.has(missingColumn)
+			) {
+				break;
+			}
+			attempted.add(missingColumn);
+			delete currentPayload[missingColumn];
+			result = await runUpsert(currentPayload);
+		}
+
+		must(!result.error, result.error);
+		return normalizeHabit(result.data);
 	}
 
 	async archiveHabit(habitId) {
@@ -150,14 +187,25 @@ export class SupabaseHabitApi {
 		return normalizeEntry(data);
 	}
 
-	async setEntry({ habitId, date, value, note, status, mood, playlistId, completedAt }) {
+	async setEntry({
+		habitId,
+		date,
+		value,
+		note,
+		status,
+		mood,
+		playlistId,
+		completedAt,
+	}) {
 		const payload = {
 			user_id: this.userId,
 			habit_id: habitId,
 			date,
 			value,
 			note: note ?? '',
-			status: status ?? (Number(value ?? 0) > 0 ? EntryStatus.done : EntryStatus.pending),
+			status:
+				status ??
+				(Number(value ?? 0) > 0 ? EntryStatus.done : EntryStatus.pending),
 			mood: mood ?? '',
 			playlist_id: playlistId ?? '',
 			completed_at: completedAt ?? null,

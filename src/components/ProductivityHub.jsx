@@ -165,6 +165,17 @@ export default function ProductivityHub() {
 	const { focus, spotify } = useStudio();
 	const fullscreenRef = useRef(null);
 	const [isFullscreen, setIsFullscreen] = useState(false);
+	const sessionHistory = useMemo(() => {
+		const seen = new Set();
+		return focus.focusHistory
+			.filter((item) => {
+				const key = `${item.status}:${item.minutes}:${String(item.finishedAt).slice(0, 16)}`;
+				if (seen.has(key)) return false;
+				seen.add(key);
+				return true;
+			})
+			.slice(0, 5);
+	}, [focus.focusHistory]);
 
 	const progressPct =
 		focus.focusMax === 0
@@ -336,10 +347,10 @@ export default function ProductivityHub() {
 								className="list"
 								style={{ marginTop: 12 }}
 							>
-								{focus.focusHistory.length === 0 ? (
+								{sessionHistory.length === 0 ? (
 									<div className="subtle">No focus history yet.</div>
 								) : (
-									focus.focusHistory.slice(0, 5).map((item) => (
+									sessionHistory.map((item) => (
 										<div
 											key={item.id}
 											className="item"
@@ -365,7 +376,8 @@ export default function ProductivityHub() {
 												className="itemName"
 												style={{ marginTop: 6 }}
 											>
-												{item.minutes} minute session
+												{item.minutes} minute{' '}
+												{item.status === 'completed' ? 'session' : 'attempt'}
 											</div>
 										</div>
 									))
