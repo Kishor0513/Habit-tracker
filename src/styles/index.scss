@@ -107,6 +107,65 @@ $mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
 		var(--bg-app);
 }
 
+/* Monkeytype-inspired Orange Theme */
+[data-theme='orange'] {
+	--bg: #1a1a1a;
+	--bg-app: #1a1a1a;
+	--bg-app-secondary: #252525;
+	--bg-sidebar: rgba(30, 30, 30, 0.95);
+	--bg-panel: rgba(40, 40, 40, 0.92);
+	--bg-panel-solid: #2a2a2a;
+	--bg-panel-hover: rgba(50, 50, 50, 0.98);
+	--bg-2: #333333;
+	--surface-container: linear-gradient(
+		145deg,
+		rgba(45, 45, 45, 0.98) 0%,
+		rgba(25, 25, 25, 0.99) 60%,
+		rgba(15, 15, 15, 0.95) 100%
+	);
+
+	--border-muted: rgba(255, 140, 0, 0.15);
+	--border-glow: rgba(255, 140, 0, 0.4);
+	--border: rgba(255, 140, 0, 0.22);
+
+	--text-main: #ffffff;
+	--text: #e8e8e8;
+	--text-muted: #a8a8a8;
+	--text-faint: #707070;
+
+	--accent-base: #ff8c00;
+	--accent-glow: #ffa500;
+	--accent-soft: rgba(255, 140, 0, 0.18);
+
+	--brand: #ff8c00;
+	--brand-mid: #ffa500;
+	--brand-strong: #ffb520;
+
+	--danger: #ff6b6b;
+	--warning: #ff8c00;
+	--success: #51cf66;
+
+	--shadow-sm: 0 18px 42px rgba(0, 0, 0, 0.5);
+	--shadow-md: 0 34px 84px rgba(0, 0, 0, 0.65);
+	--shadow-glow: 0 0 0 4px rgba(255, 140, 0, 0.25);
+}
+
+[data-theme='orange'] body {
+	background:
+		radial-gradient(
+			circle at 15% 12%,
+			rgba(255, 140, 0, 0.12),
+			transparent 30%
+		),
+		radial-gradient(
+			circle at 86% 10%,
+			rgba(255, 165, 0, 0.08),
+			transparent 32%
+		),
+		linear-gradient(180deg, rgba(255, 140, 0, 0.04), transparent 40%),
+		var(--bg-app);
+}
+
 *,
 *::before,
 *::after {
@@ -144,8 +203,9 @@ body {
 		var(--bg-app);
 	-webkit-font-smoothing: antialiased;
 	transition:
-		background-color 0.3s var(--bezier-snap),
-		color 0.3s var(--bezier-snap);
+		background-color 0.35s var(--bezier-snap),
+		color 0.35s var(--bezier-snap),
+		border-color 0.35s var(--bezier-snap);
 }
 a {
 	color: inherit;
@@ -157,6 +217,11 @@ select,
 textarea {
 	font: inherit;
 	color: inherit;
+	transition: 
+		background-color 0.35s var(--bezier-snap),
+		border-color 0.35s var(--bezier-snap),
+		color 0.35s var(--bezier-snap),
+		box-shadow 0.35s var(--bezier-snap);
 }
 h1,
 h2,
@@ -528,9 +593,11 @@ p {
 	box-shadow: var(--shadow-sm);
 	padding: 22px;
 	transition:
-		box-shadow 0.24s var(--bezier-snap),
+		background-color 0.35s var(--bezier-snap),
+		box-shadow 0.35s var(--bezier-snap),
 		transform 0.24s var(--bezier-snap),
-		border-color 0.24s var(--bezier-snap);
+		border-color 0.35s var(--bezier-snap),
+		color 0.35s var(--bezier-snap);
 }
 
 .panel:hover,

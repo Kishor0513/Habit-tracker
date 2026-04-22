@@ -9,16 +9,24 @@ function isMissingColumnError(error) {
 	const message = String(error?.message ?? error?.details ?? '').toLowerCase();
 	return (
 		error?.code === '42703' ||
-		(message.includes('column') && message.includes('does not exist'))
+		error?.code === 'PGRST202' ||
+		message.includes('column') && (message.includes('does not exist') || message.includes('undefined'))
 	);
 }
 
 function extractMissingColumn(error) {
 	const text = String(error?.message ?? error?.details ?? '');
-	const match = text.match(
+	// Try multiple patterns to extract column name
+	const patterns = [
 		/column\s+"?([a-zA-Z0-9_]+)"?\s+does\s+not\s+exist/i,
-	);
-	return match?.[1] ?? null;
+		/Undefined column: "?([a-zA-Z0-9_]+)"?/i,
+		/column "([a-zA-Z0-9_]+)" of/i,
+	];
+	for (const pattern of patterns) {
+		const match = text.match(pattern);
+		if (match) return match[1];
+	}
+	return null;
 }
 
 function nowIso() {
@@ -141,14 +149,20 @@ export class SupabaseHabitApi {
 				!(missingColumn in currentPayload) ||
 				attempted.has(missingColumn)
 			) {
-				break;
+				const errorMsg = `Schema mismatch: ${result.error?.message ?? 'Unknown column error'}. This usually means your Supabase schema migrations need to be updated. Try refreshing the schema in Supabase dashboard or re-running migrations.`;
+				throw new Error(errorMsg);
 			}
 			attempted.add(missingColumn);
+			console.warn(`[Habit Save] Skipping missing column '${missingColumn}' - schema may be out of sync`);
 			delete currentPayload[missingColumn];
 			result = await runUpsert(currentPayload);
 		}
 
-		must(!result.error, result.error);
+		if (result.error) {
+			const detail = result.error?.details || result.error?.hint || '';
+			const msg = result.error?.message || 'Unknown error';
+			throw new Error(`Failed to save habit: ${msg}${detail ? ' (' + detail + ')' : ''}`);
+		}
 		return normalizeHabit(result.data);
 	}
 

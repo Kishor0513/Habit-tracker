@@ -65,7 +65,18 @@ function NavGlyph({ name }) {
 	}
 }
 
-function Sidebar({ isDark, onThemeToggle }) {
+function Sidebar({ theme, onThemeToggle }) {
+	const themeLabel = {
+		light: 'Light',
+		dark: 'Dark',
+		orange: 'Orange'
+	};
+	const nextThemeLabel = {
+		light: 'Dark',
+		dark: 'Orange',
+		orange: 'Light'
+	};
+
 	return (
 		<aside className="sidebarArea">
 			<div className="sidebarHeader">
@@ -84,10 +95,10 @@ function Sidebar({ isDark, onThemeToggle }) {
 				<button
 					className="themeToggleBtn"
 					onClick={onThemeToggle}
-					aria-label="Toggle dark mode"
-					title={isDark ? 'Light mode' : 'Dark mode'}
+					aria-label={`Switch to ${nextThemeLabel[theme]} mode`}
+					title={`Current: ${themeLabel[theme]} mode`}
 				>
-					{isDark ? 'Light' : 'Dark'}
+					{themeLabel[theme]}
 				</button>
 			</div>
 			<div className="navGroup">
@@ -260,12 +271,12 @@ function ReminderEngine() {
 	return null;
 }
 
-function AppShell({ isDark, onThemeToggle }) {
+function AppShell({ theme, onThemeToggle }) {
 	return (
 		<div className="app">
 			<ReminderEngine />
 			<Sidebar
-				isDark={isDark}
+				theme={theme}
 				onThemeToggle={onThemeToggle}
 			/>
 			<div className="mainArea">
@@ -302,21 +313,29 @@ function AppShell({ isDark, onThemeToggle }) {
 }
 
 export default function App() {
-	const [isDark, setIsDark] = useState(() => {
-		const saved = localStorage.getItem('habitTrackerDarkMode');
-		if (saved !== null) return saved === 'true';
-		return window.matchMedia('(prefers-color-scheme: dark)').matches;
+	const [theme, setTheme] = useState(() => {
+		const saved = localStorage.getItem('habitTrackerTheme');
+		if (saved && ['light', 'dark', 'orange'].includes(saved)) return saved;
+		const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+		return prefersDark ? 'dark' : 'light';
 	});
 
 	useEffect(() => {
-		localStorage.setItem('habitTrackerDarkMode', isDark);
-		document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
-		if (isDark) {
+		localStorage.setItem('habitTrackerTheme', theme);
+		document.documentElement.dataset.theme = theme;
+		if (theme === 'dark' || theme === 'orange') {
 			document.documentElement.style.colorScheme = 'dark';
 		} else {
 			document.documentElement.style.colorScheme = 'light';
 		}
-	}, [isDark]);
+	}, [theme]);
+
+	const cycleTheme = () => {
+		const themes = ['light', 'dark', 'orange'];
+		const currentIndex = themes.indexOf(theme);
+		const nextIndex = (currentIndex + 1) % themes.length;
+		setTheme(themes[nextIndex]);
+	};
 
 	return (
 		<ToastProvider>
@@ -324,8 +343,8 @@ export default function App() {
 				<AuthGate>
 					<StudioProvider>
 						<AppShell
-							isDark={isDark}
-							onThemeToggle={() => setIsDark(!isDark)}
+							theme={theme}
+							onThemeToggle={cycleTheme}
 						/>
 					</StudioProvider>
 				</AuthGate>
