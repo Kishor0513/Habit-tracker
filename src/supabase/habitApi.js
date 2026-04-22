@@ -10,7 +10,8 @@ function isMissingColumnError(error) {
 	return (
 		error?.code === '42703' ||
 		error?.code === 'PGRST202' ||
-		message.includes('column') && (message.includes('does not exist') || message.includes('undefined'))
+		(message.includes('column') &&
+			(message.includes('does not exist') || message.includes('undefined')))
 	);
 }
 
@@ -153,7 +154,9 @@ export class SupabaseHabitApi {
 				throw new Error(errorMsg);
 			}
 			attempted.add(missingColumn);
-			console.warn(`[Habit Save] Skipping missing column '${missingColumn}' - schema may be out of sync`);
+			console.warn(
+				`[Habit Save] Skipping missing column '${missingColumn}' - schema may be out of sync`,
+			);
 			delete currentPayload[missingColumn];
 			result = await runUpsert(currentPayload);
 		}
@@ -161,7 +164,9 @@ export class SupabaseHabitApi {
 		if (result.error) {
 			const detail = result.error?.details || result.error?.hint || '';
 			const msg = result.error?.message || 'Unknown error';
-			throw new Error(`Failed to save habit: ${msg}${detail ? ' (' + detail + ')' : ''}`);
+			throw new Error(
+				`Failed to save habit: ${msg}${detail ? ' (' + detail + ')' : ''}`,
+			);
 		}
 		return normalizeHabit(result.data);
 	}

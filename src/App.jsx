@@ -1,8 +1,8 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import AuthGate from './components/AuthGate.jsx';
-import CommandPalette from './components/CommandPalette.jsx';
 import CircularClock from './components/CircularClock.jsx';
+import CommandPalette from './components/CommandPalette.jsx';
 import ToastViewport from './components/ToastViewport.jsx';
 import { isoToday } from './lib/date.js';
 import { isDueOn } from './lib/habits.js';
@@ -19,47 +19,117 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage.jsx'));
 const NAV_ITEMS = [
 	{ to: '/', label: 'Today', shortLabel: 'Pulse', icon: 'pulse' },
 	{ to: '/habits', label: 'Habits', shortLabel: 'Habits', icon: 'habit' },
-	{ to: '/projects', label: 'Projects', shortLabel: 'Projects', icon: 'target' },
+	{
+		to: '/projects',
+		label: 'Projects',
+		shortLabel: 'Projects',
+		icon: 'target',
+	},
 	{ to: '/insights', label: 'Insights', shortLabel: 'Insights', icon: 'chart' },
-	{ to: '/settings', label: 'Settings', shortLabel: 'Settings', icon: 'settings' },
+	{
+		to: '/settings',
+		label: 'Settings',
+		shortLabel: 'Settings',
+		icon: 'settings',
+	},
 ];
 
 function NavGlyph({ name }) {
 	switch (name) {
 		case 'pulse':
 			return (
-				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-					<path d="M3 12h4l2.2-5 4.4 10 2.4-5H21" strokeLinecap="round" strokeLinejoin="round" />
+				<svg
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="1.8"
+				>
+					<path
+						d="M3 12h4l2.2-5 4.4 10 2.4-5H21"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					/>
 				</svg>
 			);
 		case 'habit':
 			return (
-				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-					<path d="M7 7h10v10H7z" rx="3" />
-					<path d="M8 12h8" strokeLinecap="round" />
-					<path d="M12 8v8" strokeLinecap="round" />
+				<svg
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="1.8"
+				>
+					<path
+						d="M7 7h10v10H7z"
+						rx="3"
+					/>
+					<path
+						d="M8 12h8"
+						strokeLinecap="round"
+					/>
+					<path
+						d="M12 8v8"
+						strokeLinecap="round"
+					/>
 				</svg>
 			);
 		case 'target':
 			return (
-				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-					<circle cx="12" cy="12" r="7" />
-					<circle cx="12" cy="12" r="3" />
-					<path d="M19 5l-4.5 4.5" strokeLinecap="round" />
+				<svg
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="1.8"
+				>
+					<circle
+						cx="12"
+						cy="12"
+						r="7"
+					/>
+					<circle
+						cx="12"
+						cy="12"
+						r="3"
+					/>
+					<path
+						d="M19 5l-4.5 4.5"
+						strokeLinecap="round"
+					/>
 				</svg>
 			);
 		case 'chart':
 			return (
-				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-					<path d="M4 19h16" strokeLinecap="round" />
-					<path d="M7 15l3-3 3 2 4-6" strokeLinecap="round" strokeLinejoin="round" />
+				<svg
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="1.8"
+				>
+					<path
+						d="M4 19h16"
+						strokeLinecap="round"
+					/>
+					<path
+						d="M7 15l3-3 3 2 4-6"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					/>
 				</svg>
 			);
 		default:
 			return (
-				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+				<svg
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="1.8"
+				>
 					<path d="M12 3.5l2.2 1.3 2.5-.2 1 2.3 2 1.5-.8 2.4.8 2.4-2 1.5-1 2.3-2.5-.2L12 20.5l-2.2-1.3-2.5.2-1-2.3-2-1.5.8-2.4-.8-2.4 2-1.5 1-2.3 2.5.2L12 3.5z" />
-					<circle cx="12" cy="12" r="2.5" />
+					<circle
+						cx="12"
+						cy="12"
+						r="2.5"
+					/>
 				</svg>
 			);
 	}
@@ -69,12 +139,12 @@ function Sidebar({ theme, onThemeToggle }) {
 	const themeLabel = {
 		light: 'Light',
 		dark: 'Dark',
-		orange: 'Orange'
+		orange: 'Orange',
 	};
 	const nextThemeLabel = {
 		light: 'Dark',
 		dark: 'Orange',
-		orange: 'Light'
+		orange: 'Light',
 	};
 
 	return (
@@ -154,7 +224,9 @@ function Topbar() {
 		day: 'numeric',
 	});
 	const trackName = spotify.spotifyState?.item?.name || 'Spotify idle';
-	const isPlaying = Boolean(spotify.spotifyState?.is_playing || spotify.spotifyState?.paused === false);
+	const isPlaying = Boolean(
+		spotify.spotifyState?.is_playing || spotify.spotifyState?.paused === false,
+	);
 
 	return (
 		<header className="topbar">
@@ -184,10 +256,15 @@ function Topbar() {
 					</button>
 				</div>
 				<div className="topbarClock">
-					<CircularClock now={now} compact />
+					<CircularClock
+						now={now}
+						compact
+					/>
 					<div>
 						<div className="topbarClockTime">{timeLabel}</div>
-						<div className="topbarClockDate">{longDate} · {dateLabel}</div>
+						<div className="topbarClockDate">
+							{longDate} · {dateLabel}
+						</div>
 					</div>
 				</div>
 			</div>
@@ -241,7 +318,12 @@ function ReminderEngine() {
 		async function checkReminders() {
 			if (Notification.permission !== 'granted') return;
 			const habits = (await api.listHabits()).filter((habit) => {
-				return !habit.archivedAt && habit.reminder?.enabled && habit.reminder?.time && isDueOn(habit, isoToday());
+				return (
+					!habit.archivedAt &&
+					habit.reminder?.enabled &&
+					habit.reminder?.time &&
+					isDueOn(habit, isoToday())
+				);
 			});
 			const now = new Date();
 			const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -250,7 +332,9 @@ function ReminderEngine() {
 				const key = `${habit.id}__${isoToday()}__${currentTime}`;
 				if (localStorage.getItem(key)) continue;
 				new Notification(`Habit reminder: ${habit.name}`, {
-					body: habit.category ? `${habit.category} habit is due today.` : 'This habit is due today.',
+					body: habit.category
+						? `${habit.category} habit is due today.`
+						: 'This habit is due today.',
 				});
 				localStorage.setItem(key, '1');
 			}
@@ -316,7 +400,9 @@ export default function App() {
 	const [theme, setTheme] = useState(() => {
 		const saved = localStorage.getItem('habitTrackerTheme');
 		if (saved && ['light', 'dark', 'orange'].includes(saved)) return saved;
-		const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+		const prefersDark = window.matchMedia(
+			'(prefers-color-scheme: dark)',
+		).matches;
 		return prefersDark ? 'dark' : 'light';
 	});
 
