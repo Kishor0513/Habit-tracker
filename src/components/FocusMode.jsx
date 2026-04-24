@@ -16,7 +16,7 @@ export function FocusModeModal({
 	onSkip,
 	linkedSpotifyPlaylist = null,
 }) {
-	const [duration, setDuration] = useState(25); // minutes
+	const [duration, setDuration] = useState(60); // minutes
 	const [timeLeft, setTimeLeft] = useState(duration * 60); // seconds
 	const [isRunning, setIsRunning] = useState(false);
 	const [sessionStartTime] = useState(new Date());
@@ -84,7 +84,7 @@ export function FocusModeModal({
 			)}
 
 			{/* Main Focus UI */}
-			<div className="text-center max-w-md mx-auto px-4">
+			<div className="text-center max-w-3xl mx-auto px-6">
 				{/* Habit Name */}
 				<h2 className="text-4xl font-bold text-neutral-900 dark:text-neutral-50 mb-2">
 					{habit.name}
@@ -101,8 +101,8 @@ export function FocusModeModal({
 
 				{/* Duration Selector */}
 				{!isRunning && timeLeft === duration * 60 && (
-					<div className="flex gap-2 justify-center mb-6">
-						{[5, 15, 25, 45].map((min) => (
+					<div className="flex gap-2 justify-center mb-6 flex-wrap">
+						{[5, 15, 25, 45, 60].map((min) => (
 							<button
 								key={min}
 								onClick={() => {
@@ -122,7 +122,7 @@ export function FocusModeModal({
 				)}
 
 				{/* Control Buttons */}
-				<div className="flex gap-4 justify-center">
+				<div className="flex gap-4 justify-center flex-wrap">
 					<button
 						onClick={() => setIsRunning(!isRunning)}
 						className={`px-8 py-3 rounded-lg font-semibold transition-all ${
@@ -157,7 +157,7 @@ export function FocusModeModal({
 					<p className="text-xs text-neutral-500 dark:text-neutral-400 mb-2">
 						Session Info
 					</p>
-					<div className="flex justify-around text-sm font-medium text-neutral-900 dark:text-neutral-50">
+					<div className="flex justify-around text-sm font-medium text-neutral-900 dark:text-neutral-50 flex-wrap gap-4">
 						<div>
 							<span className="text-xs text-neutral-500 dark:text-neutral-400">
 								Target

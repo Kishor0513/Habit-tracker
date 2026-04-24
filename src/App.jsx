@@ -177,7 +177,7 @@ function Sidebar({ theme, onThemeToggle }) {
 	};
 	const ownerLinks = {
 		github: 'https://github.com/kishorchaudhary',
-		website: 'https://kishorchaudhary.com',
+		website: 'https://kishorchaudhary.com.np',
 		socials: 'https://instagram.com/kishor0513',
 	};
 

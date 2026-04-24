@@ -62,9 +62,9 @@ export function StudioProvider({ children }) {
 	const spotifyRefreshInFlightRef = useRef(null);
 	const spotifyRateLimitUntilRef = useRef(0);
 
-	const [customMinutes, setCustomMinutes] = useState('45');
-	const [focusSeconds, setFocusSeconds] = useState(45 * 60);
-	const [focusMax, setFocusMax] = useState(45 * 60);
+	const [customMinutes, setCustomMinutes] = useState('60');
+	const [focusSeconds, setFocusSeconds] = useState(60 * 60);
+	const [focusMax, setFocusMax] = useState(60 * 60);
 	const [running, setRunning] = useState(false);
 	const [autoFullscreen, setAutoFullscreen] = useState(true);
 	const [focusHistory, setFocusHistory] = useState(() =>
@@ -314,7 +314,8 @@ export function StudioProvider({ children }) {
 			throw error;
 		}
 
-		if (spotifyRefreshInFlightRef.current) return spotifyRefreshInFlightRef.current;
+		if (spotifyRefreshInFlightRef.current)
+			return spotifyRefreshInFlightRef.current;
 
 		spotifyRefreshInFlightRef.current = (async () => {
 			try {
