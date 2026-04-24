@@ -3,6 +3,7 @@ import { NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import AuthGate from './components/AuthGate.jsx';
 import CircularClock from './components/CircularClock.jsx';
 import CommandPalette from './components/CommandPalette.jsx';
+import LogoMark from './components/LogoMark.jsx';
 import ToastViewport from './components/ToastViewport.jsx';
 import { isoToday } from './lib/date.js';
 import { isDueOn } from './lib/habits.js';
@@ -14,6 +15,7 @@ const TodayPage = lazy(() => import('./pages/TodayPage.jsx'));
 const HabitsPage = lazy(() => import('./pages/HabitsPage.jsx'));
 const ProjectsPage = lazy(() => import('./pages/ProjectsPage.jsx'));
 const InsightsPage = lazy(() => import('./pages/InsightsPage.jsx'));
+const DailyReviewPage = lazy(() => import('./pages/DailyReviewPage.jsx'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage.jsx'));
 
 const NAV_ITEMS = [
@@ -26,6 +28,7 @@ const NAV_ITEMS = [
 		icon: 'target',
 	},
 	{ to: '/insights', label: 'Insights', shortLabel: 'Insights', icon: 'chart' },
+	{ to: '/review', label: 'Review', shortLabel: 'Review', icon: 'review' },
 	{
 		to: '/settings',
 		label: 'Settings',
@@ -116,6 +119,34 @@ function NavGlyph({ name }) {
 					/>
 				</svg>
 			);
+		case 'review':
+			return (
+				<svg
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="1.8"
+				>
+					<path
+						d="M7 4h8l4 4v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					/>
+					<path
+						d="M15 4v4h4"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					/>
+					<path
+						d="M9 13h6"
+						strokeLinecap="round"
+					/>
+					<path
+						d="M9 16h4"
+						strokeLinecap="round"
+					/>
+				</svg>
+			);
 		default:
 			return (
 				<svg
@@ -139,12 +170,15 @@ function Sidebar({ theme, onThemeToggle }) {
 	const themeLabel = {
 		light: 'Light',
 		dark: 'Dark',
-		orange: 'Orange',
 	};
 	const nextThemeLabel = {
 		light: 'Dark',
-		dark: 'Orange',
-		orange: 'Light',
+		dark: 'Light',
+	};
+	const ownerLinks = {
+		github: 'https://github.com/kishorchaudhary',
+		website: 'https://kishorchaudhary.com',
+		socials: 'https://instagram.com/kishor0513',
 	};
 
 	return (
@@ -155,7 +189,7 @@ function Sidebar({ theme, onThemeToggle }) {
 						className="sidebarAvatar"
 						aria-hidden="true"
 					>
-						H
+						<LogoMark size={28} />
 					</div>
 					<div className="sidebarBrandText">
 						<div className="sidebarEyebrow">Habit</div>
@@ -194,6 +228,29 @@ function Sidebar({ theme, onThemeToggle }) {
 			</div>
 			<div className="sidebarFooter">
 				<div className="sidebarFooterLine">Build steady systems.</div>
+				<div className="sidebarFooterLinks">
+					<a
+						href={ownerLinks.github}
+						target="_blank"
+						rel="noreferrer"
+					>
+						GitHub
+					</a>
+					<a
+						href={ownerLinks.website}
+						target="_blank"
+						rel="noreferrer"
+					>
+						Website
+					</a>
+					<a
+						href={ownerLinks.socials}
+						target="_blank"
+						rel="noreferrer"
+					>
+						Socials
+					</a>
+				</div>
 				<div className="sidebarFooterMeta">Habit Tracker</div>
 			</div>
 		</aside>
@@ -244,16 +301,40 @@ function Topbar() {
 						<div className="topbarSpotifyLabel">Spotify</div>
 						<div className="topbarSpotifyTrack">{trackName}</div>
 					</div>
-					<button
-						className="btn ghost"
-						type="button"
-						onClick={() => {
-							if (!spotify.spotifyAuthed) spotify.connect();
-							else spotify.playPause();
-						}}
-					>
-						{!spotify.spotifyAuthed ? 'Connect' : isPlaying ? 'Pause' : 'Play'}
-					</button>
+					<div className="topbarSpotifyControls">
+						<button
+							className="iconBtn topbarSpotifyIconBtn"
+							type="button"
+							onClick={spotify.previous}
+							disabled={!spotify.spotifyAuthed}
+							title="Previous track"
+						>
+							⏮
+						</button>
+						<button
+							className="btn ghost"
+							type="button"
+							onClick={() => {
+								if (!spotify.spotifyAuthed) spotify.connect();
+								else spotify.playPause();
+							}}
+						>
+							{!spotify.spotifyAuthed
+								? 'Connect'
+								: isPlaying
+									? 'Pause'
+									: 'Play'}
+						</button>
+						<button
+							className="iconBtn topbarSpotifyIconBtn"
+							type="button"
+							onClick={spotify.next}
+							disabled={!spotify.spotifyAuthed}
+							title="Next track"
+						>
+							⏭
+						</button>
+					</div>
 				</div>
 				<div className="topbarClock">
 					<CircularClock
@@ -385,6 +466,10 @@ function AppShell({ theme, onThemeToggle }) {
 							element={<InsightsPage />}
 						/>
 						<Route
+							path="/review"
+							element={<DailyReviewPage />}
+						/>
+						<Route
 							path="/settings"
 							element={<SettingsPage />}
 						/>
@@ -399,7 +484,7 @@ function AppShell({ theme, onThemeToggle }) {
 export default function App() {
 	const [theme, setTheme] = useState(() => {
 		const saved = localStorage.getItem('habitTrackerTheme');
-		if (saved && ['light', 'dark', 'orange'].includes(saved)) return saved;
+		if (saved && ['light', 'dark'].includes(saved)) return saved;
 		const prefersDark = window.matchMedia(
 			'(prefers-color-scheme: dark)',
 		).matches;
@@ -409,7 +494,7 @@ export default function App() {
 	useEffect(() => {
 		localStorage.setItem('habitTrackerTheme', theme);
 		document.documentElement.dataset.theme = theme;
-		if (theme === 'dark' || theme === 'orange') {
+		if (theme === 'dark') {
 			document.documentElement.style.colorScheme = 'dark';
 		} else {
 			document.documentElement.style.colorScheme = 'light';
@@ -417,7 +502,7 @@ export default function App() {
 	}, [theme]);
 
 	const cycleTheme = () => {
-		const themes = ['light', 'dark', 'orange'];
+		const themes = ['light', 'dark'];
 		const currentIndex = themes.indexOf(theme);
 		const nextIndex = (currentIndex + 1) % themes.length;
 		setTheme(themes[nextIndex]);

@@ -2,6 +2,13 @@
 
 A **premium macOS-inspired productivity system** combining habit tracking, advanced analytics, Spotify integration, and focus sessions. Built with React, Supabase, and designed for deep personal productivity workflows.
 
+## 👤 Owner & Credits
+
+This project is owned and created by **Kishor Chaudhary**.
+
+- GitHub: https://github.com/kishorchaudhary
+- Instagram: https://instagram.com/kishor0513
+
 ---
 
 ## ✨ Key Features

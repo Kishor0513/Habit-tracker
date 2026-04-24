@@ -22,6 +22,10 @@ function formatStamp(value) {
 	});
 }
 
+function formatStatus(status) {
+	return status === 'completed' ? 'Completed' : 'Stopped';
+}
+
 function SpotifyPanel({ immersive = false }) {
 	const { spotify } = useStudio();
 	const albumImg = spotify.spotifyState?.item?.album?.images?.[0]?.url ?? null;
@@ -176,6 +180,32 @@ export default function ProductivityHub() {
 			})
 			.slice(0, 5);
 	}, [focus.focusHistory]);
+	const sessionStats = useMemo(() => {
+		const total = sessionHistory.length;
+		const completed = sessionHistory.filter(
+			(item) => item.status === 'completed',
+		).length;
+		const stopped = total - completed;
+		const avgMinutes =
+			total === 0
+				? 0
+				: Math.round(
+						(sessionHistory.reduce(
+							(sum, item) => sum + (item.minutes || 0),
+							0,
+						) /
+							total) *
+							10,
+					) / 10;
+
+		return {
+			total,
+			completed,
+			stopped,
+			avgMinutes,
+			completionRate: total === 0 ? 0 : Math.round((completed / total) * 100),
+		};
+	}, [sessionHistory]);
 
 	const progressPct =
 		focus.focusMax === 0
@@ -353,10 +383,10 @@ export default function ProductivityHub() {
 									sessionHistory.map((item) => (
 										<div
 											key={item.id}
-											className="item"
+											className="historyItem"
 										>
 											<div
-												className="row between"
+												className="historyItemMeta"
 												style={{ gap: 10 }}
 											>
 												<div className="subtle">
@@ -369,11 +399,11 @@ export default function ProductivityHub() {
 															: 'badge warning'
 													}
 												>
-													{item.status}
+													{formatStatus(item.status)}
 												</span>
 											</div>
 											<div
-												className="itemName"
+												className="historyItemTitle"
 												style={{ marginTop: 6 }}
 											>
 												{item.minutes} minute{' '}
@@ -382,6 +412,48 @@ export default function ProductivityHub() {
 										</div>
 									))
 								)}
+							</div>
+						</div>
+
+						<div className="focusHistorySummary">
+							<div className="panelEyebrow">Session quality</div>
+							<div className="historyQuickStats">
+								<div className="historyQuickStat">
+									<div className="historyStatLabel">Completion rate</div>
+									<div className="historyStatValue">
+										{sessionStats.completionRate}%
+									</div>
+								</div>
+								<div className="historyQuickStat">
+									<div className="historyStatLabel">Completed</div>
+									<div className="historyStatValue successText">
+										{sessionStats.completed}
+									</div>
+								</div>
+								<div className="historyQuickStat">
+									<div className="historyStatLabel">Stopped</div>
+									<div className="historyStatValue warningText">
+										{sessionStats.stopped}
+									</div>
+								</div>
+							</div>
+
+							<div className="historyDetailBlock">
+								<div className="historyStatLabel">Average attempt</div>
+								<div className="historyDetailValue">
+									{sessionStats.total === 0
+										? '—'
+										: `${sessionStats.avgMinutes} minutes`}
+								</div>
+							</div>
+
+							<div className="historyDetailBlock">
+								<div className="historyStatLabel">Last status</div>
+								<div className="historyDetailValue">
+									{sessionHistory[0]
+										? formatStatus(sessionHistory[0].status)
+										: 'No session yet'}
+								</div>
 							</div>
 						</div>
 					</div>
