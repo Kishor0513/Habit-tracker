@@ -549,19 +549,6 @@ p {
 	flex-shrink: 0;
 }
 
-.topbarSpotifyIconBtn {
-	width: 36px;
-	height: 36px;
-	border-radius: 999px;
-	font-size: 15px;
-	background: transparent;
-}
-
-.topbarSpotifyIconBtn:disabled {
-	opacity: 0.4;
-	cursor: not-allowed;
-}
-
 .topbarSpotifyLabel {
 	font-size: 11px;
 	text-transform: uppercase;

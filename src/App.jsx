@@ -176,7 +176,7 @@ function Sidebar({ theme, onThemeToggle }) {
 		dark: 'Light',
 	};
 	const ownerLinks = {
-		github: 'https://github.com/kishorchaudhary',
+		github: 'https://github.com/kishor0513',
 		website: 'https://kishorchaudhary.com.np',
 		socials: 'https://instagram.com/kishor0513',
 	};
@@ -303,13 +303,13 @@ function Topbar() {
 					</div>
 					<div className="topbarSpotifyControls">
 						<button
-							className="iconBtn topbarSpotifyIconBtn"
+							className="btn ghost"
 							type="button"
 							onClick={spotify.previous}
 							disabled={!spotify.spotifyAuthed}
 							title="Previous track"
 						>
-							⏮
+							Prev
 						</button>
 						<button
 							className="btn ghost"
@@ -326,13 +326,13 @@ function Topbar() {
 									: 'Play'}
 						</button>
 						<button
-							className="iconBtn topbarSpotifyIconBtn"
+							className="btn ghost"
 							type="button"
 							onClick={spotify.next}
 							disabled={!spotify.spotifyAuthed}
 							title="Next track"
 						>
-							⏭
+							Next
 						</button>
 					</div>
 				</div>
