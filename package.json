@@ -5,7 +5,8 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
-		"build": "vite build",
+		"build": "npm run audit:external-links && vite build",
+		"audit:external-links": "node scripts/auditExternalLinks.mjs",
 		"preview": "vite preview"
 	},
 	"dependencies": {

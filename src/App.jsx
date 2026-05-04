@@ -232,21 +232,21 @@ function Sidebar({ theme, onThemeToggle }) {
 					<a
 						href={ownerLinks.github}
 						target="_blank"
-						rel="noreferrer"
+						rel="noopener noreferrer"
 					>
 						GitHub
 					</a>
 					<a
 						href={ownerLinks.website}
 						target="_blank"
-						rel="noreferrer"
+						rel="noopener noreferrer"
 					>
 						Website
 					</a>
 					<a
 						href={ownerLinks.socials}
 						target="_blank"
-						rel="noreferrer"
+						rel="noopener noreferrer"
 					>
 						Socials
 					</a>

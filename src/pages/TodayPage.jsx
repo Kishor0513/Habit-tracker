@@ -207,19 +207,39 @@ export default function TodayPage() {
 	const { focus, spotify } = useStudio();
 	const toast = useToast();
 	const today = isoToday();
+	const canSaveDailyReview = typeof api?.upsertDailyReview === 'function';
 	const [habits, setHabits] = useState([]);
 	const [entriesByKey, setEntriesByKey] = useState(new Map());
 	const [activeModal, setActiveModal] = useState(null);
+	const [dailyReview, setDailyReview] = useState({
+		mood: '',
+		notes: '',
+		wins: '',
+		misses: '',
+	});
 
 	useEffect(() => {
 		if (!api) return;
 		let alive = true;
-		Promise.all([api.listHabits(), api.listEntries()])
-			.then(([h, e]) => {
+		Promise.all([
+			api.listHabits(),
+			api.listEntries(),
+			api.listDailyReviews?.() ?? Promise.resolve([]),
+		])
+			.then(([h, e, reviews]) => {
 				if (!alive) return;
 				const activeHabits = h.filter((x) => !x.archivedAt);
 				setHabits(activeHabits);
 				setEntriesByKey(new Map(e.map((x) => [`${x.habitId}__${x.date}`, x])));
+				const review = (reviews ?? []).find((item) => item.date === today);
+				if (review) {
+					setDailyReview({
+						mood: review.mood ?? '',
+						notes: review.notes ?? '',
+						wins: review.wins ?? '',
+						misses: review.misses ?? '',
+					});
+				}
 			})
 			.catch((err) => console.error(err));
 		return () => {
@@ -533,6 +553,108 @@ export default function TodayPage() {
 
 					<div className="todaySectionBlock">
 						<ProductivityHub />
+					</div>
+
+					<div className="card todayReviewCard">
+						<div className="sectionHeader">
+							<div>
+								<h2>Daily review</h2>
+								<div className="subtle">
+									Capture reflection, mood, and what to improve before the day
+									closes.
+								</div>
+							</div>
+							<button
+								className="btn primary"
+								type="button"
+								disabled={!canSaveDailyReview}
+								title={
+									canSaveDailyReview
+										? undefined
+										: 'Daily reviews are not available with this data source.'
+								}
+								onClick={async () => {
+									if (!canSaveDailyReview) return;
+									await api.upsertDailyReview({
+										date: today,
+										...dailyReview,
+									});
+									toast.push('Daily review saved.');
+									refresh();
+								}}
+							>
+								Save review
+							</button>
+						</div>
+						<div
+							className="grid two"
+							style={{ marginTop: 16 }}
+						>
+							<div className="card">
+								<h2>Mood</h2>
+								<div
+									className="row"
+									style={{ gap: 8, flexWrap: 'wrap', marginTop: 12 }}
+								>
+									{['happy', 'neutral', 'tired', 'focused', 'stressed'].map(
+										(mood) => (
+											<button
+												key={mood}
+												className={
+													dailyReview.mood === mood
+														? 'btn primary'
+														: 'btn ghost'
+												}
+												type="button"
+												onClick={() =>
+													setDailyReview((current) => ({ ...current, mood }))
+												}
+											>
+												{mood}
+											</button>
+										),
+									)}
+								</div>
+								<textarea
+									className="textarea"
+									style={{ marginTop: 12 }}
+									value={dailyReview.notes}
+									onChange={(event) =>
+										setDailyReview((current) => ({
+											...current,
+											notes: event.target.value,
+										}))
+									}
+									placeholder="Quick journal entry"
+								/>
+							</div>
+							<div className="card">
+								<h2>Reflection</h2>
+								<textarea
+									className="textarea"
+									value={dailyReview.wins}
+									onChange={(event) =>
+										setDailyReview((current) => ({
+											...current,
+											wins: event.target.value,
+										}))
+									}
+									placeholder="What went well?"
+								/>
+								<textarea
+									className="textarea"
+									style={{ marginTop: 12 }}
+									value={dailyReview.misses}
+									onChange={(event) =>
+										setDailyReview((current) => ({
+											...current,
+											misses: event.target.value,
+										}))
+									}
+									placeholder="What failed or created friction?"
+								/>
+							</div>
+						</div>
 					</div>
 				</section>
 
