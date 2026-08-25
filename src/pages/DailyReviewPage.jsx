@@ -32,6 +32,7 @@ export default function DailyReviewPage() {
 			})
 			.catch((error) => {
 				console.error(error);
+				toast.push('Failed to load reviews. Please refresh.');
 			});
 		return () => {
 			alive = false;
@@ -60,6 +61,13 @@ export default function DailyReviewPage() {
 				</div>
 				<div className="todayHeroPills">
 					<span className="badge brand">{today}</span>
+					<a
+						href="#/review/weekly"
+						className="btn ghost"
+						style={{ fontSize: '0.85rem', padding: '6px 12px' }}
+					>
+						Weekly review →
+					</a>
 				</div>
 			</div>
 
@@ -76,12 +84,16 @@ export default function DailyReviewPage() {
 						className="btn primary"
 						type="button"
 						onClick={async () => {
-							await api.upsertDailyReview({
-								date: today,
-								...dailyReview,
-							});
-							toast.push('Daily review saved.');
-							refresh();
+							try {
+								await api.upsertDailyReview({
+									date: today,
+									...dailyReview,
+								});
+								toast.push('Daily review saved.');
+								refresh();
+							} catch (err) {
+								toast.push(err?.message ?? 'Could not save review.');
+							}
 						}}
 					>
 						Save review

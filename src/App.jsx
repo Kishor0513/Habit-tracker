@@ -3,19 +3,22 @@ import { NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import AuthGate from './components/AuthGate.jsx';
 import CircularClock from './components/CircularClock.jsx';
 import CommandPalette from './components/CommandPalette.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 import LogoMark from './components/LogoMark.jsx';
+import { SkeletonPage } from './components/Skeleton.jsx';
 import ToastViewport from './components/ToastViewport.jsx';
 import { isoToday } from './lib/date.js';
 import { isDueOn } from './lib/habits.js';
 import { AppProvider, useApp } from './state/AppState.jsx';
 import { StudioProvider, useStudio } from './state/StudioState.jsx';
-import { ToastProvider } from './state/ToastState.jsx';
+import { ToastProvider, useToast } from './state/ToastState.jsx';
 
 const TodayPage = lazy(() => import('./pages/TodayPage.jsx'));
 const HabitsPage = lazy(() => import('./pages/HabitsPage.jsx'));
 const ProjectsPage = lazy(() => import('./pages/ProjectsPage.jsx'));
 const InsightsPage = lazy(() => import('./pages/InsightsPage.jsx'));
 const DailyReviewPage = lazy(() => import('./pages/DailyReviewPage.jsx'));
+const WeeklyReviewPage = lazy(() => import('./pages/WeeklyReviewPage.jsx'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage.jsx'));
 
 const NAV_ITEMS = [
@@ -379,10 +382,16 @@ function BottomNav() {
 }
 
 function RouteFallback() {
+	return <SkeletonPage />;
+}
+
+function NotFoundPage() {
 	return (
 		<div className="pageContent">
-			<div className="card">
-				<div className="subtle">Loading workspace...</div>
+			<div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
+				<h1 style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>404</h1>
+				<p className="subtle" style={{ fontSize: '1.1rem', marginBottom: '1.5rem' }}>Page not found</p>
+				<a href="/" className="btn primary">Go to Today</a>
 			</div>
 		</div>
 	);
@@ -390,6 +399,23 @@ function RouteFallback() {
 
 function ReminderEngine() {
 	const { api, isReady, dataVersion } = useApp();
+	const toast = useToast();
+
+	useEffect(() => {
+		if (!isReady || !api || typeof Notification === 'undefined') return;
+		const hasPrompted = localStorage.getItem('habitTracker NotificationPrompted');
+		if (!hasPrompted && Notification.permission === 'default') {
+			const timer = window.setTimeout(() => {
+				Notification.requestPermission().then((permission) => {
+					if (permission === 'granted') {
+						toast.push('Notifications enabled! You\'ll receive habit reminders.');
+					}
+				});
+				localStorage.setItem('habitTracker NotificationPrompted', '1');
+			}, 3000);
+			return () => window.clearTimeout(timer);
+		}
+	}, [api, isReady, toast]);
 
 	useEffect(() => {
 		if (!isReady || !api || typeof Notification === 'undefined') return;
@@ -448,32 +474,42 @@ function AppShell({ theme, onThemeToggle }) {
 				<CommandPalette />
 				<Topbar />
 				<Suspense fallback={<RouteFallback />}>
-					<Routes>
-						<Route
-							path="/"
-							element={<TodayPage />}
-						/>
-						<Route
-							path="/habits"
-							element={<HabitsPage />}
-						/>
-						<Route
-							path="/projects"
-							element={<ProjectsPage />}
-						/>
-						<Route
-							path="/insights"
-							element={<InsightsPage />}
-						/>
-						<Route
-							path="/review"
-							element={<DailyReviewPage />}
-						/>
-						<Route
-							path="/settings"
-							element={<SettingsPage />}
-						/>
-					</Routes>
+					<ErrorBoundary>
+						<Routes>
+							<Route
+								path="/"
+								element={<TodayPage />}
+							/>
+							<Route
+								path="/habits"
+								element={<HabitsPage />}
+							/>
+							<Route
+								path="/projects"
+								element={<ProjectsPage />}
+							/>
+							<Route
+								path="/insights"
+								element={<InsightsPage />}
+							/>
+							<Route
+								path="/review"
+								element={<DailyReviewPage />}
+							/>
+							<Route
+								path="/review/weekly"
+								element={<WeeklyReviewPage />}
+							/>
+							<Route
+								path="/settings"
+								element={<SettingsPage />}
+							/>
+							<Route
+								path="*"
+								element={<NotFoundPage />}
+							/>
+						</Routes>
+					</ErrorBoundary>
 				</Suspense>
 			</div>
 			<BottomNav />

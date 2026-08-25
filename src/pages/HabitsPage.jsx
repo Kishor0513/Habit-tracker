@@ -126,42 +126,45 @@ function HabitEditor({ initial, onCancel, onSave }) {
 	}
 
 	return (
-		<div className="stack">
-			<div className="grid two">
-				<div className="card">
-					<h2>Basics</h2>
-					<div className="stack">
-						<input
-							className="input"
-							value={name}
-							onChange={(e) => setName(e.target.value)}
-							placeholder="e.g., Deep work"
-							autoFocus
-						/>
-						<div className="twoCols">
+			<div className="stack">
+				<div className="grid two">
+					<div className="card">
+						<h2>Basics</h2>
+						<div className="stack">
 							<input
 								className="input"
-								value={category}
-								onChange={(e) => setCategory(e.target.value)}
-								placeholder="Category: Health, Learning..."
+								value={name}
+								onChange={(e) => setName(e.target.value)}
+								placeholder="e.g., Deep work"
+								autoFocus
+								maxLength={100}
 							/>
-							<input
-								className="input"
-								value={tags}
-								onChange={(e) => setTags(e.target.value)}
-								placeholder="Tags: focus, morning"
-							/>
+							<div className="twoCols">
+								<input
+									className="input"
+									value={category}
+									onChange={(e) => setCategory(e.target.value)}
+									placeholder="Category: Health, Learning..."
+									maxLength={50}
+								/>
+								<input
+									className="input"
+									value={tags}
+									onChange={(e) => setTags(e.target.value)}
+									placeholder="Tags: focus, morning"
+									maxLength={100}
+								/>
+							</div>
+							<select
+								className="select"
+								value={type}
+								onChange={(e) => setType(e.target.value)}
+							>
+								<option value={HabitType.binary}>Binary</option>
+								<option value={HabitType.quantity}>Quantity</option>
+							</select>
 						</div>
-						<select
-							className="select"
-							value={type}
-							onChange={(e) => setType(e.target.value)}
-						>
-							<option value={HabitType.binary}>Binary</option>
-							<option value={HabitType.quantity}>Quantity</option>
-						</select>
 					</div>
-				</div>
 
 				<div className="card">
 					<h2>Targeting</h2>
@@ -292,6 +295,7 @@ function HabitEditor({ initial, onCancel, onSave }) {
 						value={linkedPlaylistId}
 						onChange={(e) => setLinkedPlaylistId(e.target.value)}
 						placeholder="Spotify playlist URI or ID"
+						maxLength={100}
 					/>
 					<p
 						className="subtle"
@@ -309,6 +313,7 @@ function HabitEditor({ initial, onCancel, onSave }) {
 					value={notes}
 					onChange={(e) => setNotes(e.target.value)}
 					placeholder="Cues, friction reducers, fallback rules, what counts as success..."
+					maxLength={500}
 				/>
 			</div>
 
@@ -431,11 +436,33 @@ export default function HabitsPage() {
 				setHabits(h.filter((x) => !x.archivedAt));
 				setEntriesByKey(new Map(e.map((x) => [x.id, x])));
 			})
-			.catch((err) => console.error(err));
+			.catch((err) => {
+				console.error(err);
+				toast.push('Failed to load habits. Please refresh.');
+			});
 		return () => {
 			alive = false;
 		};
 	}, [api, dataVersion]);
+
+	async function moveHabit(habitId, direction) {
+		const sorted = [...habits].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+		const idx = sorted.findIndex((h) => h.id === habitId);
+		if (idx < 0) return;
+		const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+		if (swapIdx < 0 || swapIdx >= sorted.length) return;
+		const a = sorted[idx];
+		const b = sorted[swapIdx];
+		const aOrder = a.orderIndex ?? idx;
+		const bOrder = b.orderIndex ?? swapIdx;
+		try {
+			await api.upsertHabit({ ...a, orderIndex: bOrder });
+			await api.upsertHabit({ ...b, orderIndex: aOrder });
+			refresh();
+		} catch (err) {
+			toast.push(err?.message ?? 'Could not reorder habits.');
+		}
+	}
 
 	useEffect(() => {
 		function openNewHabit() {
@@ -477,7 +504,8 @@ export default function HabitsPage() {
 
 	const cards = useMemo(() => {
 		const week = lastNDays(7);
-		return filteredHabits.map((habit) => {
+		const sorted = [...filteredHabits].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+		return sorted.map((habit) => {
 			const stats = completionRateLastNDays([habit], entriesByKey, 14);
 			const streak = currentStreak(habit, entriesByKey);
 			const weeklyGoal = weeklyGoalProgress(habit, entriesByKey, week);
@@ -563,7 +591,7 @@ export default function HabitsPage() {
 				</div>
 			) : (
 				<div className="list">
-					{cards.map(({ habit, stats, streak, weeklyGoal }) => {
+					{cards.map(({ habit, stats, streak, weeklyGoal }, cardIndex) => {
 						const pct = Math.round(stats.rate * 100);
 						const streakClass =
 							streak >= 7
@@ -709,6 +737,30 @@ export default function HabitsPage() {
 											type="button"
 											onClick={(event) => {
 												event.stopPropagation();
+												moveHabit(habit.id, 'up');
+											}}
+											disabled={cardIndex === 0}
+											title="Move up"
+										>
+											↑
+										</button>
+										<button
+											className="btn ghost"
+											type="button"
+											onClick={(event) => {
+												event.stopPropagation();
+												moveHabit(habit.id, 'down');
+											}}
+											disabled={cardIndex === cards.length - 1}
+											title="Move down"
+										>
+											↓
+										</button>
+										<button
+											className="btn ghost"
+											type="button"
+											onClick={(event) => {
+												event.stopPropagation();
 												setEditing(habit);
 												setShowEditor(true);
 											}}
@@ -720,9 +772,13 @@ export default function HabitsPage() {
 											type="button"
 											onClick={async (event) => {
 												event.stopPropagation();
-												await api.archiveHabit(habit.id);
-												toast.push('Archived.');
-												refresh();
+												try {
+													await api.archiveHabit(habit.id);
+													toast.push('Archived.');
+													refresh();
+												} catch (err) {
+													toast.push(err?.message ?? 'Could not archive habit.');
+												}
 											}}
 										>
 											Archive

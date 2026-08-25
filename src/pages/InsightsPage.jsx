@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   bestPerformingHabits,
   bestStreak,
@@ -12,6 +12,7 @@ import { isoToday, lastNDays } from "../lib/date.js";
 import { isDueOn, entryMeetsTarget, habitEntryStatus, EntryStatus } from "../lib/habits.js";
 import { completionRateLastNDays, currentStreak, weeklyGoalProgress } from "../lib/stats.js";
 import { useApp } from "../state/AppState.jsx";
+import { useToast } from "../state/ToastState.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import Modal from "../components/Modal.jsx";
 
@@ -46,6 +47,7 @@ function Sparkline({ points, width = 280, height = 64 }) {
 
 export default function InsightsPage() {
   const { api, isReady, dataVersion } = useApp();
+  const toast = useToast();
   const [habits, setHabits] = useState([]);
   const [entriesByKey, setEntriesByKey] = useState(new Map());
   const [entries, setEntries] = useState([]);
@@ -70,7 +72,10 @@ export default function InsightsPage() {
         setDailyReviews(reviews ?? []);
         setHabitSessions(sessions ?? []);
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        toast.push('Failed to load insights. Please refresh.');
+      });
     return () => { alive = false; };
   }, [api, dataVersion]);
 

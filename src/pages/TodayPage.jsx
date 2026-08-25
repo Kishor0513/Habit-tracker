@@ -241,7 +241,10 @@ export default function TodayPage() {
 					});
 				}
 			})
-			.catch((err) => console.error(err));
+			.catch((err) => {
+				console.error(err);
+				toast.push('Failed to load data. Please refresh.');
+			});
 		return () => {
 			alive = false;
 		};
@@ -486,62 +489,82 @@ export default function TodayPage() {
 												streak={currentStreak(h, entriesByKey, today)}
 												weeklyGoal={weeklyGoalProgress(h, entriesByKey)}
 												onToggle={async (note = entry?.note ?? '') => {
-													if (entryMeetsTarget(h, entry)) {
-														await api.deleteEntry(h.id, today);
-													} else {
+													try {
+														if (entryMeetsTarget(h, entry)) {
+															await api.deleteEntry(h.id, today);
+														} else {
+															await api.setEntry({
+																habitId: h.id,
+																date: today,
+																value:
+																	h.type === HabitType.binary
+																		? 1
+																		: Number(entry?.value ?? h.target ?? 0),
+																note,
+																status: EntryStatus.done,
+															});
+														}
+														refresh();
+													} catch (err) {
+														toast.push(err?.message ?? 'Could not update habit.');
+													}
+												}}
+												onSkip={async (note = entry?.note ?? '') => {
+													try {
 														await api.setEntry({
 															habitId: h.id,
 															date: today,
-															value:
-																h.type === HabitType.binary
-																	? 1
-																	: Number(entry?.value ?? h.target ?? 0),
+															value: 0,
 															note,
-															status: EntryStatus.done,
+															status: EntryStatus.skipped,
 														});
+														refresh();
+													} catch (err) {
+														toast.push(err?.message ?? 'Could not skip habit.');
 													}
-													refresh();
-												}}
-												onSkip={async (note = entry?.note ?? '') => {
-													await api.setEntry({
-														habitId: h.id,
-														date: today,
-														value: 0,
-														note,
-														status: EntryStatus.skipped,
-													});
-													refresh();
 												}}
 												onClear={async () => {
-													await api.deleteEntry(h.id, today);
-													refresh();
+													try {
+														await api.deleteEntry(h.id, today);
+														refresh();
+													} catch (err) {
+														toast.push(err?.message ?? 'Could not clear entry.');
+													}
 												}}
 												onSaveQuantity={async (value, note) => {
 													if (!Number.isFinite(value) || value < 0) {
 														return toast.push('Please enter a valid number.');
 													}
-													await api.setEntry({
-														habitId: h.id,
-														date: today,
-														value,
-														note,
-														status:
-															value >= Number(h.target ?? 1)
-																? EntryStatus.done
-																: EntryStatus.pending,
-													});
-													refresh();
+													try {
+														await api.setEntry({
+															habitId: h.id,
+															date: today,
+															value,
+															note,
+															status:
+																value >= Number(h.target ?? 1)
+																	? EntryStatus.done
+																	: EntryStatus.pending,
+														});
+														refresh();
+													} catch (err) {
+														toast.push(err?.message ?? 'Could not save quantity.');
+													}
 												}}
 												onSaveNote={async (note) => {
-													await api.setEntry({
-														habitId: h.id,
-														date: today,
-														value: Number(entry?.value ?? 0),
-														note,
-														status: entry?.status ?? EntryStatus.pending,
-													});
-													toast.push('Note saved.');
-													refresh();
+													try {
+														await api.setEntry({
+															habitId: h.id,
+															date: today,
+															value: Number(entry?.value ?? 0),
+															note,
+															status: entry?.status ?? EntryStatus.pending,
+														});
+														toast.push('Note saved.');
+														refresh();
+													} catch (err) {
+														toast.push(err?.message ?? 'Could not save note.');
+													}
 												}}
 											/>
 										);
@@ -575,12 +598,16 @@ export default function TodayPage() {
 								}
 								onClick={async () => {
 									if (!canSaveDailyReview) return;
-									await api.upsertDailyReview({
-										date: today,
-										...dailyReview,
-									});
-									toast.push('Daily review saved.');
-									refresh();
+									try {
+										await api.upsertDailyReview({
+											date: today,
+											...dailyReview,
+										});
+										toast.push('Daily review saved.');
+										refresh();
+									} catch (err) {
+										toast.push(err?.message ?? 'Could not save review.');
+									}
 								}}
 							>
 								Save review

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { isoToday, lastNDays } from "../lib/date.js";
 import { entryMeetsTarget, isDueOn } from "../lib/habits.js";
 import { useApp } from "../state/AppState.jsx";
@@ -159,21 +159,24 @@ export default function ProjectsPage() {
   const [activeProject, setActiveProject] = useState(null);
   const [editing, setEditing] = useState(null);
 
-  useEffect(() => {
-    if (!api) return;
-    let alive = true;
-    Promise.all([api.listProjects(), api.listHabits(), api.listEntries()])
-      .then(([p, h, e]) => {
-        if (!alive) return;
-        setProjects(p.filter((x) => !x.archivedAt));
-        setHabits(h.filter((x) => !x.archivedAt));
-        setEntriesByKey(new Map(e.map((x) => [x.id, x])));
-      })
-      .catch((err) => console.error(err));
-    return () => {
-      alive = false;
-    };
-  }, [api, dataVersion]);
+	useEffect(() => {
+		if (!api) return;
+		let alive = true;
+		Promise.all([api.listProjects(), api.listHabits(), api.listEntries()])
+			.then(([p, h, e]) => {
+				if (!alive) return;
+				setProjects(p.filter((x) => !x.archivedAt));
+				setHabits(h.filter((x) => !x.archivedAt));
+				setEntriesByKey(new Map(e.map((x) => [x.id, x])));
+			})
+			.catch((err) => {
+				console.error(err);
+				toast.push('Failed to load projects. Please refresh.');
+			});
+		return () => {
+			alive = false;
+		};
+	}, [api, dataVersion]);
 
   const habitsById = useMemo(() => new Map(habits.map((h) => [h.id, h])), [habits]);
 
@@ -232,19 +235,23 @@ export default function ProjectsPage() {
                     }}>
                       Open
                     </button>
-                    <button
-                      className="btn danger"
-                      type="button"
-                      style={{ padding: '7px 10px' }}
-                      onClick={async (event) => {
-                        event.stopPropagation();
-                        const ok = window.confirm(`Delete project "${project.name}"?`);
-                        if (!ok) return;
-                        await api.deleteProject(project.id);
-                        toast.push("Deleted.");
-                        refresh();
-                      }}
-                    >
+										<button
+											className="btn danger"
+											type="button"
+											style={{ padding: '7px 10px' }}
+											onClick={async (event) => {
+												event.stopPropagation();
+												const ok = window.confirm(`Delete project "${project.name}"?`);
+												if (!ok) return;
+												try {
+													await api.deleteProject(project.id);
+													toast.push("Deleted.");
+													refresh();
+												} catch (err) {
+													toast.push(err?.message ?? 'Could not delete project.');
+												}
+											}}
+										>
                       Delete
                     </button>
                   </div>
@@ -285,14 +292,18 @@ export default function ProjectsPage() {
             initial={editing.id ? editing : null}
             habits={habits}
             onCancel={() => setEditing(null)}
-            onSave={async (result) => {
-              const cleanName = result.value.name?.trim();
-              if (!cleanName) return toast.push("Project name is required.");
-              await api.upsertProject({ ...result.value, name: cleanName });
-              toast.push("Saved.");
-              setEditing(null);
-              refresh();
-            }}
+			onSave={async (result) => {
+								const cleanName = result.value.name?.trim();
+								if (!cleanName) return toast.push("Project name is required.");
+								try {
+									await api.upsertProject({ ...result.value, name: cleanName });
+									toast.push("Saved.");
+									setEditing(null);
+									refresh();
+								} catch (err) {
+									toast.push(err?.message ?? 'Could not save project.');
+								}
+							}}
           />
         </Modal>
       ) : null}

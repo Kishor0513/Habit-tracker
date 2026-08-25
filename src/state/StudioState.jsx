@@ -106,7 +106,9 @@ export function StudioProvider({ children }) {
 						.slice(0, 12),
 				);
 			})
-			.catch(() => {});
+			.catch((error) => {
+				console.error('Failed to load focus sessions:', error);
+			});
 		return () => {
 			alive = false;
 		};
@@ -146,7 +148,9 @@ export function StudioProvider({ children }) {
 								durationSeconds: focusMax,
 							})
 							.then(() => refresh())
-							.catch(() => {});
+							.catch((error) => {
+								console.error('Failed to save focus session:', error);
+							});
 					}
 					focusStartRef.current = null;
 					if (
@@ -293,7 +297,9 @@ export function StudioProvider({ children }) {
 						durationSeconds: elapsedSeconds,
 					})
 					.then(() => refresh())
-					.catch(() => {});
+					.catch((error) => {
+						console.error('Failed to save stopped session:', error);
+					});
 			}
 		}
 		applyCustomDuration(customMinutes);

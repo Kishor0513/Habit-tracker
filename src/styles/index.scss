@@ -687,6 +687,12 @@ p {
 		linear-gradient(180deg, rgba(255, 255, 255, 0.32), transparent),
 		var(--surface-container);
 	box-shadow: var(--shadow-sm);
+	transition: box-shadow 0.3s var(--bezier-snap), transform 0.3s var(--bezier-snap);
+}
+
+.heroCard:hover,
+.premiumPanel:hover {
+	box-shadow: var(--shadow-md);
 }
 
 .premiumPanelAccent::before,
@@ -1776,6 +1782,11 @@ p {
 		align-items: center;
 		gap: 4px;
 		color: var(--text-faint);
+		transition: color 0.2s var(--bezier-snap), transform 0.15s var(--bezier-snap);
+	}
+
+	.mobileNavItem:active {
+		transform: scale(0.92);
 	}
 
 	.mobileNavItem.isActive {
@@ -1787,6 +1798,7 @@ p {
 		display: grid;
 		place-items: center;
 		border-radius: 12px;
+		transition: background-color 0.2s var(--bezier-snap);
 	}
 
 	[data-theme='dark'] .mobileNavItemIcon {
@@ -2057,277 +2069,6 @@ p {
 	}
 }
 
-.spotifyCover {
-	width: 100%;
-	height: 240px;
-	border-radius: var(--radius-md);
-	background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 60px;
-	margin-bottom: 16px;
-	box-shadow: 0 12px 24px rgba(139, 92, 246, 0.3);
-	overflow: hidden;
-
-	img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-	}
-}
-
-.spotifyTrack {
-	margin-bottom: 16px;
-
-	.trackName {
-		font-weight: 600;
-		font-size: 14px;
-		color: var(--text-main);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		margin-bottom: 4px;
-	}
-
-	.artistName {
-		font-size: 12px;
-		color: var(--text-muted);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-}
-
-.spotifyTimeline {
-	margin-bottom: 16px;
-
-	.timelineBar {
-		width: 100%;
-		height: 3px;
-		background: var(--bg-2);
-		border-radius: 2px;
-		overflow: hidden;
-		margin-bottom: 6px;
-		cursor: pointer;
-
-		.timelineProgress {
-			height: 100%;
-			background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 100%);
-			transition: width 0.1s linear;
-			border-radius: 2px;
-		}
-	}
-
-	.timelineLabels {
-		display: flex;
-		justify-content: space-between;
-		font-size: 10px;
-		color: var(--text-muted);
-	}
-}
-
-.spotifyControls {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 12px;
-
-	.controlBtn {
-		width: 40px;
-		height: 40px;
-		border-radius: 50%;
-		border: 1px solid rgba(139, 92, 246, 0.3);
-		background: rgba(139, 92, 246, 0.1);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: var(--brand);
-		cursor: pointer;
-		transition: all 0.2s var(--bezier-snap);
-
-		&:hover {
-			background: rgba(139, 92, 246, 0.2);
-			border-color: var(--accent-base);
-			transform: scale(1.1);
-		}
-
-		&.playBtn {
-			width: 48px;
-			height: 48px;
-			background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-			border-color: transparent;
-			color: #fff;
-			font-size: 18px;
-
-			&:hover {
-				transform: scale(1.15);
-				box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
-			}
-		}
-
-		svg {
-			width: 18px;
-			height: 18px;
-		}
-	}
-}
-
-/* ━━━ HABITS LAYOUT (Two Column) ━━━ */
-.habitsContainer {
-	display: grid;
-	grid-template-columns: 1fr 320px;
-	gap: 24px;
-	padding: 28px;
-	max-width: 1400px;
-	margin: 0 auto;
-
-	@media (max-width: 1024px) {
-		grid-template-columns: 1fr;
-	}
-}
-
-.habitsList {
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
-
-	.habitItem {
-		display: flex;
-		align-items: center;
-		gap: 14px;
-		padding: 14px;
-		background: var(--bg-panel);
-		border: 1px solid var(--border-muted);
-		border-radius: var(--radius-md);
-		transition: all 0.2s var(--bezier-snap);
-
-		&:hover {
-			border-color: var(--accent-base);
-			box-shadow: var(--shadow-md);
-		}
-
-		.habitCheckbox {
-			width: 24px;
-			height: 24px;
-			border-radius: 50%;
-			border: 2px solid var(--border-muted);
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			flex-shrink: 0;
-			cursor: pointer;
-			transition: all 0.2s var(--bezier-snap);
-
-			&.checked {
-				background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-				border-color: #7c3aed;
-
-				svg {
-					opacity: 1;
-				}
-			}
-
-			svg {
-				width: 14px;
-				height: 14px;
-				stroke: white;
-				opacity: 0;
-				transition: opacity 0.2s;
-			}
-		}
-
-		.habitContent {
-			flex: 1;
-			min-width: 0;
-
-			.habitName {
-				font-weight: 600;
-				font-size: 14px;
-				color: var(--text-main);
-				margin-bottom: 2px;
-			}
-
-			.habitTarget {
-				font-size: 12px;
-				color: var(--text-muted);
-			}
-		}
-
-		.habitStreak {
-			font-size: 12px;
-			padding: 4px 8px;
-			background: rgba(251, 146, 60, 0.15);
-			color: #ea580c;
-			border-radius: 6px;
-			white-space: nowrap;
-		}
-	}
-}
-
-.habitsCalendar {
-	.calendarHeader {
-		padding: 14px;
-		background: var(--bg-2);
-		border-radius: var(--radius-md);
-		margin-bottom: 12px;
-
-		.monthYear {
-			font-weight: 600;
-			font-size: 13px;
-			color: var(--text-main);
-			text-align: center;
-		}
-	}
-
-	.calendarDays {
-		display: grid;
-		grid-template-columns: repeat(7, 1fr);
-		gap: 6px;
-
-		.dayHeader {
-			text-align: center;
-			font-size: 10px;
-			color: var(--text-faint);
-			font-weight: 600;
-			height: 24px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-		}
-
-		.dayCell {
-			aspect-ratio: 1;
-			border-radius: 6px;
-			border: 1px solid var(--border-muted);
-			background: var(--bg-app);
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-size: 11px;
-			color: var(--text-faint);
-			cursor: pointer;
-			transition: all 0.2s var(--bezier-snap);
-
-			&:hover {
-				transform: scale(1.15);
-				box-shadow: var(--shadow-md);
-			}
-
-			&.completed {
-				background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-				border-color: #7c3aed;
-				color: white;
-				font-weight: 600;
-
-				&::after {
-					content: '✓';
-				}
-			}
-		}
-	}
-}
-
 /* ━━━ PREMIUM ANIMATIONS ━━━ */
 @keyframes slideUp {
 	from {
@@ -2359,6 +2100,84 @@ p {
 	}
 }
 
+@keyframes skeleton-shimmer {
+	0% { background-position: 200% 0; }
+	100% { background-position: -200% 0; }
+}
+
+.skeleton-line {
+	animation: skeleton-shimmer 1.5s infinite;
+}
+
+/* ━━━ UI POLISH ━━━ */
+.card {
+	transition: transform 0.2s var(--bezier-snap), box-shadow 0.2s var(--bezier-snap), border-color 0.2s var(--bezier-snap);
+}
+
+.card:hover {
+	box-shadow: var(--shadow-md);
+}
+
+.interactiveSurface {
+	cursor: pointer;
+	transition: transform 0.2s var(--bezier-snap), box-shadow 0.2s var(--bezier-snap), border-color 0.2s var(--bezier-snap);
+}
+
+.interactiveSurface:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--shadow-md);
+}
+
+.badge {
+	transition: transform 0.15s var(--bezier-snap), background-color 0.2s var(--bezier-snap);
+}
+
+.badge:hover {
+	transform: scale(1.05);
+}
+
+.btn {
+	transition: transform 0.15s var(--bezier-snap), box-shadow 0.2s var(--bezier-snap), background-color 0.2s var(--bezier-snap);
+}
+
+.btn:active {
+	transform: scale(0.97);
+}
+
+.btn.primary {
+	box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
+}
+
+.btn.primary:hover {
+	box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+}
+
+.taskRow {
+	transition: transform 0.15s var(--bezier-snap), box-shadow 0.2s var(--bezier-snap), background-color 0.2s var(--bezier-snap);
+}
+
+.taskRow:hover {
+	box-shadow: var(--shadow-sm);
+}
+
+.heatCell {
+	transition: transform 0.15s var(--bezier-snap), box-shadow 0.15s var(--bezier-snap);
+}
+
+.heatCell:hover {
+	transform: scale(1.3);
+	z-index: 1;
+}
+
+.kpi {
+	transition: transform 0.2s var(--bezier-snap);
+}
+
+.kpi:hover {
+	transform: scale(1.02);
+}
+
+/* ━━━ FOCUS STUDIO ━━━ */
 .focusStudio {
 	position: relative;
 	overflow: hidden;

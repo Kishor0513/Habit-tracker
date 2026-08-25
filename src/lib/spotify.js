@@ -68,10 +68,6 @@ export async function startSpotifyLogin({ clientId, redirectUri }) {
     ].join(" "),
   });
 
-  console.info(
-    `[Spotify] Starting OAuth login with Redirect URI: ${redirectUri}`,
-  );
-
   window.location.assign(`${AUTHORIZE_ENDPOINT}?${params.toString()}`);
 }
 

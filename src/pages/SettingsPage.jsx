@@ -22,11 +22,24 @@ async function exportData(api) {
 }
 
 async function importData(api, data) {
-	if (!data || typeof data !== 'object') throw new Error('Invalid import.');
+	if (!data || typeof data !== 'object') throw new Error('Invalid import: not an object.');
+	if (data.version !== 1) throw new Error('Invalid import: unsupported version.');
+
 	const habits = Array.isArray(data.habits) ? data.habits : [];
 	const entries = Array.isArray(data.entries) ? data.entries : [];
 	const projects = Array.isArray(data.projects) ? data.projects : [];
 	const settings = Array.isArray(data.settings) ? data.settings : [];
+
+	for (const h of habits) {
+		if (!h.name || typeof h.name !== 'string') throw new Error('Invalid habit: missing name.');
+		if (!h.type || !['binary', 'quantity'].includes(h.type)) throw new Error(`Invalid habit type: ${h.type}`);
+	}
+	for (const e of entries) {
+		if (!e.habitId || typeof e.habitId !== 'string') throw new Error('Invalid entry: missing habitId.');
+		if (!e.date || typeof e.date !== 'string') throw new Error('Invalid entry: missing date.');
+		if (e.status && !['pending', 'done', 'skipped'].includes(e.status)) throw new Error(`Invalid entry status: ${e.status}`);
+	}
+
 	for (const h of habits) await api.upsertHabit(h);
 	for (const e of entries)
 		await api.setEntry({
