@@ -413,7 +413,7 @@ export default function HabitsPage() {
 			.then(([h, e]) => {
 				if (!alive) return;
 				setHabits(h.filter((x) => !x.archivedAt));
-				setEntriesByKey(new Map(e.map((x) => [x.id, x])));
+				setEntriesByKey(new Map(e.map((x) => [`${x.habitId}__${x.date}`, x])));
 			})
 			.catch((err) => {
 				console.error(err);

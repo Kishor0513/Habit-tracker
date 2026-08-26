@@ -167,7 +167,7 @@ export default function ProjectsPage() {
 				if (!alive) return;
 				setProjects(p.filter((x) => !x.archivedAt));
 				setHabits(h.filter((x) => !x.archivedAt));
-				setEntriesByKey(new Map(e.map((x) => [x.id, x])));
+				setEntriesByKey(new Map(e.map((x) => [`${x.habitId}__${x.date}`, x])));
 			})
 			.catch((err) => {
 				console.error(err);
