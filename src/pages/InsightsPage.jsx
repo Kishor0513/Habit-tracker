@@ -32,7 +32,7 @@ function Sparkline({ points, width = 280, height = 64 }) {
   const fillD = `${d} L ${width} ${height} L 0 ${height} Z`;
 
   return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label="30-day completion trend" style={{ overflow: "visible" }}>
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label="30-day completion trend">
       <defs>
         <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="var(--brand)" stopOpacity="0.4" />
@@ -166,35 +166,29 @@ export default function InsightsPage() {
   return (
     <div className="bento">
       <div className="span-12 stack">
-        <div className="card interactiveSurface" style={{ background: 'var(--surface-container)', border: 'none' }} onClick={() => setActivePanel('history')}>
+        <div className="card interactiveSurface" style={{ background: 'var(--bg-surface)' }} onClick={() => setActivePanel('history')}>
           <div className="sectionHeader">
-            <div className="stack" style={{ gap: 4 }}>
+            <div className="stack gap-xs">
               <span className="greeting">History</span>
               <h2>Last 6 weeks</h2>
             </div>
             <span className="badge accent">Calendar view</span>
           </div>
-          <div className="heatmap" style={{ gap: 4, marginTop: 16 }}>
+          <div className="heatmap heatCellLg listMt">
             {heatmapData.map((cell) => {
               const level = cell.done === 0 ? '' : cell.done >= 4 ? 'level-4' : cell.done >= 2 ? 'level-2' : 'level-1';
               return (
                 <div
                   key={cell.iso}
-                  className={`heatCell ${level}`}
+                  className={`heatCell ${level} ${cell.skipped > 0 ? 'heatCellSkipped' : ''}`}
                   title={`${cell.iso}: ${cell.done} completed, ${cell.skipped} skipped`}
-                  style={{
-                    width: 14,
-                    height: 14,
-                    outline: cell.skipped > 0 ? '1px solid rgba(249,115,22,0.55)' : 'none',
-                    outlineOffset: 1,
-                  }}
                 />
               );
             })}
           </div>
-          <div className="row" style={{ marginTop: 12, justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div className="historyBar">
             <div className="subtle">Orange outline indicates skipped activity on that day.</div>
-            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            <div className="row gap-sm flex-wrap">
               <span className="badge">{recoveryMetrics.skipped} skips / 30d</span>
               <span className="badge success">{recoveryMetrics.protectedSkips} protected</span>
             </div>
@@ -219,11 +213,11 @@ export default function InsightsPage() {
             </div>
             <div className="kpi">
               <div className="label">Active habits</div>
-              <div className="value" style={{ fontSize: '1.2rem' }}>{habits.length}</div>
+              <div className="value">{habits.length}</div>
             </div>
             <div className="kpi">
               <div className="label">Best streak</div>
-              <div className="value" style={{ fontSize: '1.2rem' }}>{bestStreakOverall}</div>
+              <div className="value">{bestStreakOverall}</div>
             </div>
           </div>
         </div>
@@ -233,10 +227,10 @@ export default function InsightsPage() {
             <h2>Trend analysis</h2>
             <span className="badge">{fmtPct(overall30.rate)}</span>
           </div>
-          <div className="sparkline-wrap" style={{ marginTop: 12 }}>
+          <div className="sparkline-wrap listMt">
             <Sparkline points={dailyRate.map((x) => Math.round(x * 100))} />
           </div>
-          <p className="subtle" style={{ marginTop: 12 }}>
+          <p className="subtle insightsSubtext">
             Rising trend means your system is getting easier to execute. Falling trend usually means too much friction or too many active habits.
           </p>
         </div>
@@ -246,12 +240,12 @@ export default function InsightsPage() {
             <h2>Category performance</h2>
             <span className="badge brand">{categoryBreakdown.length} groups</span>
           </div>
-          <div className="list" style={{ marginTop: 12 }}>
+          <div className="list listMt">
             {categoryBreakdown.map((item) => (
               <div key={item.category} className="item">
-                <div className="row between" style={{ gap: 12 }}>
+                <div className="row between gap-md">
                   <div className="itemName">{item.category}</div>
-                  <div className="row" style={{ gap: 8 }}>
+                  <div className="row gap-sm">
                     <span className="badge">{item.habits} habits</span>
                     <span className={item.completion >= 0.8 ? "badge success" : item.completion >= 0.5 ? "badge warning" : "badge danger"}>
                       {fmtPct(item.completion)}
@@ -268,18 +262,18 @@ export default function InsightsPage() {
             <h2>Advanced analytics</h2>
             <span className="badge brand">Behavioral</span>
           </div>
-          <div className="list" style={{ marginTop: 12 }}>
+          <div className="list listMt">
             <div className="item">
               <div className="itemName">Most skipped habit</div>
-              <div className="subtle" style={{ marginTop: 6 }}>{skippedLeaders[0]?.habit?.name ?? '—'}</div>
+              <div className="subtle insightsSubtext">{skippedLeaders[0]?.habit?.name ?? '—'}</div>
             </div>
             <div className="item">
               <div className="itemName">Best performing habit</div>
-              <div className="subtle" style={{ marginTop: 6 }}>{topHabits[0]?.habit?.name ?? '—'}</div>
+              <div className="subtle insightsSubtext">{topHabits[0]?.habit?.name ?? '—'}</div>
             </div>
             <div className="item">
               <div className="itemName">Top playlist</div>
-              <div className="subtle" style={{ marginTop: 6 }}>{playlistMetrics[0]?.playlistId ?? '—'}</div>
+              <div className="subtle insightsSubtext">{playlistMetrics[0]?.playlistId ?? '—'}</div>
             </div>
           </div>
         </div>
@@ -288,19 +282,19 @@ export default function InsightsPage() {
       <div className="span-4 stack">
         <div className="card interactiveSurface" onClick={() => setActivePanel('stability')}>
           <h2>Stability index</h2>
-          <div className="list" style={{ marginTop: 12 }}>
+          <div className="list listMt">
             {habits.map((h) => {
               const streak = currentStreak(h, entriesByKey, isoToday());
               const weeklyGoal = weeklyGoalProgress(h, entriesByKey);
               return (
                 <div key={h.id} className="item">
-                  <div className="row between" style={{ gap: 10 }}>
-                    <div className="stack" style={{ gap: 6, minWidth: 0 }}>
-                      <div className="row" style={{ gap: 10, minWidth: 0 }}>
-                        <div className="dot" style={{ background: h.color, width: 10, height: 10 }} />
-                        <div className="itemName" style={{ fontSize: '0.85rem' }}>{h.name}</div>
+                  <div className="row between gap-sm">
+                    <div className="stack gap-xs min-w-0 flex-1">
+                      <div className="row gap-sm min-w-0">
+                        <div className="dot habitDot" style={{ background: h.color }} />
+                        <div className="itemName insightsHeading">{h.name}</div>
                       </div>
-                      <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+                      <div className="row gap-xs flex-wrap">
                         {h.category ? <span className="badge">{h.category}</span> : null}
                         {weeklyGoal.target > 0 ? (
                           <span className={weeklyGoal.met ? "badge success" : "badge warning"}>
@@ -336,27 +330,27 @@ export default function InsightsPage() {
             <div className="list">
               {heatmapData.map((cell) => (
                 <div key={cell.iso} className="item">
-                  <div className="row between" style={{ gap: 8 }}>
+                  <div className="row between modalRow">
                     <div className="itemName">{cell.iso}</div>
                     <span className="badge">{cell.done} done</span>
                   </div>
-                  <div className="subtle" style={{ marginTop: 6 }}>{cell.skipped} skipped</div>
+                  <div className="subtle insightsSubtext">{cell.skipped} skipped</div>
                 </div>
               ))}
             </div>
           ) : null}
           {activePanel === 'momentum' ? (
             <div className="list">
-              <div className="item"><div className="itemName">14-day rate</div><div className="subtle" style={{ marginTop: 6 }}>{fmtPct(overall14.rate)}</div></div>
-              <div className="item"><div className="itemName">30-day rate</div><div className="subtle" style={{ marginTop: 6 }}>{fmtPct(overall30.rate)}</div></div>
-              <div className="item"><div className="itemName">Active habits</div><div className="subtle" style={{ marginTop: 6 }}>{habits.length}</div></div>
+              <div className="item"><div className="itemName">14-day rate</div><div className="subtle insightsSubtext">{fmtPct(overall14.rate)}</div></div>
+              <div className="item"><div className="itemName">30-day rate</div><div className="subtle insightsSubtext">{fmtPct(overall30.rate)}</div></div>
+              <div className="item"><div className="itemName">Active habits</div><div className="subtle insightsSubtext">{habits.length}</div></div>
             </div>
           ) : null}
           {activePanel === 'trend' ? (
             <div className="list">
               {overall30.days.map((day, index) => (
                 <div key={day} className="item">
-                  <div className="row between" style={{ gap: 8 }}>
+                  <div className="row between modalRow">
                     <div className="itemName">{day}</div>
                     <span className="badge">{fmtPct(dailyRate[index])}</span>
                   </div>
@@ -368,11 +362,11 @@ export default function InsightsPage() {
             <div className="list">
               {categoryBreakdown.map((item) => (
                 <div key={item.category} className="item">
-                  <div className="row between" style={{ gap: 8 }}>
+                  <div className="row between modalRow">
                     <div className="itemName">{item.category}</div>
                     <span className="badge">{fmtPct(item.completion)}</span>
                   </div>
-                  <div className="subtle" style={{ marginTop: 6 }}>{item.habits} habits</div>
+                  <div className="subtle insightsSubtext">{item.habits} habits</div>
                 </div>
               ))}
             </div>
@@ -384,11 +378,11 @@ export default function InsightsPage() {
                 const weeklyGoal = weeklyGoalProgress(h, entriesByKey);
                 return (
                   <div key={h.id} className="item">
-                    <div className="row between" style={{ gap: 8 }}>
+                    <div className="row between modalRow">
                       <div className="itemName">{h.name}</div>
                       <span className="badge">{streak > 0 ? `${streak} streak` : 'No streak'}</span>
                     </div>
-                    <div className="subtle" style={{ marginTop: 6 }}>
+                    <div className="subtle insightsSubtext">
                       {weeklyGoal.target > 0 ? `${weeklyGoal.completions}/${weeklyGoal.target} this week` : 'No weekly goal'}
                     </div>
                   </div>
@@ -400,7 +394,7 @@ export default function InsightsPage() {
             <div className="stack">
               <div className="card">
                 <h3>Completion by weekday</h3>
-                <div className="list" style={{ marginTop: 12 }}>
+                <div className="list listMt">
                   {weekdayPerformance.map((item) => (
                     <div key={item.weekday} className="item">
                       <div className="row between">
@@ -413,7 +407,7 @@ export default function InsightsPage() {
               </div>
               <div className="card">
                 <h3>Most skipped habits</h3>
-                <div className="list" style={{ marginTop: 12 }}>
+                <div className="list listMt">
                   {skippedLeaders.map((item) => (
                     <div key={item.habit.id} className="item">
                       <div className="row between">
@@ -426,7 +420,7 @@ export default function InsightsPage() {
               </div>
               <div className="card">
                 <h3>Time-of-day success</h3>
-                <div className="list" style={{ marginTop: 12 }}>
+                <div className="list listMt">
                   {timeOfDayRates.map((item) => (
                     <div key={item.key} className="item">
                       <div className="row between">
@@ -439,7 +433,7 @@ export default function InsightsPage() {
               </div>
               <div className="card">
                 <h3>Mood vs completion</h3>
-                <div className="list" style={{ marginTop: 12 }}>
+                <div className="list listMt">
                   {moodCorrelation.length === 0 ? (
                     <div className="subtle">Add daily reviews with mood to populate this correlation.</div>
                   ) : moodCorrelation.map((item) => (
@@ -454,7 +448,7 @@ export default function InsightsPage() {
               </div>
               <div className="card">
                 <h3>Playlist correlation</h3>
-                <div className="list" style={{ marginTop: 12 }}>
+                <div className="list listMt">
                   {playlistMetrics.length === 0 ? (
                     <div className="subtle">Start focus sessions to generate playlist analytics.</div>
                   ) : playlistMetrics.map((item) => (

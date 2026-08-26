@@ -56,8 +56,7 @@ function HabitTaskRow({
 
 	return (
 		<div
-			className={`taskRow ${done ? 'isDone' : ''}`}
-			style={{ opacity: skipped ? 0.8 : 1 }}
+			className={`taskRow ${done ? 'isDone' : ''} ${skipped ? 'isSkipped' : ''}`}
 		>
 			<div
 				className="taskCheckbox"
@@ -82,27 +81,9 @@ function HabitTaskRow({
 				</svg>
 			</div>
 
-			<div
-				style={{
-					display: 'flex',
-					flexDirection: 'column',
-					flex: 1,
-					minWidth: 0,
-					gap: 8,
-				}}
-			>
-				<div
-					style={{
-						display: 'flex',
-						alignItems: 'center',
-						gap: 8,
-						flexWrap: 'wrap',
-					}}
-				>
-					<span
-						className="taskText"
-						style={{ fontWeight: 600, fontSize: '14px' }}
-					>
+			<div className="taskContent">
+				<div className="taskNameRow">
+					<span className="taskText font-semibold text-md">
 						{habit.name}
 					</span>
 					{streak >= 3 ? (
@@ -116,10 +97,7 @@ function HabitTaskRow({
 					{skipped ? <span className="badge danger">Skipped</span> : null}
 				</div>
 
-				<div
-					className="row"
-					style={{ gap: 8, flexWrap: 'wrap' }}
-				>
+				<div className="badgeRow">
 					<span className="badge">{targetLabel(habit)}</span>
 					<span className="badge">{scheduleLabel(habit)}</span>
 					{habitGoalLabel(habit) ? (
@@ -146,8 +124,7 @@ function HabitTaskRow({
 							}}
 						/>
 						<button
-							className="btn btn-bordered"
-							style={{ height: 28, fontSize: 12, padding: '0 8px' }}
+							className="btn btn-bordered btn-sm"
 							onClick={() => onSaveQuantity(qty === '' ? 0 : Number(qty), note)}
 						>
 							Save quantity
@@ -155,13 +132,9 @@ function HabitTaskRow({
 					</div>
 				) : null}
 
-				<div
-					className="row"
-					style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}
-				>
+				<div className="actionRow">
 					<input
-						className="input"
-						style={{ maxWidth: 320 }}
+						className="input noteInput"
 						value={note}
 						onChange={(e) => setNote(e.target.value)}
 						placeholder="Entry note"
@@ -392,7 +365,7 @@ export default function TodayPage() {
 	if (!isReady) {
 		return (
 			<div className="pageContent">
-				<p style={{ color: 'var(--text-muted)' }}>Loading runtime...</p>
+				<p className="subtle">Loading runtime...</p>
 			</div>
 		);
 	}
@@ -613,16 +586,10 @@ export default function TodayPage() {
 								Save review
 							</button>
 						</div>
-						<div
-							className="grid two"
-							style={{ marginTop: 16 }}
-						>
+						<div className="grid two mt-md">
 							<div className="card">
 								<h2>Mood</h2>
-								<div
-									className="row"
-									style={{ gap: 8, flexWrap: 'wrap', marginTop: 12 }}
-								>
+								<div className="moodRow">
 									{['happy', 'neutral', 'tired', 'focused', 'stressed'].map(
 										(mood) => (
 											<button
@@ -643,8 +610,7 @@ export default function TodayPage() {
 									)}
 								</div>
 								<textarea
-									className="textarea"
-									style={{ marginTop: 12 }}
+									className="textarea mt-sm"
 									value={dailyReview.notes}
 									onChange={(event) =>
 										setDailyReview((current) => ({
@@ -669,8 +635,7 @@ export default function TodayPage() {
 									placeholder="What went well?"
 								/>
 								<textarea
-									className="textarea"
-									style={{ marginTop: 12 }}
+									className="textarea mt-sm"
 									value={dailyReview.misses}
 									onChange={(event) =>
 										setDailyReview((current) => ({
@@ -746,10 +711,10 @@ export default function TodayPage() {
 											/>
 											<Tooltip
 												contentStyle={{
-													background: 'var(--bg-panel-solid)',
-													border: '1px solid var(--border-muted)',
-													borderRadius: 16,
-												}}
+												background: 'var(--bg-elevated)',
+												border: '1px solid var(--border)',
+												borderRadius: 'var(--radius-md)',
+											}}
 											/>
 											<Area
 												type="monotone"
@@ -790,10 +755,10 @@ export default function TodayPage() {
 											/>
 											<Tooltip
 												contentStyle={{
-													background: 'var(--bg-panel-solid)',
-													border: '1px solid var(--border-muted)',
-													borderRadius: 16,
-												}}
+												background: 'var(--bg-elevated)',
+												border: '1px solid var(--border)',
+												borderRadius: 'var(--radius-md)',
+											}}
 											/>
 											<Bar
 												dataKey="due"
@@ -832,7 +797,6 @@ export default function TodayPage() {
 										<div
 											key={cell.iso}
 											className={`heatCell ${level}`}
-											style={{ width: '12px', height: '12px' }}
 										/>
 									);
 								})}
@@ -859,10 +823,7 @@ export default function TodayPage() {
 										className="item"
 									>
 										<div className="itemName">{habit.name}</div>
-										<div
-											className="subtle"
-											style={{ marginTop: 6 }}
-										>
+										<div className="subtle modalSubtle">
 											{scheduleLabel(habit)}
 										</div>
 									</div>
@@ -881,10 +842,7 @@ export default function TodayPage() {
 										className="item"
 									>
 										<div className="itemName">{habit.name}</div>
-										<div
-											className="subtle"
-											style={{ marginTop: 6 }}
-										>
+										<div className="subtle modalSubtle">
 											Completed against {targetLabel(habit)}
 										</div>
 									</div>
@@ -903,10 +861,7 @@ export default function TodayPage() {
 										className="item"
 									>
 										<div className="itemName">{habit.name}</div>
-										<div
-											className="subtle"
-											style={{ marginTop: 6 }}
-										>
+										<div className="subtle modalSubtle">
 											{habit.skipRule === 'protect'
 												? 'Skip protects streak'
 												: 'Skip breaks streak'}
@@ -920,10 +875,7 @@ export default function TodayPage() {
 						<div className="stack">
 							<div className="card">
 								<div className="label">Completion rate</div>
-								<div
-									className="value"
-									style={{ fontSize: '2rem', marginTop: 6 }}
-								>
+								<div className="modalValue">
 									{progressPercent}%
 								</div>
 							</div>
@@ -942,19 +894,13 @@ export default function TodayPage() {
 										key={habit.id}
 										className="item"
 									>
-										<div
-											className="row between"
-											style={{ gap: 8 }}
-										>
+										<div className="row between gap-sm">
 											<div className="itemName">{habit.name}</div>
 											<span className="badge">
 												{habitEntryStatus(habit, entry)}
 											</span>
 										</div>
-										<div
-											className="subtle"
-											style={{ marginTop: 6 }}
-										>
+										<div className="subtle modalSubtle">
 											{targetLabel(habit)} · {scheduleLabel(habit)}
 										</div>
 									</div>
@@ -969,17 +915,11 @@ export default function TodayPage() {
 									key={day.name}
 									className="item"
 								>
-									<div
-										className="row between"
-										style={{ gap: 8 }}
-									>
+									<div className="row between gap-sm">
 										<div className="itemName">{day.name}</div>
 										<span className="badge">{day.rate}%</span>
 									</div>
-									<div
-										className="subtle"
-										style={{ marginTop: 6 }}
-									>
+									<div className="subtle modalSubtle">
 										Done {day.done} of {day.due}, skipped {day.skipped}
 									</div>
 								</div>

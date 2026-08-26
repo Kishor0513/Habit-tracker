@@ -65,14 +65,14 @@ function ProjectEditor({ initial, habits, onCancel, onSave }) {
         <p className="subtle">Progress is driven by habits you actually do.</p>
         <div className="stack">
           {habits.map((h) => (
-            <label key={h.id} className="row" style={{ gap: 10 }}>
+            <label key={h.id} className="row gap-sm">
               <input type="checkbox" checked={habitIds.has(h.id)} onChange={() => toggleHabit(h.id)} />
               <span>{h.name}</span>
             </label>
           ))}
         </div>
       </div>
-      <div className="row" style={{ justifyContent: "flex-end", gap: 10 }}>
+      <div className="row justify-end gap-sm">
         <button className="btn" type="button" onClick={onCancel}>
           Cancel
         </button>
@@ -109,7 +109,7 @@ function ProjectDetail({ project, habitsById }) {
     <div className="stack">
       <div className="card">
         <h2>Goal</h2>
-        <div className="subtle" style={{ fontSize: '1rem', color: 'var(--text)', marginBottom: 4 }}>{project.goal || "Define success in one sentence."}</div>
+        <div className="subtle projectGoalText">{project.goal || "Define success in one sentence."}</div>
         {project.targetDate ? <div className="badge accent">Target: {project.targetDate}</div> : null}
       </div>
       <div className="card">
@@ -119,10 +119,10 @@ function ProjectDetail({ project, habitsById }) {
       <div className="card">
         <h2>Milestones</h2>
         {project.milestones?.length ? (
-          <div className="stack" style={{ gap: 8 }}>
+          <div className="stack gap-sm">
             {project.milestones.map((m, idx) => (
-              <div key={idx} className="item" style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.03)' }}>
-                <span style={{ color: 'var(--brand-mid)', marginRight: 8 }}>•</span>
+              <div key={idx} className="item milestoneItem">
+                <span className="milestoneBullet">•</span>
                 {m}
               </div>
             ))}
@@ -136,7 +136,7 @@ function ProjectDetail({ project, habitsById }) {
         {project.habitIds?.length ? (
           <div className="list">
             {project.habitIds.map((id) => (
-              <div key={id} className="row" style={{ gap: 10 }}>
+              <div key={id} className="row gap-sm">
                 <span className="badge brand">habit</span>
                 <div className="itemName">{habitsById.get(id)?.name ?? "(missing)"}</div>
               </div>
@@ -215,20 +215,20 @@ export default function ProjectsPage() {
 
             return (
               <div key={project.id} className="item interactiveSurface" onClick={() => setActiveProject(project)}>
-                <div className="row between" style={{ gap: 14 }}>
-                  <div className="stack" style={{ gap: 6, minWidth: 0, flex: 1 }}>
-                    <div className="itemName" style={{ fontSize: '1rem' }}>
+                <div className="row between gap-md">
+                  <div className="stack gap-xs min-w-0 flex-1">
+                    <div className="itemName projectName">
                       {project.name}
                     </div>
-                    <div className="subtle" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div className="subtle projectGoalBrief">
                       {project.goal || "No goal set yet."}
                     </div>
-                    <div className="row" style={{ gap: 8 }}>
+                    <div className="row gap-sm">
                       <span className={progressClass}>{pct}% progress</span>
                       <span className="badge accent">{(project.habitIds ?? []).length} habits</span>
                     </div>
                   </div>
-                  <div className="row" style={{ gap: 8 }}>
+                  <div className="row gap-sm">
                     <button className="btn ghost" type="button" onClick={(event) => {
                       event.stopPropagation();
                       setActiveProject(project);
@@ -236,9 +236,8 @@ export default function ProjectsPage() {
                       Open
                     </button>
 										<button
-											className="btn danger"
+											className="btn danger btnSm"
 											type="button"
-											style={{ padding: '7px 10px' }}
 											onClick={async (event) => {
 												event.stopPropagation();
 												const ok = window.confirm(`Delete project "${project.name}"?`);
@@ -267,7 +266,7 @@ export default function ProjectsPage() {
           title={activeProject.name}
           onClose={() => setActiveProject(null)}
           actions={
-            <div className="row" style={{ gap: 8 }}>
+            <div className="row gap-sm">
               <button
                 className="btn primary"
                 type="button"

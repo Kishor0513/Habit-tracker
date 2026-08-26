@@ -388,9 +388,9 @@ function RouteFallback() {
 function NotFoundPage() {
 	return (
 		<div className="pageContent">
-			<div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-				<h1 style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>404</h1>
-				<p className="subtle" style={{ fontSize: '1.1rem', marginBottom: '1.5rem' }}>Page not found</p>
+			<div className="card notFoundCard">
+				<h1 className="notFoundTitle">404</h1>
+				<p className="subtle notFoundSubtitle">Page not found</p>
 				<a href="/" className="btn primary">Go to Today</a>
 			</div>
 		</div>

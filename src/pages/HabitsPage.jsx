@@ -37,18 +37,14 @@ function errorMessage(error, fallback = 'Something went wrong.') {
 
 function DayPicker({ days, onToggle }) {
 	return (
-		<div
-			className="row"
-			style={{ gap: 8, flexWrap: 'wrap' }}
-		>
+		<div className="row gap-sm flex-wrap">
 			{WEEKDAY_OPTIONS.map((day) => {
 				const active = days.includes(day.value);
 				return (
 					<button
 						key={day.value}
 						type="button"
-						className={active ? 'btn primary' : 'btn ghost'}
-						style={{ minWidth: 54, padding: '8px 12px' }}
+					className={active ? 'btn primary dayBtn' : 'btn ghost dayBtn'}
 						onClick={() => onToggle(day.value)}
 					>
 						{day.short}
@@ -62,12 +58,7 @@ function DayPicker({ days, onToggle }) {
 function ColorPicker({ value, onChange }) {
 	return (
 		<div>
-			<div
-				className="label"
-				style={{ marginBottom: 8 }}
-			>
-				Color
-			</div>
+			<div className="label mb-sm">Color</div>
 			<div className="colorSwatches">
 				{COLORS.map((c) => (
 					<button
@@ -197,11 +188,8 @@ function HabitEditor({ initial, onCancel, onSave }) {
 							onChange={(e) => setGoalFrequency(e.target.value)}
 							placeholder="Weekly goal"
 						/>
-						<p
-							className="subtle"
-							style={{ margin: 0 }}
-						>
-							Set a weekly goal like `3` for “3 times per week”.
+						<p className="subtle">
+							Set a weekly goal like `3` for "3 times per week".
 						</p>
 					</div>
 				</div>
@@ -253,10 +241,7 @@ function HabitEditor({ initial, onCancel, onSave }) {
 							<option value="medium">Medium priority</option>
 							<option value="low">Low priority</option>
 						</select>
-						<label
-							className="row"
-							style={{ gap: 10 }}
-						>
+						<label className="row gap-sm">
 							<input
 								type="checkbox"
 								checked={reminderEnabled}
@@ -297,10 +282,7 @@ function HabitEditor({ initial, onCancel, onSave }) {
 						placeholder="Spotify playlist URI or ID"
 						maxLength={100}
 					/>
-					<p
-						className="subtle"
-						style={{ margin: 0 }}
-					>
+					<p className="subtle">
 						Used for focus sessions and playlist analytics.
 					</p>
 				</div>
@@ -317,10 +299,7 @@ function HabitEditor({ initial, onCancel, onSave }) {
 				/>
 			</div>
 
-			<div
-				className="row"
-				style={{ justifyContent: 'flex-end', gap: 10 }}
-			>
+			<div className="row justify-end gap-sm">
 				<button
 					className="btn ghost"
 					type="button"
@@ -542,20 +521,15 @@ export default function HabitsPage() {
 						+ New habit
 					</button>
 				</div>
-				<div
-					className="row"
-					style={{ gap: 10, marginTop: 16, flexWrap: 'wrap' }}
-				>
+				<div className="row gap-sm mt-md flex-wrap">
 					<input
-						className="input"
-						style={{ maxWidth: 320 }}
+						className="input max-w-sm"
 						value={query}
 						onChange={(e) => setQuery(e.target.value)}
 						placeholder="Search habits, categories, tags"
 					/>
-					<select
-						className="select"
-						style={{ maxWidth: 220 }}
+				<select
+					className="select selectMaxW"
 						value={category}
 						onChange={(e) => setCategory(e.target.value)}
 					>
@@ -616,27 +590,16 @@ export default function HabitsPage() {
 									setShowEditor(true);
 								}}
 							>
-								<div
-									className="row between"
-									style={{ gap: 14, alignItems: 'flex-start' }}
-								>
+								<div className="row between gap-md items-center">
+									<div className="stack gap-sm min-w-0 flex-1">
+										<div className="row gap-sm min-w-0 flex-wrap">
 									<div
-										className="stack"
-										style={{ gap: 8, minWidth: 0, flex: 1 }}
-									>
-										<div
-											className="row"
-											style={{ gap: 10, minWidth: 0, flexWrap: 'wrap' }}
-										>
-											<div
-												className="dot"
-												style={{
-													background: habit.color,
-													boxShadow: `0 0 0 3px ${habit.color}30`,
-													width: 12,
-													height: 12,
-												}}
-											/>
+										className="dot habitDot"
+										style={{
+											background: habit.color,
+											boxShadow: `0 0 0 3px ${habit.color}30`,
+										}}
+									/>
 											<div className="itemName">{habit.name}</div>
 											<span
 												className={
@@ -652,10 +615,7 @@ export default function HabitsPage() {
 											) : null}
 										</div>
 
-										<div
-											className="row"
-											style={{ gap: 8, flexWrap: 'wrap' }}
-										>
+										<div className="badgeRow">
 											<span className={rateClass}>{pct}% (14d)</span>
 											<span className={streakClass}>
 												{streak > 0 ? `🔥 ${streak}` : 'no streak'}
@@ -703,10 +663,7 @@ export default function HabitsPage() {
 										</div>
 
 										{(habit.tags ?? []).length ? (
-											<div
-												className="row"
-												style={{ gap: 8, flexWrap: 'wrap' }}
-											>
+											<div className="badgeRow">
 												{habit.tags.map((tag) => (
 													<span
 														key={tag}
@@ -719,19 +676,13 @@ export default function HabitsPage() {
 										) : null}
 
 										{habit.notes ? (
-											<div
-												className="subtle"
-												style={{ whiteSpace: 'pre-wrap' }}
-											>
+											<div className="subtle notePre">
 												{habit.notes}
 											</div>
 										) : null}
 									</div>
 
-									<div
-										className="row"
-										style={{ gap: 8 }}
-									>
+									<div className="row gap-sm">
 										<button
 											className="btn ghost"
 											type="button"

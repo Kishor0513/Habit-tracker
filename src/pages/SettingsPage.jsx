@@ -88,12 +88,11 @@ export default function SettingsPage() {
 			{supabaseConfigured ? (
 				<div className="card interactiveSurface" onClick={() => setActivePanel('account')}>
 					<h2>Account</h2>
-					<div className="row" style={{ gap: 12, alignItems: 'center' }}>
+					<div className="row settingsAccountRow">
 						<div className="badge accent">{user?.email ?? user?.id}</div>
 						<button
-							className="btn ghost"
+							className="btn ghost btnSm"
 							type="button"
-							style={{ padding: '6px 12px', fontSize: '0.85rem' }}
 							onClick={async (event) => {
 								event.stopPropagation();
 								try {
@@ -116,7 +115,7 @@ export default function SettingsPage() {
 					<div className="subtle">
 						Browser reminders fire while this app is open. Enable notifications and set reminder times per habit.
 					</div>
-					<div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+					<div className="row gap-sm flex-wrap">
 						<span className="badge accent">
 							{typeof Notification === 'undefined'
 								? 'Unsupported'
@@ -150,11 +149,11 @@ export default function SettingsPage() {
 				<div className="list">
 					{TEMPLATE_PACKS.map((pack) => (
 						<div key={pack.id} className="item interactiveSurface" onClick={() => setActivePanel(`pack:${pack.id}`)}>
-							<div className="row between" style={{ gap: 14 }}>
-								<div className="stack" style={{ gap: 6, minWidth: 0, flex: 1 }}>
+							<div className="row between gap-md">
+								<div className="stack gap-xs min-w-0 flex-1">
 									<div className="itemName">{pack.name}</div>
 									<div className="subtle">{pack.description}</div>
-									<div className="row" style={{ gap: 8 }}>
+									<div className="row gap-sm">
 										<span className="badge">Habits: {pack.habits.length}</span>
 										<span className="badge accent">Projects: {pack.projects.length}</span>
 									</div>
@@ -177,7 +176,7 @@ export default function SettingsPage() {
 
 			<div className="card interactiveSurface" onClick={() => setActivePanel('data')}>
 				<h2>Data management</h2>
-				<div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
+				<div className="row flex-wrap gap-sm">
 					<button
 						className="btn ghost"
 						type="button"
@@ -245,7 +244,7 @@ export default function SettingsPage() {
 						Reset application
 					</button>
 				</div>
-				<p className="subtle" style={{ marginTop: 12 }}>
+				<p className="subtle settingsDataNote">
 					{supabaseConfigured
 						? 'Signed-in data is stored in Supabase and synced across devices.'
 						: 'Data is stored locally in your browser (IndexedDB). Export regularly to prevent data loss.'}
@@ -267,7 +266,7 @@ export default function SettingsPage() {
 						<div className="stack">
 							<div className="card">
 								<div className="label">Signed in as</div>
-								<div className="value" style={{ marginTop: 8 }}>{user?.email ?? user?.id}</div>
+								<div className="value mt-sm">{user?.email ?? user?.id}</div>
 							</div>
 						</div>
 					) : null}
@@ -275,7 +274,7 @@ export default function SettingsPage() {
 						<div className="stack">
 							<div className="card">
 								<div className="label">Browser notifications</div>
-								<div className="subtle" style={{ marginTop: 8 }}>
+								<div className="subtle mt-sm">
 									Enable notifications here, then set reminder times inside each habit.
 								</div>
 							</div>
@@ -286,7 +285,7 @@ export default function SettingsPage() {
 							{TEMPLATE_PACKS.map((pack) => (
 								<div key={pack.id} className="item">
 									<div className="itemName">{pack.name}</div>
-									<div className="subtle" style={{ marginTop: 6 }}>{pack.description}</div>
+									<div className="subtle insightsSubtext">{pack.description}</div>
 								</div>
 							))}
 						</div>
@@ -295,7 +294,7 @@ export default function SettingsPage() {
 						<div className="stack">
 							<div className="card">
 								<div className="label">Export / Import / Reset</div>
-								<div className="subtle" style={{ marginTop: 8 }}>
+								<div className="subtle mt-sm">
 									Export backups, import previous data, or reset the local application storage.
 								</div>
 							</div>
@@ -309,8 +308,8 @@ export default function SettingsPage() {
 								<div className="stack">
 									<div className="card">
 										<div className="itemName">{pack.name}</div>
-										<div className="subtle" style={{ marginTop: 8 }}>{pack.description}</div>
-										<div className="row" style={{ gap: 8, marginTop: 12 }}>
+										<div className="subtle mt-sm">{pack.description}</div>
+										<div className="row gap-sm mt-md">
 											<span className="badge">Habits: {pack.habits.length}</span>
 											<span className="badge accent">Projects: {pack.projects.length}</span>
 										</div>

@@ -40,13 +40,13 @@ export default function DailyReviewPage() {
 	}, [api, today, dataVersion]);
 
 	if (!isReady) {
-		return (
-			<div className="pageContent">
-				<p style={{ color: 'var(--text-muted)' }}>
-					Loading review workspace...
-				</p>
-			</div>
-		);
+	return (
+		<div className="pageContent">
+			<p className="reviewLoadingText">
+				Loading review workspace...
+			</p>
+		</div>
+	);
 	}
 
 	return (
@@ -63,8 +63,7 @@ export default function DailyReviewPage() {
 					<span className="badge brand">{today}</span>
 					<a
 						href="#/review/weekly"
-						className="btn ghost"
-						style={{ fontSize: '0.85rem', padding: '6px 12px' }}
+						className="btn ghost btnSm"
 					>
 						Weekly review →
 					</a>
@@ -100,14 +99,12 @@ export default function DailyReviewPage() {
 					</button>
 				</div>
 				<div
-					className="grid two"
-					style={{ marginTop: 16 }}
+					className="grid two mt-md"
 				>
 					<div className="card">
 						<h2>Mood</h2>
 						<div
-							className="row"
-							style={{ gap: 8, flexWrap: 'wrap', marginTop: 12 }}
+							className="moodRowMt"
 						>
 							{['happy', 'neutral', 'tired', 'focused', 'stressed'].map(
 								(mood) => (
@@ -127,8 +124,7 @@ export default function DailyReviewPage() {
 							)}
 						</div>
 						<textarea
-							className="textarea"
-							style={{ marginTop: 12 }}
+							className="textarea mt-md"
 							value={dailyReview.notes}
 							onChange={(event) =>
 								setDailyReview((current) => ({
@@ -153,8 +149,7 @@ export default function DailyReviewPage() {
 							placeholder="What went well?"
 						/>
 						<textarea
-							className="textarea"
-							style={{ marginTop: 12 }}
+							className="textarea mt-md"
 							value={dailyReview.misses}
 							onChange={(event) =>
 								setDailyReview((current) => ({

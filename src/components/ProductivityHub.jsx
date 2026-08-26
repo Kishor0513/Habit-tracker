@@ -59,8 +59,7 @@ function SpotifyPanel({ immersive = false }) {
 			{!spotify.spotifyAuthed ? (
 				<div className="spotifyConnect">
 					<button
-						className="btn primary"
-						style={{ width: '100%' }}
+						className="btn primary w-full"
 						onClick={spotify.connect}
 					>
 						Connect Spotify
@@ -84,8 +83,7 @@ function SpotifyPanel({ immersive = false }) {
 							<div className="spotifyArtistName">{artistName}</div>
 							{spotify.spotifyError ? (
 								<div
-									className="subtle"
-									style={{ color: 'var(--warning)' }}
+									className="subtle warningText"
 								>
 									{spotify.spotifyError}
 								</div>
@@ -140,8 +138,7 @@ function SpotifyPanel({ immersive = false }) {
 					</div>
 
 					<div
-						className="row"
-						style={{ gap: 8, flexWrap: 'wrap' }}
+						className="row gap-sm flex-wrap"
 					>
 						<button
 							className="btn ghost"
@@ -256,8 +253,7 @@ export default function ProductivityHub() {
 							<h3 className="premiumPanelTitle">Remaining time</h3>
 							{focus.selectedHabitName ? (
 								<div
-									className="subtle"
-									style={{ marginTop: 6 }}
+									className="subtle insightsSubtext"
 								>
 									Linked habit: {focus.selectedHabitName}
 								</div>
@@ -321,10 +317,9 @@ export default function ProductivityHub() {
 						</button>
 					</div>
 
-					<div
-						className="row"
-						style={{ gap: 10, flexWrap: 'wrap' }}
-					>
+				<div
+					className="row gap-sm flex-wrap"
+				>
 						<label className="sessionToggle">
 							<input
 								type="checkbox"
@@ -374,8 +369,7 @@ export default function ProductivityHub() {
 						<div className="focusHistoryCard">
 							<div className="panelEyebrow">Session history</div>
 							<div
-								className="list"
-								style={{ marginTop: 12 }}
+								className="list listMt"
 							>
 								{sessionHistory.length === 0 ? (
 									<div className="subtle">No focus history yet.</div>
@@ -386,8 +380,7 @@ export default function ProductivityHub() {
 											className="historyItem"
 										>
 											<div
-												className="historyItemMeta"
-												style={{ gap: 10 }}
+												className="historyItemMeta gap-sm"
 											>
 												<div className="subtle">
 													{formatStamp(item.finishedAt)}
@@ -403,8 +396,7 @@ export default function ProductivityHub() {
 												</span>
 											</div>
 											<div
-												className="historyItemTitle"
-												style={{ marginTop: 6 }}
+												className="historyItemTitle insightsSubtext"
 											>
 												{item.minutes} minute{' '}
 												{item.status === 'completed' ? 'session' : 'attempt'}

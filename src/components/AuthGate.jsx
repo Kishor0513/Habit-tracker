@@ -50,70 +50,30 @@ export default function AuthGate({ children }) {
 
 	if (authLoading) {
 		return (
-			<div
-				className="app"
-				style={{ alignItems: 'center', justifyContent: 'center' }}
-			>
-				<p style={{ color: 'var(--text-muted)' }}>Loading workspace...</p>
+			<div className="app authLoadingWrap">
+				<p className="subtle">Loading workspace...</p>
 			</div>
 		);
 	}
 
 	return (
-		<div
-			className="app"
-			style={{
-				display: 'flex',
-				alignItems: 'center',
-				justifyContent: 'center',
-				backgroundColor: 'var(--bg)',
-			}}
-		>
-			<div
-				className="authCard"
-				style={{ padding: '40px', borderRadius: 'var(--radius-lg)' }}
-			>
-				<div style={{ textAlign: 'center', marginBottom: '32px' }}>
-					<div
-						style={{
-							fontSize: '11px',
-							letterSpacing: '0.16em',
-							textTransform: 'uppercase',
-							color: 'var(--text-faint)',
-							fontWeight: 700,
-							marginBottom: '12px',
-						}}
-					>
+		<div className="app authLoginWrap">
+			<div className="authCard authCardInner">
+				<div className="authCardHeader">
+					<div className="authCardEyebrow">
 						Workspace access
 					</div>
-					<h2 style={{ fontSize: '28px', marginBottom: '8px' }}>Log In</h2>
-					<p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>{help}</p>
+					<h2 className="authCardTitle">Log In</h2>
+					<p className="authCardHelp">{help}</p>
 				</div>
 
-				<div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-					<div
-						style={{
-							display: 'flex',
-							alignItems: 'center',
-							margin: '4px 0 8px',
-							color: 'var(--border)',
-						}}
-					>
-						<div
-							style={{ flex: 1, height: '1px', background: 'var(--border)' }}
-						/>
-						<span
-							style={{
-								padding: '0 10px',
-								fontSize: '12px',
-								color: 'var(--text-faint)',
-							}}
-						>
+				<div className="authCardForm">
+					<div className="authDivider">
+						<div className="authDividerLine" />
+						<span className="authDividerLabel">
 							PASSWORD ACCESS
 						</span>
-						<div
-							style={{ flex: 1, height: '1px', background: 'var(--border)' }}
-						/>
+						<div className="authDividerLine" />
 					</div>
 
 					<input
@@ -130,16 +90,9 @@ export default function AuthGate({ children }) {
 						value={password}
 						onChange={(e) => setPassword(e.target.value)}
 					/>
-					<div
-						style={{
-							display: 'grid',
-							gridTemplateColumns: '1fr 1fr',
-							gap: '10px',
-						}}
-					>
+					<div className="authBtnGrid">
 						<button
-							className="btn btn-primary"
-							style={{ width: '100%', height: '36px' }}
+							className="btn btn-primary authBtnFull"
 							disabled={!email.trim() || !password || busy}
 							onClick={async () => {
 								try {
@@ -157,8 +110,7 @@ export default function AuthGate({ children }) {
 							Sign in
 						</button>
 						<button
-							className="btn ghost"
-							style={{ width: '100%', height: '36px' }}
+							className="btn ghost authBtnFull"
 							disabled={!email.trim() || !password || busy}
 							onClick={async () => {
 								try {
@@ -178,8 +130,7 @@ export default function AuthGate({ children }) {
 						</button>
 					</div>
 					<button
-						className="btn ghost"
-						style={{ width: '100%', height: '32px' }}
+						className="btn ghost authBtnSm"
 						disabled={!email.trim() || busy}
 						onClick={async () => {
 							try {
@@ -196,34 +147,16 @@ export default function AuthGate({ children }) {
 						Forgot password?
 					</button>
 
-					<div
-						style={{
-							display: 'flex',
-							alignItems: 'center',
-							margin: '14px 0 8px',
-							color: 'var(--border)',
-						}}
-					>
-						<div
-							style={{ flex: 1, height: '1px', background: 'var(--border)' }}
-						/>
-						<span
-							style={{
-								padding: '0 10px',
-								fontSize: '12px',
-								color: 'var(--text-faint)',
-							}}
-						>
+					<div className="authDivider" style={{ margin: '14px 0 8px' }}>
+						<div className="authDividerLine" />
+						<span className="authDividerLabel">
 							EMAIL LOGIN
 						</span>
-						<div
-							style={{ flex: 1, height: '1px', background: 'var(--border)' }}
-						/>
+						<div className="authDividerLine" />
 					</div>
 
 					<button
-						className="btn btn-primary"
-						style={{ width: '100%', height: '32px' }}
+						className="btn btn-primary authBtnSm"
 						disabled={!email.trim() || busy}
 						onClick={async () => {
 							try {
