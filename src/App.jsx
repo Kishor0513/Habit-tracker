@@ -403,7 +403,7 @@ function ReminderEngine() {
 
 	useEffect(() => {
 		if (!isReady || !api || typeof Notification === 'undefined') return;
-		const hasPrompted = localStorage.getItem('habitTracker NotificationPrompted');
+		const hasPrompted = localStorage.getItem('habitTrackerNotificationPrompted');
 		if (!hasPrompted && Notification.permission === 'default') {
 			const timer = window.setTimeout(() => {
 				Notification.requestPermission().then((permission) => {
@@ -411,7 +411,7 @@ function ReminderEngine() {
 						toast.push('Notifications enabled! You\'ll receive habit reminders.');
 					}
 				});
-				localStorage.setItem('habitTracker NotificationPrompted', '1');
+				localStorage.setItem('habitTrackerNotificationPrompted', '1');
 			}, 3000);
 			return () => window.clearTimeout(timer);
 		}

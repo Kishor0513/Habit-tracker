@@ -11,6 +11,14 @@ const ACTIONS = [
 	{ id: 'open-settings', title: 'Open settings', keywords: 'settings preferences timezone' },
 ];
 
+const EDITABLE_TARGET_SELECTOR =
+	'input, textarea, select, [contenteditable=""], [contenteditable="true"]';
+
+function isEditableTarget(target) {
+	if (!(target instanceof HTMLElement)) return false;
+	return target.isContentEditable || Boolean(target.closest(EDITABLE_TARGET_SELECTOR));
+}
+
 export default function CommandPalette() {
 	const navigate = useNavigate();
 	const location = useLocation();
@@ -20,16 +28,16 @@ export default function CommandPalette() {
 
 	useEffect(() => {
 		function onKeyDown(event) {
+			if (event.defaultPrevented) return;
+			if (isEditableTarget(event.target)) return;
 			if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
 				event.preventDefault();
 				setOpen((value) => !value);
 			}
-			if (!open) return;
-			if (event.key === 'Escape') setOpen(false);
 		}
 		window.addEventListener('keydown', onKeyDown);
 		return () => window.removeEventListener('keydown', onKeyDown);
-	}, [open]);
+	}, []);
 
 	useEffect(() => {
 		setQuery('');
@@ -63,11 +71,21 @@ export default function CommandPalette() {
 		if (actionId === 'open-settings') navigate('/settings');
 	}
 
+	function onPaletteKeyDown(event) {
+		if (event.key !== 'Escape') return;
+		event.preventDefault();
+		setOpen(false);
+	}
+
 	if (!open) return null;
 
 	return (
 		<div className="modalBackdrop" onMouseDown={() => setOpen(false)}>
-			<div className="commandPalette" onMouseDown={(event) => event.stopPropagation()}>
+			<div
+				className="commandPalette"
+				onKeyDown={onPaletteKeyDown}
+				onMouseDown={(event) => event.stopPropagation()}
+			>
 				<input
 					className="input commandPaletteInput"
 					autoFocus
