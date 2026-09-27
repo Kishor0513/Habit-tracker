@@ -174,13 +174,13 @@ export default function InsightsPage() {
             </div>
             <span className="badge accent">Calendar view</span>
           </div>
-          <div className="heatmap heatCellLg listMt">
+          <div className="heatmap listMt">
             {heatmapData.map((cell) => {
               const level = cell.done === 0 ? '' : cell.done >= 4 ? 'level-4' : cell.done >= 2 ? 'level-2' : 'level-1';
               return (
                 <div
                   key={cell.iso}
-                  className={`heatCell ${level} ${cell.skipped > 0 ? 'heatCellSkipped' : ''}`}
+                  className={`heatCell heatCellLg ${level} ${cell.skipped > 0 ? 'heatCellSkipped' : ''}`}
                   title={`${cell.iso}: ${cell.done} completed, ${cell.skipped} skipped`}
                 />
               );
