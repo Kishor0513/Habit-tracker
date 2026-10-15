@@ -74,14 +74,15 @@ export default function SettingsPage() {
 
 	return (
 		<div className="stack">
-			<div className="card">
+			<div className="card celebrateCard">
 				<div className="sectionHeader">
 					<div>
-						<h2>Settings</h2>
+						<h2>⚙️ <span className="gradientText">Settings</span> & playground</h2>
 						<div className="subtle">
-							Load real-life examples, export your data, or import it on another device.
+							Load playful example packs, tune reminders, or move your data anywhere.
 						</div>
 					</div>
+					<span className="badge levelPill">✨ v2.1 playful</span>
 				</div>
 			</div>
 
@@ -110,7 +111,7 @@ export default function SettingsPage() {
 			) : null}
 
 			<div className="card interactiveSurface" onClick={() => setActivePanel('notifications')}>
-				<h2>Notifications</h2>
+				<h2>🔔 Notifications</h2>
 				<div className="stack">
 					<div className="subtle">
 						Browser reminders fire while this app is open. Enable notifications and set reminder times per habit.
@@ -144,8 +145,8 @@ export default function SettingsPage() {
 				</div>
 			</div>
 
-			<div className="card interactiveSurface" onClick={() => setActivePanel('packs')}>
-				<h2>Example packs</h2>
+			<div className="card interactiveSurface celebrateCard" onClick={() => setActivePanel('packs')}>
+				<h2>🎁 Example packs</h2>
 				<div className="list">
 					{TEMPLATE_PACKS.map((pack) => (
 						<div key={pack.id} className="item interactiveSurface" onClick={() => setActivePanel(`pack:${pack.id}`)}>
@@ -175,7 +176,7 @@ export default function SettingsPage() {
 			</div>
 
 			<div className="card interactiveSurface" onClick={() => setActivePanel('data')}>
-				<h2>Data management</h2>
+				<h2>💾 Data management</h2>
 				<div className="row flex-wrap gap-sm">
 					<button
 						className="btn ghost"

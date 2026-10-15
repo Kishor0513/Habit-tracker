@@ -117,10 +117,10 @@ function HabitEditor({ initial, onCancel, onSave }) {
 	}
 
 	return (
-			<div className="stack">
-				<div className="grid two">
-					<div className="card">
-						<h2>Basics</h2>
+		<div className="stack">
+			<div className="grid two">
+				<div className="card">
+					<h2>🌱 Basics</h2>
 						<div className="stack">
 							<input
 								className="input"
@@ -158,7 +158,7 @@ function HabitEditor({ initial, onCancel, onSave }) {
 					</div>
 
 				<div className="card">
-					<h2>Targeting</h2>
+					<h2>🎯 Targeting</h2>
 					<div className="stack">
 						<div className="twoCols">
 							<input
@@ -197,7 +197,7 @@ function HabitEditor({ initial, onCancel, onSave }) {
 
 			<div className="grid two">
 				<div className="card">
-					<h2>Recurrence</h2>
+					<h2>📅 Recurrence</h2>
 					<div className="stack">
 						<select
 							className="select"
@@ -230,7 +230,7 @@ function HabitEditor({ initial, onCancel, onSave }) {
 				</div>
 
 				<div className="card">
-					<h2>Reminder & Recovery</h2>
+					<h2>⏰ Reminder & 🛡️ Recovery</h2>
 					<div className="stack">
 						<select
 							className="select"
@@ -501,13 +501,12 @@ export default function HabitsPage() {
 
 	return (
 		<div className="stack">
-			<div className="card">
+			<div className="card celebrateCard">
 				<div className="sectionHeader">
 					<div>
-						<h2>Habits</h2>
+						<h2>🌱 <span className="gradientText">Habits</span> · {habits.length} growing</h2>
 						<div className="subtle">
-							Custom recurrence, tags, reminders, and recovery rules in one
-							place.
+							Design tiny, winnable habits. Streaks, reminders and recovery in one playful place.
 						</div>
 					</div>
 					<button
@@ -518,7 +517,7 @@ export default function HabitsPage() {
 							setShowEditor(true);
 						}}
 					>
-						+ New habit
+						✨ New habit
 					</button>
 				</div>
 				<div className="row gap-sm mt-md flex-wrap">
@@ -615,24 +614,28 @@ export default function HabitsPage() {
 											) : null}
 										</div>
 
-										<div className="badgeRow">
-											<span className={rateClass}>{pct}% (14d)</span>
-											<span className={streakClass}>
-												{streak > 0 ? `🔥 ${streak}` : 'no streak'}
+									<div className="badgeRow">
+										<span className={rateClass}>✨ {pct}% · 14d</span>
+										<span className={`${streakClass}${streak >= 3 ? ' streakPop' : ''}`}>
+											{streak > 0 ? `🔥 ${streak}` : '🌱 new'}
+										</span>
+										<span className="badge playful">📅 {scheduleLabel(habit)}</span>
+										{goalLabel ? (
+											<span
+												className={
+													weeklyGoal.met ? 'badge success' : 'badge warning'
+												}
+											>
+												🎯 {weeklyGoal.completions}/{weeklyGoal.target} wk
 											</span>
-											<span className="badge">{scheduleLabel(habit)}</span>
-											{goalLabel ? (
-												<span
-													className={
-														weeklyGoal.met ? 'badge success' : 'badge warning'
-													}
-												>
-													{weeklyGoal.completions}/{weeklyGoal.target} this week
-												</span>
-											) : null}
+										) : null}
+									</div>
+									<details>
+										<summary className="subtle" style={{ cursor: 'pointer', fontSize: 12 }}>More details</summary>
+										<div className="badgeRow" style={{ marginTop: 8 }}>
 											{habit.reminder?.enabled ? (
 												<span className="badge accent">
-													Reminds at {habit.reminder.time}
+													⏰ {habit.reminder.time}
 												</span>
 											) : null}
 											<span
@@ -644,7 +647,7 @@ export default function HabitsPage() {
 															: 'badge'
 												}
 											>
-												{habit.priority} priority
+												{habit.priority === 'high' ? '❗ high' : habit.priority === 'medium' ? '🔸 medium' : '🔹 low'}
 											</span>
 											<span
 												className={
@@ -654,13 +657,14 @@ export default function HabitsPage() {
 												}
 											>
 												{habit.skipRule === 'protect'
-													? 'skip protects streak'
-													: 'skip breaks streak'}
+													? '🛡️ skip protects'
+													: '💔 skip breaks'}
 											</span>
 											{habit.linkedPlaylistId ? (
-												<span className="badge accent">playlist linked</span>
+												<span className="badge accent">🎶 playlist</span>
 											) : null}
 										</div>
+									</details>
 
 										{(habit.tags ?? []).length ? (
 											<div className="badgeRow">

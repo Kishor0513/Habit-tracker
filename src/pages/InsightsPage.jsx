@@ -35,12 +35,12 @@ function Sparkline({ points, width = 280, height = 64 }) {
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label="30-day completion trend">
       <defs>
         <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--brand)" stopOpacity="0.4" />
-          <stop offset="100%" stopColor="var(--brand)" stopOpacity="0" />
+          <stop offset="0%" stopColor="#a855f7" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#ec4899" stopOpacity="0" />
         </linearGradient>
       </defs>
       <path d={fillD} fill="url(#sparkGrad)" />
-      <path d={d} fill="none" stroke="var(--brand-mid)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={d} fill="none" stroke="#8b5cf6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -156,9 +156,10 @@ export default function InsightsPage() {
   if (habits.length === 0) {
     return (
       <EmptyState
-        title="No data yet"
-        body="Add habits or load example packs to see insights."
-        action={<a className="btn" href="#/settings">Open Settings</a>}
+        emoji="📊"
+        title="No data yet — let's make some magic"
+        body="Add habits or load example packs to unlock streaks, heatmaps and playful insights."
+        action={<a className="btn primary" href="#/settings">✨ Open Settings</a>}
       />
     );
   }
@@ -166,13 +167,13 @@ export default function InsightsPage() {
   return (
     <div className="bento">
       <div className="span-12 stack">
-        <div className="card interactiveSurface" style={{ background: 'var(--bg-surface)' }} onClick={() => setActivePanel('history')}>
+        <div className="card interactiveSurface celebrateCard" onClick={() => setActivePanel('history')}>
           <div className="sectionHeader">
             <div className="stack gap-xs">
-              <span className="greeting">History</span>
-              <h2>Last 6 weeks</h2>
+              <span className="greeting">✨ History</span>
+              <h2>Last 6 weeks · <span className="gradientText">your story</span></h2>
             </div>
-            <span className="badge accent">Calendar view</span>
+            <span className="badge levelPill">🔥 Calendar</span>
           </div>
           <div className="heatmap listMt">
             {heatmapData.map((cell) => {
@@ -197,10 +198,10 @@ export default function InsightsPage() {
       </div>
 
       <div className="span-8 stack">
-        <div className="card interactiveSurface" onClick={() => setActivePanel('momentum')}>
+        <div className="card interactiveSurface celebrateCard" onClick={() => setActivePanel('momentum')}>
           <div className="sectionHeader">
-            <h2>Momentum control</h2>
-            <span className="badge accent">Last 30 days</span>
+            <h2>⚡ Momentum control</h2>
+            <span className="badge accent">✨ 30 days</span>
           </div>
           <div className="kpiGrid">
             <div className="kpi">

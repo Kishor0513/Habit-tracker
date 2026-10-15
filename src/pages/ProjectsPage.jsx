@@ -184,25 +184,26 @@ export default function ProjectsPage() {
 
   return (
     <div className="stack">
-      <div className="card">
+      <div className="card celebrateCard">
         <div className="sectionHeader">
           <div>
-            <h2>Projects</h2>
-            <div className="subtle">Tie habits to outcomes: fitness, learning, business, health.</div>
+            <h2>🎯 <span className="gradientText">Projects</span> · {projects.length} quests</h2>
+            <div className="subtle">Tie habits to outcomes: fitness, learning, business, health. Small quests, big ships.</div>
           </div>
           <button className="btn primary" type="button" onClick={() => setEditing({})}>
-            + New project
+            ✨ New quest
           </button>
         </div>
       </div>
 
       {projects.length === 0 ? (
         <EmptyState
-          title="No projects yet"
-          body="Load example packs in Settings or create a project and link habits."
+          emoji="🎯"
+          title="No quests yet"
+          body="Load example packs in Settings or create a project and link 1–3 habits to start your first quest."
           action={
-            <a className="btn" href="#/settings">
-              Load examples
+            <a className="btn primary" href="#/settings">
+              ✨ Load examples
             </a>
           }
         />
@@ -224,8 +225,11 @@ export default function ProjectsPage() {
                       {project.goal || "No goal set yet."}
                     </div>
                     <div className="row gap-sm">
-                      <span className={progressClass}>{pct}% progress</span>
-                      <span className="badge accent">{(project.habitIds ?? []).length} habits</span>
+                      <span className={progressClass}>{pct >= 100 ? '🎉 ' : pct >= 60 ? '🔥 ' : '🌱 '}{pct}%</span>
+                      <span className="badge accent">🔗 {(project.habitIds ?? []).length} habits</span>
+                    </div>
+                    <div className="sectionProgress" style={{ margin: '8px 0 0' }}>
+                      <div className="sectionProgressFill" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
                   <div className="row gap-sm">

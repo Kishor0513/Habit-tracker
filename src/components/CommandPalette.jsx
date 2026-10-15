@@ -3,12 +3,13 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useStudio } from '../state/StudioState.jsx';
 
 const ACTIONS = [
-	{ id: 'add-habit', title: 'Add habit', keywords: 'new create habit habits' },
-	{ id: 'complete-habit', title: 'Complete next habit', keywords: 'mark done complete today' },
-	{ id: 'start-focus', title: 'Start focus', keywords: 'focus timer session' },
-	{ id: 'open-analytics', title: 'Open analytics', keywords: 'analytics insights charts' },
-	{ id: 'search-habits', title: 'Search habits', keywords: 'search habits filter' },
-	{ id: 'open-settings', title: 'Open settings', keywords: 'settings preferences timezone' },
+	{ id: 'add-habit', title: '✨ Add habit', keywords: 'new create habit habits', group: 'Create' },
+	{ id: 'complete-habit', title: '✅ Complete next habit', keywords: 'mark done complete today', group: 'Execute' },
+	{ id: 'start-focus', title: '🎯 Start focus', keywords: 'focus timer session deep work', group: 'Execute' },
+	{ id: 'open-analytics', title: '📊 Open analytics', keywords: 'analytics insights charts', group: 'Go to' },
+	{ id: 'open-review', title: '💭 Open daily review', keywords: 'review reflect journal mood', group: 'Go to' },
+	{ id: 'search-habits', title: '🔍 Search habits', keywords: 'search habits filter', group: 'Find' },
+	{ id: 'open-settings', title: '⚙️ Open settings', keywords: 'settings preferences timezone', group: 'Go to' },
 ];
 
 const EDITABLE_TARGET_SELECTOR =
@@ -64,6 +65,7 @@ export default function CommandPalette() {
 			focus.startSession();
 		}
 		if (actionId === 'open-analytics') navigate('/insights');
+		if (actionId === 'open-review') navigate('/review');
 		if (actionId === 'search-habits') {
 			navigate('/habits');
 			window.dispatchEvent(new CustomEvent('command:search-habits'));
@@ -91,10 +93,13 @@ export default function CommandPalette() {
 					autoFocus
 					value={query}
 					onChange={(event) => setQuery(event.target.value)}
-					placeholder="Search actions..."
+					placeholder="✨ Type a command — try 'focus', 'habit', 'review'…"
 				/>
+				<div className="subtle" style={{ marginTop: 8, fontSize: 11 }}>⌘K anywhere · Enter to run · Esc to close</div>
 				<div className="commandPaletteList">
-					{items.map((action) => (
+					{items.length === 0 ? (
+						<div className="subtle" style={{ padding: 12, textAlign: 'center' }}>No matches — try “habit” or “focus” 🌱</div>
+					) : items.map((action) => (
 						<button
 							key={action.id}
 							className="commandPaletteItem"
@@ -102,7 +107,7 @@ export default function CommandPalette() {
 							onClick={() => trigger(action.id)}
 						>
 							<span>{action.title}</span>
-							<span className="badge">{action.id}</span>
+							<span className="badge playful">{action.group ?? action.id}</span>
 						</button>
 					))}
 				</div>

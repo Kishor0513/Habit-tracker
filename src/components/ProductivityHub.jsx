@@ -246,32 +246,33 @@ export default function ProductivityHub() {
 			ref={fullscreenRef}
 		>
 			<div className={`focusStudioGrid ${focus.running ? 'isActive' : ''}`}>
-				<div className="focusCountdownCard">
+				<div className="focusCountdownCard celebrateCard">
 					<div className="premiumPanelHeader">
 						<div>
-							<div className="panelEyebrow">Focus session</div>
-							<h3 className="premiumPanelTitle">Remaining time</h3>
+							<div className="panelEyebrow">🎯 Focus session</div>
+							<h3 className="premiumPanelTitle"><span className="gradientText">Deep work</span> timer</h3>
 							{focus.selectedHabitName ? (
 								<div
 									className="subtle insightsSubtext"
 								>
-									Linked habit: {focus.selectedHabitName}
+									🔗 Linked habit: {focus.selectedHabitName}
 								</div>
-							) : null}
+							) : (
+								<div className="subtle insightsSubtext">Pick one habit, set a timer, ship it.</div>
+							)}
 						</div>
-						<span className={focus.running ? 'badge success' : 'badge'}>
-							{sessionLabel}
+						<span className={focus.running ? 'badge levelPill' : 'badge'}>
+							{focus.running ? '🔥 ' : '✨ '}{sessionLabel}
 						</span>
 					</div>
 
 					<div className="countdownMachine">
-						<div className="countdownMachineLabel">Countdown machine</div>
+						<div className="countdownMachineLabel">⏳ Countdown machine</div>
 						<div className="countdownMachineValue">
 							{formatTime(focus.focusSeconds)}
 						</div>
 						<div className="countdownMachineSubtle">
-							{Math.round(progressPct)}% left of{' '}
-							{Math.round(focus.focusMax / 60)} minutes
+							{focus.focusSeconds === 0 ? '🎉 Done — log it and stretch!' : `${Math.round(progressPct)}% left of ${Math.round(focus.focusMax / 60)} mindful minutes`}
 						</div>
 					</div>
 
@@ -283,19 +284,23 @@ export default function ProductivityHub() {
 					</div>
 
 					<div className="focusPresetRow">
-						{[15, 25, 45, 60].map((minutes) => (
-							<button
-								key={minutes}
-								className="btn ghost"
-								type="button"
-								onClick={() => {
-									focus.setCustomMinutes(String(minutes));
-									focus.applyCustomDuration(String(minutes));
-								}}
-							>
-								{minutes}m
-							</button>
-						))}
+						{[15, 25, 45, 60].map((minutes) => {
+							const isActive = Math.round(focus.focusMax / 60) === minutes;
+							return (
+								<button
+									key={minutes}
+									className={isActive ? 'btn primary focusPresetActive' : 'btn ghost'}
+									type="button"
+									onClick={() => {
+										focus.setCustomMinutes(String(minutes));
+										focus.applyCustomDuration(String(minutes));
+									}}
+									title={`${minutes} minute sprint`}
+								>
+									{minutes === 15 ? '⚡ ' : minutes === 25 ? '🍅 ' : minutes === 45 ? '🔥 ' : '🚀 '}{minutes}m
+								</button>
+							);
+						})}
 					</div>
 
 					<div className="focusCustomRow">
@@ -345,7 +350,7 @@ export default function ProductivityHub() {
 								if (started && focus.autoFullscreen) await enterFullscreen();
 							}}
 						>
-							{focus.running ? 'Pause session' : 'Start session'}
+							{focus.running ? '⏸ Pause' : '▶ Start sprint'}
 						</button>
 						<button
 							className="btn ghost"

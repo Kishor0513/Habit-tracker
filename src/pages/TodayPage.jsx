@@ -84,10 +84,12 @@ function HabitTaskRow({
 			<div className="taskContent">
 				<div className="taskNameRow">
 					<span className="taskText font-semibold text-md">
-						{habit.name}
+						{done ? '✅ ' : ''}{habit.name}
 					</span>
 					{streak >= 3 ? (
-						<span className="badge warning">🔥 {streak}</span>
+						<span className="badge warning streakPop">🔥 {streak}</span>
+					) : streak > 0 ? (
+						<span className="badge">🔥 {streak}</span>
 					) : null}
 					{weeklyGoal.target > 0 ? (
 						<span className={weeklyGoal.met ? 'badge success' : 'badge'}>
@@ -133,42 +135,50 @@ function HabitTaskRow({
 				) : null}
 
 				<div className="actionRow">
-					<input
-						className="input noteInput"
-						value={note}
-						onChange={(e) => setNote(e.target.value)}
-						placeholder="Entry note"
-					/>
-					<button
-						className="btn ghost"
-						type="button"
-						onClick={() => onSaveNote(note)}
-					>
-						Save note
-					</button>
 					<button
 						className={done ? 'btn ghost' : 'btn primary'}
 						type="button"
 						onClick={() => onToggle(note)}
+						title={done ? 'Mark as not done' : 'Celebrate — mark complete'}
 					>
-						{done ? 'Undo' : 'Mark done'}
+						{done ? '↩ Undo' : '✨ Done'}
 					</button>
 					<button
 						className="btn ghost"
 						type="button"
 						onClick={() => onSkip(note)}
+						title="Skip today without guilt"
 					>
-						Skip today
+						⏭ Skip
 					</button>
-					{entry ? (
-						<button
-							className="btn danger"
-							type="button"
-							onClick={onClear}
-						>
-							Clear
-						</button>
-					) : null}
+					<details style={{ flex: 1, minWidth: 180 }}>
+						<summary className="subtle" style={{ cursor: 'pointer', fontSize: 12 }}>📝 Note / quantity</summary>
+						<div className="row gap-sm flex-wrap" style={{ marginTop: 8 }}>
+							<input
+								className="input noteInput"
+								value={note}
+								onChange={(e) => setNote(e.target.value)}
+								placeholder="Add a quick note…"
+							/>
+							<button
+								className="btn ghost btn-sm"
+								type="button"
+								onClick={() => onSaveNote(note)}
+							>
+								Save
+							</button>
+							{entry ? (
+								<button
+									className="btn ghost btn-sm"
+									type="button"
+									onClick={onClear}
+									title="Clear today's entry"
+								>
+									Clear
+								</button>
+							) : null}
+						</div>
+					</details>
 				</div>
 			</div>
 		</div>
@@ -328,10 +338,19 @@ export default function TodayPage() {
 	);
 	const greeting = (() => {
 		const hour = new Date().getHours();
-		if (hour < 12) return 'Good morning';
-		if (hour < 18) return 'Good afternoon';
-		return 'Good evening';
+		if (hour < 5) return '🌙 Late night grind';
+		if (hour < 12) return '☀️ Good morning';
+		if (hour < 18) return '🌤️ Good afternoon';
+		return '🌙 Good evening';
 	})();
+	const motivation =
+		progressPercent >= 100
+			? '🎉 All clear! You crushed today — enjoy the glow.'
+			: progressPercent >= 60
+				? '🔥 Strong momentum — finish the last few and lock it in.'
+				: progressPercent > 0
+					? '🌱 Nice start — one habit at a time builds the streak.'
+					: '✨ Fresh board. Pick the easiest win and start the chain.';
 
 	useEffect(() => {
 		if (!due.length || focus.selectedHabitId) return;
@@ -372,20 +391,23 @@ export default function TodayPage() {
 
 	return (
 		<div className="pageContent">
-			<div className="heroCard todayHeroCard">
+			<div className="heroCard todayHeroCard celebrateCard">
 				<div className="todayHeroContent">
-					<div className="greeting">{greeting}</div>
-					<h2 className="todayHeroTitle">Daily operating system</h2>
+					<div className="greeting">{greeting} · {today}</div>
+					<h2 className="todayHeroTitle">
+						<span className="gradientText">Today&apos;s wins</span> start here
+					</h2>
 					<div className="todayHeroSubtle">
+						{motivation}{' '}
 						{spotify.spotifyState?.item?.name
-							? `Now playing: ${spotify.spotifyState.item.name}`
-							: 'Use today as the central execution, focus, and reflection view.'}
+							? `🎶 ${spotify.spotifyState.item.name}`
+							: ''}
 					</div>
 				</div>
 				<div className="todayHeroPills">
-					<span className="badge brand">{today}</span>
-					<span className="badge success">{progressPercent}% complete</span>
-					<span className="badge warning">{bestTodayStreak} streak</span>
+					<span className="badge levelPill">✨ {progressPercent}%</span>
+					<span className="badge warning streakPop">🔥 {bestTodayStreak} best streak</span>
+					<span className="badge brand">📅 {today}</span>
 				</div>
 			</div>
 
@@ -393,30 +415,38 @@ export default function TodayPage() {
 				<div
 					className="card interactiveSurface todayKpiCard"
 					onClick={() => setActiveModal('due')}
+					title="See what's due"
 				>
-					<div className="label">Due today</div>
+					<div className="row gap-sm"><span className="kpiIcon">📋</span><div className="label">Due today</div></div>
 					<div className="value todayKpiValue">{summary.dueCount}</div>
+					<div className="subtle" style={{ fontSize: 11 }}>{summary.dueCount === 0 ? 'Rest day — enjoy!' : 'Queued for you'}</div>
 				</div>
 				<div
 					className="card interactiveSurface todayKpiCard"
 					onClick={() => setActiveModal('completed')}
+					title="See completed"
 				>
-					<div className="label">Completed</div>
+					<div className="row gap-sm"><span className="kpiIcon">✅</span><div className="label">Completed</div></div>
 					<div className="value todayKpiValue">{summary.doneCount}</div>
+					<div className="subtle" style={{ fontSize: 11 }}>{summary.doneCount >= summary.dueCount && summary.dueCount > 0 ? 'Perfect day!' : 'Keep going'}</div>
 				</div>
 				<div
 					className="card interactiveSurface todayKpiCard"
 					onClick={() => setActiveModal('skipped')}
+					title="See skipped"
 				>
-					<div className="label">Skipped</div>
+					<div className="row gap-sm"><span className="kpiIcon">⏭️</span><div className="label">Skipped</div></div>
 					<div className="value todayKpiValue">{skippedCount}</div>
+					<div className="subtle" style={{ fontSize: 11 }}>{skippedCount === 0 ? 'Zero slips' : 'Be kind, reset tomorrow'}</div>
 				</div>
 				<div
 					className="card interactiveSurface todayKpiCard"
 					onClick={() => setActiveModal('rate')}
+					title="Completion details"
 				>
-					<div className="label">Completion rate</div>
-					<div className="value todayKpiValue">{progressPercent}%</div>
+					<div className="row gap-sm"><span className="kpiIcon">⚡</span><div className="label">Completion rate</div></div>
+					<div className="value todayKpiValue gradientText">{progressPercent}%</div>
+					<div className="subtle" style={{ fontSize: 11 }}>{progressPercent >= 80 ? 'Elite zone' : progressPercent >= 40 ? 'Building' : 'Warming up'}</div>
 				</div>
 			</div>
 
@@ -587,24 +617,31 @@ export default function TodayPage() {
 							</button>
 						</div>
 						<div className="grid two mt-md">
-							<div className="card">
-								<h2>Mood</h2>
+							<div className="card celebrateCard">
+								<h2>✨ Mood check-in</h2>
 								<div className="moodRow">
-									{['happy', 'neutral', 'tired', 'focused', 'stressed'].map(
+									{[
+										{ id: 'happy', emoji: '😄' },
+										{ id: 'focused', emoji: '🎯' },
+										{ id: 'neutral', emoji: '😐' },
+										{ id: 'tired', emoji: '😴' },
+										{ id: 'stressed', emoji: '😰' },
+									].map(
 										(mood) => (
 											<button
-												key={mood}
+												key={mood.id}
 												className={
-													dailyReview.mood === mood
-														? 'btn primary'
-														: 'btn ghost'
+													dailyReview.mood === mood.id
+														? 'btn primary moodBtn isActive'
+														: 'btn ghost moodBtn'
 												}
 												type="button"
+												title={mood.id}
 												onClick={() =>
-													setDailyReview((current) => ({ ...current, mood }))
+													setDailyReview((current) => ({ ...current, mood: mood.id }))
 												}
 											>
-												{mood}
+												{mood.emoji} {mood.id}
 											</button>
 										),
 									)}
@@ -685,13 +722,13 @@ export default function TodayPage() {
 												>
 													<stop
 														offset="0%"
-														stopColor="#39aba0"
-														stopOpacity={0.45}
+														stopColor="#a855f7"
+														stopOpacity={0.5}
 													/>
 													<stop
 														offset="100%"
-														stopColor="#39aba0"
-														stopOpacity={0.05}
+														stopColor="#ec4899"
+														stopOpacity={0.06}
 													/>
 												</linearGradient>
 											</defs>
@@ -719,7 +756,7 @@ export default function TodayPage() {
 											<Area
 												type="monotone"
 												dataKey="rate"
-												stroke="#1f8a83"
+												stroke="#8b5cf6"
 												strokeWidth={3}
 												fill="url(#completionFill)"
 											/>
@@ -762,17 +799,17 @@ export default function TodayPage() {
 											/>
 											<Bar
 												dataKey="due"
-												fill="rgba(57, 171, 160, 0.25)"
+												fill="rgba(139, 92, 246, 0.28)"
 												radius={[10, 10, 0, 0]}
 											/>
 											<Bar
 												dataKey="done"
-												fill="#1f8a83"
+												fill="#8b5cf6"
 												radius={[10, 10, 0, 0]}
 											/>
 											<Bar
 												dataKey="skipped"
-												fill="#f38954"
+												fill="#f59e0b"
 												radius={[10, 10, 0, 0]}
 											/>
 										</BarChart>

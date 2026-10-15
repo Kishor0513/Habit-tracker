@@ -49,18 +49,25 @@ export default function DailyReviewPage() {
 	);
 	}
 
+	const MOODS = [
+		{ id: 'happy', emoji: '😄', label: 'Happy' },
+		{ id: 'focused', emoji: '🎯', label: 'Focused' },
+		{ id: 'neutral', emoji: '😐', label: 'Neutral' },
+		{ id: 'tired', emoji: '😴', label: 'Tired' },
+		{ id: 'stressed', emoji: '😰', label: 'Stressed' },
+	];
 	return (
 		<div className="pageContent">
-			<div className="heroCard todayHeroCard">
+			<div className="heroCard todayHeroCard celebrateCard">
 				<div className="todayHeroContent">
-					<div className="greeting">Reflection</div>
-					<h2 className="todayHeroTitle">Daily review workspace</h2>
+					<div className="greeting">💭 Reflection · {today}</div>
+					<h2 className="todayHeroTitle"><span className="gradientText">Daily review</span> workspace</h2>
 					<div className="todayHeroSubtle">
-						Capture mood, wins, misses, and notes for {today}.
+						Close the loop: mood, wins, friction and one kind note to future-you.
 					</div>
 				</div>
 				<div className="todayHeroPills">
-					<span className="badge brand">{today}</span>
+					<span className="badge levelPill">💭 Today</span>
 					<a
 						href="#/review/weekly"
 						className="btn ghost btnSm"
@@ -73,10 +80,9 @@ export default function DailyReviewPage() {
 			<div className="card todayReviewCard">
 				<div className="sectionHeader">
 					<div>
-						<h2>Daily review</h2>
+						<h2>✨ How was today, really?</h2>
 						<div className="subtle">
-							Capture reflection, mood, and what to improve before the day
-							closes.
+							Two minutes of honesty beats a perfect week of guessing.
 						</div>
 					</div>
 					<button
@@ -101,24 +107,25 @@ export default function DailyReviewPage() {
 				<div
 					className="grid two mt-md"
 				>
-					<div className="card">
-						<h2>Mood</h2>
+					<div className="card celebrateCard">
+						<h2>✨ Mood</h2>
 						<div
 							className="moodRowMt"
 						>
-							{['happy', 'neutral', 'tired', 'focused', 'stressed'].map(
+							{MOODS.map(
 								(mood) => (
 									<button
-										key={mood}
+										key={mood.id}
 										className={
-											dailyReview.mood === mood ? 'btn primary' : 'btn ghost'
+											dailyReview.mood === mood.id ? 'btn primary moodBtn isActive' : 'btn ghost moodBtn'
 										}
 										type="button"
+										title={mood.label}
 										onClick={() =>
-											setDailyReview((current) => ({ ...current, mood }))
+											setDailyReview((current) => ({ ...current, mood: mood.id }))
 										}
 									>
-										{mood}
+										{mood.emoji} {mood.label}
 									</button>
 								),
 							)}

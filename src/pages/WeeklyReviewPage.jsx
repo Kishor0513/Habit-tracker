@@ -135,17 +135,18 @@ export default function WeeklyReviewPage() {
 
 	return (
 		<div className="pageContent">
-			<div className="heroCard todayHeroCard">
+			<div className="heroCard todayHeroCard celebrateCard">
 				<div className="todayHeroContent">
-					<div className="greeting">Weekly Review</div>
-					<h2 className="todayHeroTitle">Week of {weekStart}</h2>
+					<div className="greeting">🗓️ Weekly review · {weekStart}</div>
+					<h2 className="todayHeroTitle">Week of <span className="gradientText">{weekStart}</span></h2>
 					<div className="todayHeroSubtle">
-						Review your week: {weekStats.totalDone} habits completed out of {weekStats.totalDue} due ({weekStats.rate}%).
+						{weekStats.rate >= 80 ? '🎉 Elite week! ' : weekStats.rate >= 50 ? '🔥 Solid week — ' : '🌱 Learning week — '}
+						{weekStats.totalDone} of {weekStats.totalDue} habits ({weekStats.rate}%).
 					</div>
 				</div>
 				<div className="todayHeroPills">
-					<span className="badge brand">{weekStart}</span>
-					<span className="badge success">{weekStats.rate}% completion</span>
+					<span className="badge brand">📅 {weekStart}</span>
+					<span className="badge levelPill">⚡ {weekStats.rate}%</span>
 				</div>
 			</div>
 

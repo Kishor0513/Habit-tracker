@@ -22,21 +22,25 @@ const WeeklyReviewPage = lazy(() => import('./pages/WeeklyReviewPage.jsx'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage.jsx'));
 
 const NAV_ITEMS = [
-	{ to: '/', label: 'Today', shortLabel: 'Pulse', icon: 'pulse' },
-	{ to: '/habits', label: 'Habits', shortLabel: 'Habits', icon: 'habit' },
+	{ to: '/', label: 'Today', shortLabel: 'Today', icon: 'pulse', emoji: '⚡', hint: 'Execute' },
+	{ to: '/habits', label: 'Habits', shortLabel: 'Habits', icon: 'habit', emoji: '🌱', hint: 'Grow' },
 	{
 		to: '/projects',
 		label: 'Projects',
 		shortLabel: 'Projects',
 		icon: 'target',
+		emoji: '🎯',
+		hint: 'Ship',
 	},
-	{ to: '/insights', label: 'Insights', shortLabel: 'Insights', icon: 'chart' },
-	{ to: '/review', label: 'Review', shortLabel: 'Review', icon: 'review' },
+	{ to: '/insights', label: 'Insights', shortLabel: 'Insights', icon: 'chart', emoji: '📊', hint: 'Learn' },
+	{ to: '/review', label: 'Review', shortLabel: 'Review', icon: 'review', emoji: '💭', hint: 'Reflect' },
 	{
 		to: '/settings',
 		label: 'Settings',
 		shortLabel: 'Settings',
 		icon: 'settings',
+		emoji: '⚙️',
+		hint: 'Tune',
 	},
 ];
 
@@ -170,16 +174,13 @@ function NavGlyph({ name }) {
 }
 
 function Sidebar({ theme, onThemeToggle }) {
-	const themeLabel = {
-		light: 'Light',
-		dark: 'Dark',
-	};
 	const nextThemeLabel = {
 		light: 'Dark',
 		dark: 'Light',
 	};
+	const themeIcon = theme === 'dark' ? '☀️' : '🌙';
 	const ownerLinks = {
-		github: 'https://github.com/kishor0513',
+		github: 'https://github.com/kishorchaudhary',
 		website: 'https://kishorchaudhary.com.np',
 		socials: 'https://instagram.com/kishor0513',
 	};
@@ -195,21 +196,23 @@ function Sidebar({ theme, onThemeToggle }) {
 						<LogoMark size={28} />
 					</div>
 					<div className="sidebarBrandText">
-						<div className="sidebarEyebrow">Habit</div>
-						<div className="sidebarWorkspace">Workspace</div>
+						<div className="sidebarEyebrow">✨ Habit</div>
+						<div className="sidebarWorkspace">
+							<span className="gradientText">Workspace</span>
+						</div>
 					</div>
 				</div>
 				<button
 					className="themeToggleBtn"
 					onClick={onThemeToggle}
 					aria-label={`Switch to ${nextThemeLabel[theme]} mode`}
-					title={`Current: ${themeLabel[theme]} mode`}
+					title={`Current: ${theme} mode — switch to ${nextThemeLabel[theme]}`}
 				>
-					{themeLabel[theme]}
+					<span aria-hidden="true">{themeIcon}</span>&nbsp;{theme}
 				</button>
 			</div>
 			<div className="navGroup">
-				<div className="navGroupLabel">Workspace</div>
+				<div className="navGroupLabel">Workspace · ⌘K for actions</div>
 				{NAV_ITEMS.map((item) => (
 					<NavLink
 						key={item.to}
@@ -225,12 +228,29 @@ function Sidebar({ theme, onThemeToggle }) {
 						>
 							<NavGlyph name={item.icon} />
 						</span>
-						<span>{item.label}</span>
+						<span style={{ flex: 1 }}>{item.label}</span>
+						<span
+							className="badge"
+							style={{ fontSize: 10, padding: '2px 6px' }}
+							title={item.hint}
+						>
+							{item.emoji}
+						</span>
 					</NavLink>
 				))}
 			</div>
+			<div className="sidebarLevelCard celebrateCard">
+				<div className="levelTop">
+					<span>🔥 Keep the chain alive</span>
+					<span className="badge levelPill">Lv 3</span>
+				</div>
+				<div className="levelBar" aria-hidden="true">
+					<div className="levelFill" style={{ width: '62%' }} />
+				</div>
+				<div className="levelSub">Small wins compound. Do 1 habit now.</div>
+			</div>
 			<div className="sidebarFooter">
-				<div className="sidebarFooterLine">Build steady systems.</div>
+				<div className="sidebarFooterLine">🌱 Build steady systems.</div>
 				<div className="sidebarFooterLinks">
 					<a
 						href={ownerLinks.github}
@@ -254,7 +274,7 @@ function Sidebar({ theme, onThemeToggle }) {
 						Socials
 					</a>
 				</div>
-				<div className="sidebarFooterMeta">Habit Tracker</div>
+				<div className="sidebarFooterMeta">Habit Tracker · v2.1 playful</div>
 			</div>
 		</aside>
 	);
@@ -288,21 +308,26 @@ function Topbar() {
 		spotify.spotifyState?.is_playing || spotify.spotifyState?.paused === false,
 	);
 
+	const activeNav = NAV_ITEMS.find((n) => n.to === location.pathname);
 	return (
 		<header className="topbar">
 			<div>
 				<div className="breadcrumb">
-					<span>Habit Workspace</span>
+					<span>✨ Habit Workspace</span>
 					<span className="breadcrumbSeparator">/</span>
 					<span className="breadcrumb active">{title}</span>
 				</div>
-				<div className="topbarTitle">{title}</div>
+				<div className="topbarTitle">
+					{activeNav?.emoji ? `${activeNav.emoji} ` : ''}{title}
+				</div>
 			</div>
 			<div className="topbarMeta">
-				<div className="topbarSpotify">
+				<div className="topbarSpotify celebrateCard">
 					<div className="topbarSpotifyInfo">
-						<div className="topbarSpotifyLabel">Spotify</div>
-						<div className="topbarSpotifyTrack">{trackName}</div>
+						<div className="topbarSpotifyLabel">
+							{isPlaying ? '🎶 Now playing' : '🎧 Spotify'}
+						</div>
+						<div className="topbarSpotifyTrack" title={trackName}>{trackName}</div>
 					</div>
 					<div className="topbarSpotifyControls">
 						<button
@@ -312,7 +337,7 @@ function Topbar() {
 							disabled={!spotify.spotifyAuthed}
 							title="Previous track"
 						>
-							Prev
+							⏮
 						</button>
 						<button
 							className="btn ghost"
@@ -321,12 +346,13 @@ function Topbar() {
 								if (!spotify.spotifyAuthed) spotify.connect();
 								else spotify.playPause();
 							}}
+							title={spotify.spotifyAuthed ? (isPlaying ? 'Pause' : 'Play') : 'Connect Spotify'}
 						>
 							{!spotify.spotifyAuthed
-								? 'Connect'
+								? '✨ Connect'
 								: isPlaying
-									? 'Pause'
-									: 'Play'}
+									? '⏸'
+									: '▶'}
 						</button>
 						<button
 							className="btn ghost"
@@ -335,7 +361,7 @@ function Topbar() {
 							disabled={!spotify.spotifyAuthed}
 							title="Next track"
 						>
-							Next
+							⏭
 						</button>
 					</div>
 				</div>

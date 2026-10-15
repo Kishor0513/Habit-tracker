@@ -12,9 +12,9 @@ export default function Modal({ title, children, actions, onClose }) {
 
   return createPortal(
     <div className="modalBackdrop" role="dialog" aria-modal="true" onMouseDown={onClose}>
-      <div className="modal" onMouseDown={(e) => e.stopPropagation()}>
+      <div className="modal celebrateCard" onMouseDown={(e) => e.stopPropagation()}>
         <div className="modalHeader">
-          <h3>{title}</h3>
+          <h3>✨ {title}</h3>
           <button className="btn ghost" type="button" aria-label="Close dialog" onClick={onClose}>
             ✕
           </button>
