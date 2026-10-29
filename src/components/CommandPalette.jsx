@@ -26,6 +26,7 @@ export default function CommandPalette() {
 	const { focus } = useStudio();
 	const [open, setOpen] = useState(false);
 	const [query, setQuery] = useState('');
+	const [activeIndex, setActiveIndex] = useState(0);
 
 	useEffect(() => {
 		function onKeyDown(event) {
@@ -36,13 +37,24 @@ export default function CommandPalette() {
 				setOpen((value) => !value);
 			}
 		}
+		function openPalette() {
+			setOpen(true);
+		}
 		window.addEventListener('keydown', onKeyDown);
-		return () => window.removeEventListener('keydown', onKeyDown);
+		window.addEventListener('habit:open-palette', openPalette);
+		return () => {
+			window.removeEventListener('keydown', onKeyDown);
+			window.removeEventListener('habit:open-palette', openPalette);
+		};
 	}, []);
 
 	useEffect(() => {
 		setQuery('');
 	}, [location.pathname, open]);
+
+	useEffect(() => {
+		setActiveIndex(0);
+	}, [query, open, location.pathname]);
 
 	const items = useMemo(() => {
 		const value = query.trim().toLowerCase();
@@ -74,15 +86,37 @@ export default function CommandPalette() {
 	}
 
 	function onPaletteKeyDown(event) {
-		if (event.key !== 'Escape') return;
-		event.preventDefault();
-		setOpen(false);
+		if (event.key === 'Escape') {
+			event.preventDefault();
+			setOpen(false);
+			return;
+		}
+		if (event.key === 'ArrowDown') {
+			event.preventDefault();
+			setActiveIndex((index) => (items.length === 0 ? 0 : (index + 1) % items.length));
+			return;
+		}
+		if (event.key === 'ArrowUp') {
+			event.preventDefault();
+			setActiveIndex((index) =>
+				items.length === 0 ? 0 : (index - 1 + items.length) % items.length,
+			);
+			return;
+		}
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			const action = items[Math.min(activeIndex, items.length - 1)];
+			if (action) trigger(action.id);
+		}
 	}
 
 	if (!open) return null;
 
 	return (
-		<div className="modalBackdrop" onMouseDown={() => setOpen(false)}>
+		<div
+			className="modalBackdrop commandBackdrop"
+			onMouseDown={() => setOpen(false)}
+		>
 			<div
 				className="commandPalette"
 				onKeyDown={onPaletteKeyDown}
@@ -91,19 +125,27 @@ export default function CommandPalette() {
 				<input
 					className="input commandPaletteInput"
 					autoFocus
+					autoComplete="off"
 					value={query}
 					onChange={(event) => setQuery(event.target.value)}
 					placeholder="✨ Type a command — try 'focus', 'habit', 'review'…"
 				/>
-				<div className="subtle" style={{ marginTop: 8, fontSize: 11 }}>⌘K anywhere · Enter to run · Esc to close</div>
-				<div className="commandPaletteList">
+				<div className="subtle" style={{ marginTop: 8, fontSize: 11 }}>⌘K anywhere · ↑↓ navigate · Enter to run · Esc to close</div>
+				<div
+					className="commandPaletteList"
+					role="listbox"
+					aria-label="Workspace commands"
+				>
 					{items.length === 0 ? (
 						<div className="subtle" style={{ padding: 12, textAlign: 'center' }}>No matches — try “habit” or “focus” 🌱</div>
-					) : items.map((action) => (
+					) : items.map((action, index) => (
 						<button
 							key={action.id}
-							className="commandPaletteItem"
+							className={`commandPaletteItem ${index === activeIndex ? 'isActive' : ''}`}
 							type="button"
+							role="option"
+							aria-selected={index === activeIndex}
+							onMouseEnter={() => setActiveIndex(index)}
 							onClick={() => trigger(action.id)}
 						>
 							<span>{action.title}</span>

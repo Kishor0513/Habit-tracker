@@ -21,6 +21,10 @@ const DailyReviewPage = lazy(() => import('./pages/DailyReviewPage.jsx'));
 const WeeklyReviewPage = lazy(() => import('./pages/WeeklyReviewPage.jsx'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage.jsx'));
 
+const EXTRA_ROUTES = {
+	'/review/weekly': { label: 'Weekly review', emoji: '📅' },
+};
+
 const NAV_ITEMS = [
 	{ to: '/', label: 'Today', shortLabel: 'Today', icon: 'pulse', emoji: '⚡', hint: 'Execute' },
 	{ to: '/habits', label: 'Habits', shortLabel: 'Habits', icon: 'habit', emoji: '🌱', hint: 'Grow' },
@@ -284,8 +288,10 @@ function Topbar() {
 	const location = useLocation();
 	const [now, setNow] = useState(() => new Date());
 	const { spotify } = useStudio();
-	const title =
-		NAV_ITEMS.find((n) => n.to === location.pathname)?.label || 'Page';
+	const routeMeta =
+		NAV_ITEMS.find((n) => n.to === location.pathname) ||
+		EXTRA_ROUTES[location.pathname];
+	const title = routeMeta?.label || 'Page';
 	const dateLabel = isoToday();
 
 	useEffect(() => {
@@ -308,7 +314,9 @@ function Topbar() {
 		spotify.spotifyState?.is_playing || spotify.spotifyState?.paused === false,
 	);
 
-	const activeNav = NAV_ITEMS.find((n) => n.to === location.pathname);
+	const openPalette = () => {
+		window.dispatchEvent(new CustomEvent('habit:open-palette'));
+	};
 	return (
 		<header className="topbar">
 			<div>
@@ -318,10 +326,37 @@ function Topbar() {
 					<span className="breadcrumb active">{title}</span>
 				</div>
 				<div className="topbarTitle">
-					{activeNav?.emoji ? `${activeNav.emoji} ` : ''}{title}
+					{routeMeta?.emoji ? `${routeMeta.emoji} ` : ''}{title}
 				</div>
 			</div>
 			<div className="topbarMeta">
+				<button
+					className="topbarSearch"
+					type="button"
+					onClick={openPalette}
+					aria-label="Open command palette"
+					title="Search or jump to… (⌘K)"
+				>
+					<svg
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="1.8"
+						aria-hidden="true"
+					>
+						<circle
+							cx="11"
+							cy="11"
+							r="7"
+						/>
+						<path
+							d="m20 20-3.2-3.2"
+							strokeLinecap="round"
+						/>
+					</svg>
+					<span className="topbarSearchLabel">Search</span>
+					<kbd>⌘K</kbd>
+				</button>
 				<div className="topbarSpotify celebrateCard">
 					<div className="topbarSpotifyInfo">
 						<div className="topbarSpotifyLabel">

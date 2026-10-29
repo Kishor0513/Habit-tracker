@@ -589,7 +589,7 @@ export default function HabitsPage() {
 									setShowEditor(true);
 								}}
 							>
-								<div className="row between gap-md items-center">
+								<div className="row between gap-md items-center listCardRow">
 									<div className="stack gap-sm min-w-0 flex-1">
 										<div className="row gap-sm min-w-0 flex-wrap">
 									<div
@@ -630,7 +630,7 @@ export default function HabitsPage() {
 											</span>
 										) : null}
 									</div>
-									<details>
+									<details onClick={(event) => event.stopPropagation()}>
 										<summary className="subtle" style={{ cursor: 'pointer', fontSize: 12 }}>More details</summary>
 										<div className="badgeRow" style={{ marginTop: 8 }}>
 											{habit.reminder?.enabled ? (
@@ -686,7 +686,7 @@ export default function HabitsPage() {
 										) : null}
 									</div>
 
-									<div className="row gap-sm">
+									<div className="row gap-sm listCardActions">
 										<button
 											className="btn ghost"
 											type="button"

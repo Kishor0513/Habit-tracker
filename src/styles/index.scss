@@ -62,6 +62,17 @@ $mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.12);
 
+  --app-glow:
+    radial-gradient(1100px 620px at 16% -12%, rgba(124, 58, 237, 0.12), transparent 62%),
+    radial-gradient(900px 520px at 100% 0%, rgba(236, 72, 153, 0.07), transparent 58%);
+  --hover-tint: color-mix(in srgb, var(--bg-elevated) 94%, var(--brand) 6%);
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+
   --radius-xs: 6px;
   --radius-sm: 10px;
   --radius-md: 14px;
@@ -126,6 +137,11 @@ $mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.5);
 
+  --app-glow:
+    radial-gradient(1100px 620px at 16% -12%, rgba(139, 92, 246, 0.2), transparent 62%),
+    radial-gradient(900px 520px at 100% 0%, rgba(236, 72, 153, 0.1), transparent 58%);
+  --hover-tint: color-mix(in srgb, var(--bg-elevated) 92%, var(--brand) 8%);
+
   --radius-xs: 6px;
   --radius-sm: 10px;
   --radius-md: 14px;
@@ -136,7 +152,9 @@ $mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
 
 // ── Global Reset ──
 *, *::before, *::after { box-sizing: border-box; }
+html { height: 100%; }
 html, body, #root { min-height: 100%; margin: 0; padding: 0; }
+#root { height: 100dvh; }
 
 body {
   font-family: $sans;
@@ -147,7 +165,12 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  overflow: hidden;
+  accent-color: var(--brand);
+  -webkit-tap-highlight-color: transparent;
 }
+
+button { -webkit-tap-highlight-color: transparent; }
 
 img, svg { max-width: 100%; }
 
@@ -174,7 +197,8 @@ p { margin: 0; text-wrap: pretty; }
 .interactiveSurface:focus-visible,
 .todayKpiCard:focus-visible,
 .commandPaletteItem:focus-visible,
-.themeToggleBtn:focus-visible {
+.themeToggleBtn:focus-visible,
+.topbarSearch:focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
   border-color: var(--border-accent);
@@ -200,12 +224,19 @@ button, input, select, textarea {
 // ── App Shell ──
 .app {
   display: flex;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100dvh;
   overflow: hidden;
   padding: 12px;
   gap: 12px;
-  background: var(--bg);
+  background: var(--app-glow), var(--bg);
+}
+
+.app.authLoginWrap,
+.app.authLoadingWrap {
+  overflow-y: auto;
+  align-items: flex-start;
+  padding: 24px 12px;
 }
 
 // ── Sidebar ──
@@ -221,6 +252,7 @@ button, input, select, textarea {
 }
 
 .sidebarHeader {
+  flex-shrink: 0;
   padding: 20px 18px 16px;
   display: flex;
   align-items: center;
@@ -277,6 +309,9 @@ button, input, select, textarea {
   flex-direction: column;
   gap: 2px;
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .navItem {
@@ -291,19 +326,25 @@ button, input, select, textarea {
   background: transparent;
   font-size: 13px;
   font-weight: 500;
-  transition: all 0.15s ease;
+  transition:
+    background-color var(--dur-fast) ease,
+    color var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .navItem:hover {
   color: var(--text-primary);
-  background: var(--bg-elevated);
+  background: var(--hover-tint);
+}
+
+.navItem:active {
+  transform: scale(0.99);
 }
 
 .navItem.isActive {
   color: var(--text-primary);
   background: var(--brand-soft);
   font-weight: 600;
-  box-shadow: inset 2px 0 0 var(--brand);
 }
 
 .navItem.isActive:hover {
@@ -318,10 +359,16 @@ button, input, select, textarea {
   place-items: center;
   border-radius: var(--radius-xs);
   color: var(--text-muted);
+  transition: color var(--dur-fast) ease, transform var(--dur-base) var(--ease-spring);
 }
 
+.navItem:hover .navIcon,
 .navItem.isActive .navIcon {
   color: var(--brand);
+}
+
+.navItem:hover .navIcon {
+  transform: scale(1.06);
 }
 
 .navIcon svg,
@@ -331,6 +378,7 @@ button, input, select, textarea {
 }
 
 .sidebarFooter {
+  flex-shrink: 0;
   padding: 14px 18px 18px;
   border-top: 1px solid var(--border);
   color: var(--text-muted);
@@ -359,7 +407,10 @@ button, input, select, textarea {
     border-radius: var(--radius-xs);
     border: 1px solid var(--border);
     background: transparent;
-    transition: all 0.15s ease;
+    transition:
+      border-color var(--dur-fast) ease,
+      background-color var(--dur-fast) ease,
+      color var(--dur-fast) ease;
   }
 
   a:hover {
@@ -381,8 +432,12 @@ button, input, select, textarea {
 .mainArea {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   height: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scroll-padding-top: 80px;
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
@@ -390,6 +445,7 @@ button, input, select, textarea {
 
 // ── Topbar ──
 .topbar {
+  min-width: 0;
   min-height: 64px;
   position: sticky;
   top: 0;
@@ -405,12 +461,29 @@ button, input, select, textarea {
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
 }
 
+.topbar > div:first-child {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .breadcrumb {
   display: flex;
   align-items: center;
   font-size: 12px;
   color: var(--text-muted);
   gap: 4px;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.breadcrumb > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .breadcrumb.active {
@@ -427,6 +500,60 @@ button, input, select, textarea {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.topbarSearch {
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) ease,
+    background-color var(--dur-fast) ease,
+    color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease;
+}
+
+.topbarSearch:hover {
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.topbarSearch:active {
+  transform: scale(0.98);
+}
+
+.topbarSearch svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.topbarSearchLabel {
+  white-space: nowrap;
+}
+
+.topbarSearch kbd {
+  font-family: $mono;
+  font-size: 10px;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-muted);
 }
 
 .topbarSpotify {
@@ -434,8 +561,8 @@ button, input, select, textarea {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-width: clamp(240px, 28vw, 380px);
-  max-width: clamp(280px, 32vw, 420px);
+  min-width: 0;
+  width: clamp(220px, 26vw, 360px);
   padding: 8px 14px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
@@ -450,8 +577,14 @@ button, input, select, textarea {
 .topbarSpotifyControls {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex-shrink: 0;
+}
+
+.topbarSpotifyControls .btn {
+  min-height: 32px;
+  padding: 0 8px;
+  font-size: 12px;
 }
 
 .topbarSpotifyLabel {
@@ -472,7 +605,7 @@ button, input, select, textarea {
 }
 
 .topbarClock {
-  min-width: 200px;
+  min-width: 0;
   padding: 8px 12px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
@@ -487,12 +620,17 @@ button, input, select, textarea {
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .topbarClockDate {
   margin-top: 2px;
   font-size: 11px;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .topbarTitle {
@@ -500,17 +638,29 @@ button, input, select, textarea {
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 // ── Page Content ──
 .pageContent {
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 24px 28px 100px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  animation: fadeUp 0.3s ease;
+  animation: fadeUp var(--dur-slow) var(--ease-out);
+}
+
+.pageContent > *,
+.todayLayout > *,
+.bento > *,
+.stack > *,
+.grid > * {
+  min-width: 0;
 }
 
 .mainArea > .stack,
@@ -518,7 +668,7 @@ button, input, select, textarea {
   max-width: 1200px;
   margin: 0 auto;
   padding: 24px 28px 100px;
-  animation: fadeUp 0.3s ease;
+  animation: fadeUp var(--dur-slow) var(--ease-out);
 }
 
 .pageHeader {
@@ -547,45 +697,42 @@ button, input, select, textarea {
 // ── Cards / Panels ──
 .panel,
 .card {
+  min-width: 0;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 20px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
-}
-
-.panel:hover,
-.card:hover {
-  border-color: var(--border-hover);
-  box-shadow: var(--shadow-sm);
-}
-
-.card.interactiveSurface:hover,
-.panel.interactiveSurface:hover {
-  border-color: var(--border-hover);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+  transition:
+    border-color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
 }
 
 .interactiveSurface {
   cursor: pointer;
+  transition:
+    border-color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
 }
 
 .interactiveSurface:hover {
-  border-color: var(--border-hover);
+  border-color: var(--border-accent);
   box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
 }
 
 .interactiveSurface:active {
-  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.item.interactiveSurface:hover {
+  background: var(--hover-tint);
 }
 
 @media (hover: none) {
-  .panel:hover,
-  .card:hover,
   .interactiveSurface:hover {
-    transform: none;
+    box-shadow: none;
   }
 }
 
@@ -600,8 +747,6 @@ button, input, select, textarea {
   background:
     var(--brand-gradient-soft),
     var(--bg-elevated);
-  border-top: 3px solid transparent;
-  border-top-color: var(--brand-mid);
   box-shadow: var(--shadow-md);
   &::after {
     content: '';
@@ -613,15 +758,9 @@ button, input, select, textarea {
   }
 }
 
-.heroCard:hover,
-.premiumPanel:hover {
-  border-color: var(--border-hover);
-  box-shadow: var(--shadow-md);
-}
-
 .premiumPanel.interactiveSurface:hover,
 .heroCard.interactiveSurface:hover {
-  transform: translateY(-1px);
+  border-color: var(--border-accent);
 }
 
 .heroCard::before {
@@ -636,9 +775,6 @@ button, input, select, textarea {
   pointer-events: none;
   transform: translate(28%, -28%);
   filter: blur(2px);
-}
-.heroCard::after {
-  background: var(--brand-gradient);
 }
 
 .heroCard {
@@ -766,19 +902,28 @@ button, input, select, textarea {
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  transition:
+    border-color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
   min-width: 0;
   overflow: hidden;
 }
 
 .todayKpiCard:hover {
-  border-color: var(--border-hover);
+  border-color: var(--border-accent);
   box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .todayKpiCard:active {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.995);
+}
+
+@media (hover: none) {
+  .todayKpiCard:hover {
+    transform: none;
+  }
 }
 
 .todayKpiValue {
@@ -816,6 +961,7 @@ button, input, select, textarea {
 
 .taskPanelHeader {
   padding: 20px 20px 0;
+  align-items: center;
 }
 
 .taskPanelBody {
@@ -840,17 +986,24 @@ button, input, select, textarea {
   height: 100%;
   border-radius: inherit;
   background: var(--brand-gradient);
-  transition: width 0.5s cubic-bezier(0.34, 1.4, 0.64, 1);
-  box-shadow: 0 0 12px rgba(168, 85, 247, 0.55);
+  transition: width 0.5s var(--ease-out);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
   position: relative;
   &::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
-    animation: shimmer-slide 2.4s infinite;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.42), transparent);
+    opacity: 0;
+    transform: translateX(-100%);
   }
 }
+
+.focusStudioGrid.isActive .focusBarFill::after {
+  opacity: 1;
+  animation: shimmer-slide 2.8s ease-in-out infinite;
+}
+
 @keyframes shimmer-slide {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
@@ -872,31 +1025,42 @@ button, input, select, textarea {
 
 .taskRow {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   min-height: 48px;
-  padding: 10px 12px;
+  padding: 12px;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   background: transparent;
-  transition: all 0.12s ease;
-  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease;
+  position: relative;
+  min-width: 0;
 }
 
 .taskRow:hover {
-  background: var(--bg-elevated);
+  background: var(--hover-tint);
   border-color: var(--border);
 }
 
 .taskCheckbox {
+  margin-top: 3px;
   width: 18px;
   height: 18px;
   display: grid;
   place-items: center;
   border-radius: var(--radius-xs);
   border: 1.5px solid var(--text-faint);
-  transition: all 0.15s ease;
+  transition:
+    background-color var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-spring);
   flex-shrink: 0;
+}
+
+.taskCheckbox:hover {
+  border-color: var(--brand);
 }
 
 .taskCheckboxSvg {
@@ -912,19 +1076,24 @@ button, input, select, textarea {
   border-color: transparent;
   box-shadow: var(--glow-brand);
   transform: scale(1.08) rotate(-6deg);
+  animation: check-pop var(--dur-slow) var(--ease-spring);
 }
-.taskRow {
-  position: relative;
-  &.isDone::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 10px;
-    bottom: 10px;
-    width: 3px;
-    border-radius: 999px;
-    background: var(--brand-gradient);
-  }
+
+.taskRow.isDone::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--brand-gradient);
+}
+
+@keyframes check-pop {
+  0% { transform: scale(0.8) rotate(0); }
+  60% { transform: scale(1.16) rotate(-8deg); }
+  100% { transform: scale(1.08) rotate(-6deg); }
 }
 
 .taskRow.isDone .taskCheckboxSvg {
@@ -940,6 +1109,7 @@ button, input, select, textarea {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
 .taskInput {
@@ -958,11 +1128,20 @@ button, input, select, textarea {
 .select,
 .textarea {
   width: 100%;
+  min-width: 0;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--bg-surface);
   color: var(--text-primary);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease,
+    background-color var(--dur-fast) ease;
+}
+
+.row > .input,
+.row > .select {
+  flex: 1 1 160px;
 }
 
 .input,
@@ -1014,7 +1193,13 @@ button, input, select, textarea {
   font-weight: 500;
   background: var(--bg-surface);
   color: var(--text-primary);
-  transition: all 0.12s ease;
+  transition:
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease,
+    filter var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .btn:hover:not(:disabled) {
@@ -1040,11 +1225,11 @@ button, input, select, textarea {
   letter-spacing: -0.01em;
   box-shadow: var(--glow-brand), 0 1px 2px rgba(0, 0, 0, 0.16);
   &:hover:not(:disabled) {
-    filter: brightness(1.06) saturate(1.05);
-    transform: translateY(-1px);
+    filter: brightness(1.06) saturate(1.04);
+    box-shadow: var(--glow-brand), 0 4px 16px rgba(124, 58, 237, 0.3);
   }
   &:active:not(:disabled) {
-    transform: translateY(0) scale(0.98);
+    transform: scale(0.98);
   }
 }
 
@@ -1054,11 +1239,6 @@ button, input, select, textarea {
   height: 30px;
   font-size: 12px;
   padding: 0 10px;
-}
-
-.btn.primary:hover:not(:disabled),
-.btn-primary:hover:not(:disabled) {
-  background: var(--brand-hover);
 }
 
 .btn.ghost {
@@ -1074,6 +1254,17 @@ button, input, select, textarea {
   color: var(--text-on-brand);
   border-color: transparent;
   background: var(--danger);
+}
+
+.item .btn.danger {
+  color: var(--danger);
+  border-color: var(--danger-border);
+  background: var(--danger-soft);
+}
+
+.item .btn.danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger-soft) 70%, var(--danger) 12%);
+  border-color: var(--danger);
 }
 
 .btn.btn-accent {
@@ -1097,12 +1288,16 @@ button, input, select, textarea {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition:
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    color var(--dur-fast) ease;
 }
 
 .iconBtn:hover {
   border-color: var(--border-hover);
   background: var(--bg-elevated);
+  color: var(--text-primary);
 }
 
 .playBtn {
@@ -1163,6 +1358,7 @@ button, input, select, textarea {
 // ── Auth Card ──
 .authCard {
   width: min(400px, 92vw);
+  margin: auto 0;
   padding: 28px;
   border-radius: var(--radius-lg);
   background: var(--bg-surface);
@@ -1274,7 +1470,10 @@ button, input, select, textarea {
   border-radius: var(--radius-xs);
   border: 2px solid transparent;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition:
+    transform var(--dur-fast) var(--ease-spring),
+    border-color var(--dur-fast) ease,
+    box-shadow var(--dur-fast) ease;
 }
 
 .colorSwatch:hover {
@@ -1309,7 +1508,7 @@ button, input, select, textarea {
 .kpiGrid {
   margin-top: 10px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -1371,11 +1570,17 @@ button, input, select, textarea {
   border-radius: 4px;
   border: 1px solid var(--border);
   background: var(--bg-surface);
-  transition: transform 0.12s ease;
+  position: relative;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) ease,
+    border-color var(--dur-fast) ease;
 }
 
 .heatCell:hover {
-  transform: scale(1.25);
+  transform: scale(1.18);
+  z-index: 1;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.24);
 }
 
 .heatCell.level-0 {
@@ -1413,23 +1618,34 @@ button, input, select, textarea {
   display: grid;
   place-items: center;
   padding: 20px;
-  animation: fadeUp 0.18s ease;
+  animation: backdropIn 0.2s ease;
+}
+
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal {
   width: min(720px, 100%);
-  max-height: min(90vh, 860px);
+  max-height: min(90dvh, 860px);
   overflow: auto;
+  overscroll-behavior: contain;
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  animation: modalPop 0.2s ease;
+  animation: modalPop 0.22s var(--ease-out);
 }
 
 @keyframes modalPop {
-  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes sheetUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .modalHeader,
@@ -1442,7 +1658,24 @@ button, input, select, textarea {
 }
 
 .modalHeader {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.modalHeader h3 {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modalHeader .btn {
+  flex-shrink: 0;
 }
 
 .modalBody {
@@ -1457,12 +1690,12 @@ button, input, select, textarea {
 .toastViewport {
   position: fixed;
   right: 14px;
-  bottom: 14px;
+  bottom: max(14px, env(safe-area-inset-bottom));
   z-index: 400;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-width: 320px;
+  width: min(360px, calc(100vw - 28px));
 }
 
 .toast {
@@ -1473,36 +1706,46 @@ button, input, select, textarea {
   background: var(--bg-elevated);
   color: var(--text-primary);
   box-shadow: var(--shadow-lg);
-  animation: toastIn 0.25s ease;
+  animation: toastIn var(--dur-slow) var(--ease-out);
   font-size: 13px;
+  overflow-wrap: anywhere;
 }
 
 @keyframes toastIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 // ── Command Palette ──
 .commandPalette {
-  width: min(640px, 92vw);
+  width: min(640px, calc(100vw - 32px));
+  max-height: min(72dvh, 560px);
   padding: 14px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   background: var(--bg-surface);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
-  animation: modalPop 0.18s ease;
+  animation: modalPop 0.18s var(--ease-out);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .commandPaletteInput {
   height: 48px;
   font-size: 15px;
+  flex-shrink: 0;
 }
 
 .commandPaletteList {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   margin-top: 12px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
 }
 
 .commandPaletteItem {
@@ -1516,13 +1759,29 @@ button, input, select, textarea {
   background: transparent;
   color: var(--text-primary);
   cursor: pointer;
-  transition: all 0.12s ease;
+  text-align: left;
+  transition:
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .commandPaletteItem:hover,
-.commandPaletteItem:focus-visible {
-  background: var(--bg-elevated);
-  border-color: var(--border);
+.commandPaletteItem:focus-visible,
+.commandPaletteItem.isActive {
+  background: var(--brand-soft);
+  border-color: var(--brand-border);
+}
+
+.commandPaletteItem:active {
+  transform: scale(0.995);
+}
+
+.commandPaletteItem > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 // ── Chart Panel ──
@@ -1698,7 +1957,11 @@ button, input, select, textarea {
   text-transform: uppercase;
   cursor: pointer;
   color: var(--text-secondary);
-  transition: all 0.15s ease;
+  transition:
+    border-color var(--dur-fast) ease,
+    background-color var(--dur-fast) ease,
+    color var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out);
 
   &:hover,
   &:focus-visible {
@@ -1824,10 +2087,16 @@ button, input, select, textarea {
     border-radius: 3px;
     cursor: pointer;
     border: 1px solid var(--border);
-    transition: all 0.12s ease;
+    position: relative;
+    transition:
+      transform var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-fast) ease,
+      border-color var(--dur-fast) ease;
 
     &:hover {
-      transform: scale(1.2);
+      transform: scale(1.14);
+      z-index: 1;
+      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.24);
     }
 
     &.level-0 { background: var(--bg-surface); }
@@ -2205,6 +2474,25 @@ button, input, select, textarea {
 }
 
 // ── Responsive ──
+@media (max-width: 1200px) {
+  .topbarSpotify {
+    display: none;
+  }
+}
+
+@media (max-width: 1080px) {
+  .topbarSearchLabel,
+  .topbarSearch kbd {
+    display: none;
+  }
+
+  .topbarSearch {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
 @media (max-width: 940px) {
   .grid.two,
   .twoCols {
@@ -2220,6 +2508,11 @@ button, input, select, textarea {
     grid-template-columns: 1fr;
   }
 
+  .heroCard {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
   .todayHeroCard {
     align-items: flex-start;
   }
@@ -2231,6 +2524,12 @@ button, input, select, textarea {
   .span-8,
   .span-4 {
     grid-column: span 12;
+  }
+}
+
+@media (max-width: 860px) {
+  .topbarClockDate {
+    display: none;
   }
 }
 
@@ -2371,13 +2670,6 @@ button, input, select, textarea {
   }
 }
 
-@media (max-width: 560px) {
-  .kpiGrid,
-  .todayKpiStrip {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (max-width: 1100px) {
   .focusStudioGrid.isActive,
   .focusFullscreenShell {
@@ -2436,6 +2728,165 @@ button, input, select, textarea {
 
   .focusFullscreenShell {
     padding: 14px;
+  }
+}
+
+@media (max-width: 720px) {
+  .toastViewport {
+    bottom: calc(78px + env(safe-area-inset-bottom));
+  }
+
+  .item > .row,
+  .item .row.between,
+  .settingsAccountRow {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .listCardRow {
+    flex-direction: column;
+    align-items: stretch;
+    flex-wrap: nowrap;
+  }
+
+  .listCardActions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .listCardActions .btn {
+    flex: 0 1 auto;
+  }
+
+  .listCardRow > .btn {
+    align-self: flex-start;
+  }
+
+  .sectionHeader {
+    flex-wrap: wrap;
+  }
+
+  .sectionHeader > div {
+    min-width: 0;
+  }
+
+  .premiumPanelHeader {
+    flex-wrap: wrap;
+  }
+
+  .modal .row {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sectionHeader > div {
+    width: 100%;
+  }
+
+  .sectionHeader > .btn {
+    align-self: flex-start;
+  }
+
+  .topbarSearch {
+    display: none;
+  }
+
+  .pageTitle {
+    font-size: 22px;
+  }
+
+  .modalBackdrop {
+    place-items: end center;
+    padding: 0;
+  }
+
+  .modal {
+    width: 100%;
+    max-height: 92dvh;
+    border-radius: 22px 22px 0 0;
+    border-bottom: none;
+    animation: sheetUp 0.26s var(--ease-out);
+  }
+
+  .modalHeader {
+    padding-top: 16px;
+  }
+
+  .modalBody,
+  .modalActions {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .modalActions {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  .commandBackdrop {
+    place-items: start center;
+    padding: 12px;
+  }
+
+  .commandBackdrop .commandPalette {
+    width: 100%;
+    max-height: calc(100dvh - 24px);
+    border-radius: var(--radius-xl);
+    animation: modalPop 0.22s var(--ease-out);
+  }
+}
+
+@media (max-width: 560px) {
+  .topbarClock {
+    padding: 6px 9px;
+  }
+
+  .topbarClockTime {
+    font-size: 0.82rem;
+  }
+
+  .topbarSpotifyControls .btn {
+    min-height: 30px;
+    padding: 0 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .historyQuickStats {
+    grid-template-columns: 1fr;
+  }
+
+  .authBtnGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .heroMetricValue {
+    font-size: 20px;
+  }
+
+  .countdownMachine {
+    padding: 16px;
+  }
+
+  .todayHeroPills {
+    gap: 6px;
+  }
+}
+
+@media (max-width: 380px) {
+  .mobileNavItem {
+    min-width: 0;
+    flex: 1 1 0;
+    padding: 4px;
+  }
+
+  .mobileNavItemLabel {
+    font-size: 10px;
   }
 }
 
@@ -2644,6 +3095,15 @@ button, input, select, textarea {
   font-size: 13px;
 }
 
+@media (max-width: 720px) {
+  .projectGoalBrief {
+    display: -webkit-box;
+    white-space: normal;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+}
+
 // ── Settings Page ──
 .settingsAccountRow {
   display: flex;
@@ -2693,7 +3153,7 @@ button, input, select, textarea {
 }
 
 .authCardInner {
-  padding: 40px;
+  padding: clamp(24px, 5vw, 40px);
   border-radius: var(--radius-lg);
 }
 
@@ -2837,7 +3297,6 @@ button, input, select, textarea {
 }
 .navItem.isActive {
   background: var(--brand-gradient-soft);
-  box-shadow: inset 3px 0 0 transparent;
   position: relative;
   &::before {
     content: '';
@@ -2862,12 +3321,12 @@ button, input, select, textarea {
 }
 .heatCell.level-4,
 .heatmapDay.level-4 {
-  box-shadow: 0 0 10px rgba(168, 85, 247, 0.65);
-  animation: heat-glow 2.2s ease-in-out infinite alternate;
+  box-shadow: 0 0 0 1px var(--brand-border), 0 0 10px rgba(168, 85, 247, 0.32);
 }
-@keyframes heat-glow {
-  from { filter: brightness(1); }
-  to { filter: brightness(1.18); }
+
+.heatCell.level-4:hover,
+.heatmapDay.level-4:hover {
+  box-shadow: 0 0 0 1px var(--brand), 0 0 16px rgba(168, 85, 247, 0.48);
 }
 .commandPalette {
   border: 1px solid var(--brand-border);
@@ -2885,6 +3344,11 @@ button, input, select, textarea {
 .modal {
   border-radius: 22px;
   border-color: var(--brand-border);
+}
+@media (max-width: 640px) {
+  .modal {
+    border-radius: 22px 22px 0 0;
+  }
 }
 .emptyPlayful {
   text-align: center;
@@ -2908,20 +3372,19 @@ button, input, select, textarea {
   &.isActive {
     background: var(--brand-gradient-soft) !important;
     border-color: var(--brand-border) !important;
-    box-shadow: var(--glow-brand);
-    transform: scale(1.06);
+    box-shadow: 0 0 0 2px var(--brand-soft), var(--glow-brand);
   }
 }
 .habitDot {
   box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 18%, transparent);
 }
 .focusPresetActive {
-  background: var(--brand-gradient) !important;
-  color: #fff !important;
-  border-color: transparent !important;
+  color: var(--text-on-brand);
+  border-color: transparent;
   box-shadow: var(--glow-brand);
 }
 .sidebarLevelCard {
+  flex-shrink: 0;
   margin: 0 10px 10px;
   padding: 12px 14px;
   border-radius: 16px;

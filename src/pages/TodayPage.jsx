@@ -452,18 +452,24 @@ export default function TodayPage() {
 
 			<div className="todayLayout">
 				<section>
-					<div
-						className="premiumPanel taskPanel interactiveSurface"
-						onClick={() => setActiveModal('queue')}
-					>
+					<div className="premiumPanel taskPanel">
 						<div className="premiumPanelHeader taskPanelHeader">
 							<div>
 								<div className="panelEyebrow">Habits</div>
 								<h3 className="premiumPanelTitle">Execution queue</h3>
 							</div>
-							<span className="badge brand">
-								{summary.doneCount} / {summary.dueCount}
-							</span>
+							<div className="row gap-sm items-center">
+								<span className="badge brand">
+									{summary.doneCount} / {summary.dueCount}
+								</span>
+								<button
+									className="btn ghost btn-sm"
+									type="button"
+									onClick={() => setActiveModal('queue')}
+								>
+									Details
+								</button>
+							</div>
 						</div>
 						<div className="sectionProgress">
 							<div
@@ -472,10 +478,7 @@ export default function TodayPage() {
 							/>
 						</div>
 
-						<div
-							className="taskPanelBody"
-							onClick={(event) => event.stopPropagation()}
-						>
+						<div className="taskPanelBody">
 							{due.length === 0 ? (
 								<div className="emptyPanelState">
 									System idle. Nothing scheduled for today.

@@ -216,7 +216,7 @@ export default function ProjectsPage() {
 
             return (
               <div key={project.id} className="item interactiveSurface" onClick={() => setActiveProject(project)}>
-                <div className="row between gap-md">
+                <div className="row between gap-md listCardRow">
                   <div className="stack gap-xs min-w-0 flex-1">
                     <div className="itemName projectName">
                       {project.name}
@@ -232,7 +232,7 @@ export default function ProjectsPage() {
                       <div className="sectionProgressFill" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
-                  <div className="row gap-sm">
+                  <div className="row gap-sm listCardActions">
                     <button className="btn ghost" type="button" onClick={(event) => {
                       event.stopPropagation();
                       setActiveProject(project);

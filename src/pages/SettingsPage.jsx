@@ -145,12 +145,12 @@ export default function SettingsPage() {
 				</div>
 			</div>
 
-			<div className="card interactiveSurface celebrateCard" onClick={() => setActivePanel('packs')}>
+			<div className="card celebrateCard">
 				<h2>🎁 Example packs</h2>
 				<div className="list">
 					{TEMPLATE_PACKS.map((pack) => (
 						<div key={pack.id} className="item interactiveSurface" onClick={() => setActivePanel(`pack:${pack.id}`)}>
-							<div className="row between gap-md">
+							<div className="row between gap-md listCardRow">
 								<div className="stack gap-xs min-w-0 flex-1">
 									<div className="itemName">{pack.name}</div>
 									<div className="subtle">{pack.description}</div>
