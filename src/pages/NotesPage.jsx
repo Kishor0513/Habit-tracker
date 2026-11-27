@@ -46,6 +46,7 @@ export default function NotesPage() {
 	const [folderName, setFolderName] = useState('');
 	const [saveState, setSaveState] = useState('Saved');
 	const editorRef = useRef(null);
+	const titleRef = useRef(null);
 	const lastSavedSignature = useRef('');
 
 	useEffect(() => {
@@ -106,30 +107,44 @@ export default function NotesPage() {
 
 	useEffect(() => {
 		if (!draft || !selectedId) return undefined;
-		const content = editorRef.current?.innerHTML ?? draft.content;
-		const signature = JSON.stringify({ id: selectedId, title: draft.title, content, tags: draft.tags, pinned: draft.pinned, favorite: draft.favorite });
-		
-		// avoid resaving content we already persisted (prevents refresh -> setDraft loop)
+		// Only auto-title if the title input is not focused and title is empty/default
+		const titleInputFocused = titleRef.current?.contains(document.activeElement);
+		const content = editorRef.current?.innerHTML ?? draft.content ?? '';
+		const plainText = htmlToPlain(content);
+		// Apple Notes-style: auto-title from first line when title is empty/default
+		let autoTitle = draft.title;
+		if (!titleInputFocused) {
+			if (!autoTitle || autoTitle === 'Untitled note') {
+				const firstLine = plainText.split('\n').map((l) => l.trim()).find(Boolean) ?? '';
+				autoTitle = firstLine.slice(0, 60) || 'Untitled note';
+			}
+		}
+		const nextDraft = { ...draft, title: autoTitle, content, plainText, updatedAt: new Date().toISOString() };
+		const signature = JSON.stringify({ id: selectedId, title: nextDraft.title, content, tags: nextDraft.tags, pinned: nextDraft.pinned, favorite: nextDraft.favorite, archivedAt: nextDraft.archivedAt, deletedAt: nextDraft.deletedAt });
+
 		if (signature === lastSavedSignature.current) return undefined;
-		
+
+		// Optimistically update local list so typing reflects immediately (Apple Notes feel)
+		setLiveNotes((prev) => {
+			const base = prev ?? noteRecords;
+			const exists = base.some((n) => n.id === selectedId);
+			if (!exists) return base;
+			return base.map((n) => (n.id === selectedId ? { ...n, ...nextDraft } : n));
+		});
+
 		setSaveState('Saving…');
 		const timer = window.setTimeout(async () => {
 			try {
-				await life.upsertNote({
-					...draft,
-					id: selectedId,
-					content,
-					plainText: htmlToPlain(content),
-				});
+				const saved = await life.upsertNote({ ...nextDraft, id: selectedId });
 				lastSavedSignature.current = signature;
+				setLiveNotes((prev) => (prev ?? noteRecords).map((n) => (n.id === selectedId ? { ...n, ...saved } : n)));
 				setSaveState('Saved');
-				refresh();
 			} catch {
 				setSaveState('Save failed');
 			}
-		}, 250);
+		}, 350);
 		return () => window.clearTimeout(timer);
-	}, [draft, selectedId, life, refresh]);
+	}, [draft, selectedId, life, noteRecords]);
 
 	useEffect(() => {
 		const handler = () => createNote();
@@ -168,30 +183,34 @@ export default function NotesPage() {
 			folderId: folderId || null,
 			tags: [],
 		});
-		refresh();
-		setFilter('all');
-		setDraft(note);
+		setLiveNotes((prev) => [note, ...(prev ?? noteRecords)]);
 		setSelectedId(note.id);
+		setDraft(note);
+		setFilter('all');
 	};
 
 	const patchNote = async (patch) => {
 		if (!selected) return;
 		const next = { ...selected, ...patch };
 		setDraft(next);
+		setLiveNotes((prev) => (prev ?? noteRecords).map((n) => (n.id === selectedId ? next : n)));
 		await life.upsertNote(next);
-		refresh();
 	};
 
 	const removeNote = async () => {
 		if (!selected) return;
-		await life.upsertNote({ ...selected, deletedAt: new Date().toISOString() });
+		const next = { ...selected, deletedAt: new Date().toISOString() };
+		setLiveNotes((prev) => (prev ?? noteRecords).filter((n) => n.id !== selectedId));
 		setSelectedId(null);
-		refresh();
+		setDraft(null);
+		await life.upsertNote(next);
 	};
 
 	const restoreNote = async (note) => {
-		await life.upsertNote({ ...note, deletedAt: null, archivedAt: null });
-		refresh();
+		const next = { ...note, deletedAt: null, archivedAt: null };
+		setLiveNotes((prev) => [next, ...(prev ?? noteRecords)]);
+		await life.upsertNote(next);
+		refresh(); // Full refresh to fix ordering
 	};
 
 	const selectNote = (note) => {
@@ -326,9 +345,12 @@ export default function NotesPage() {
 								<span className={`saveIndicator ${saveState === 'Save failed' ? 'dangerText' : ''}`}>{saveState}</span>
 							</div>
 							<input
+								ref={titleRef}
 								className="notesTitleInput"
 								value={draft?.title ?? ''}
 								onChange={(event) => setDraft({ ...draft, title: event.target.value })}
+								onFocus={() => setSaveState('')}
+								onBlur={() => setSaveState('Saving…')}
 								placeholder="Untitled note"
 							/>
 							<div
