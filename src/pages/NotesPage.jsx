@@ -46,6 +46,7 @@ export default function NotesPage() {
 	const [folderName, setFolderName] = useState('');
 	const [saveState, setSaveState] = useState('Saved');
 	const editorRef = useRef(null);
+	const lastSavedSignature = useRef('');
 
 	useEffect(() => {
 		if (!life) return undefined;
@@ -105,25 +106,28 @@ export default function NotesPage() {
 
 	useEffect(() => {
 		if (!draft || !selectedId) return undefined;
-		setSaveState('Saving…');
+		const content = editorRef.current?.innerHTML ?? draft.content;
+		const signature = JSON.stringify({ id: selectedId, title: draft.title, content, tags: draft.tags, pinned: draft.pinned, favorite: draft.favorite });
 		
-		const saveNote = async () => {
+		// avoid resaving content we already persisted (prevents refresh -> setDraft loop)
+		if (signature === lastSavedSignature.current) return undefined;
+		
+		setSaveState('Saving…');
+		const timer = window.setTimeout(async () => {
 			try {
 				await life.upsertNote({
 					...draft,
 					id: selectedId,
-					content: editorRef.current?.innerHTML ?? draft.content,
-					plainText: htmlToPlain(editorRef.current?.innerHTML ?? draft.content),
+					content,
+					plainText: htmlToPlain(content),
 				});
+				lastSavedSignature.current = signature;
 				setSaveState('Saved');
 				refresh();
 			} catch {
 				setSaveState('Save failed');
 			}
-		};
-		
-		// Immediate save on draft change - no delay
-		const timer = window.setTimeout(saveNote, 50);
+		}, 250);
 		return () => window.clearTimeout(timer);
 	}, [draft, selectedId, life, refresh]);
 
@@ -206,7 +210,8 @@ export default function NotesPage() {
 	const exec = (command, value) => {
 		editorRef.current?.focus();
 		document.execCommand(command, false, value);
-		setDraft((current) => current ? { ...current } : current);
+		const html = editorRef.current?.innerHTML ?? '';
+		setDraft((current) => current ? { ...current, content: html, plainText: htmlToPlain(html) } : current);
 	};
 
 	return (
