@@ -3649,6 +3649,78 @@ button, input, select, textarea {
   }
 }
 
+@media (max-width: 980px) {
+  .notesLayout {
+    grid-template-columns: 180px 280px minmax(0, 1fr);
+  }
+
+  .notesEditorInner {
+    padding: 18px 22px;
+  }
+
+  .notesTitleInput {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 768px) {
+  .notesLayout {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: calc(100vh - 150px);
+    margin: 0 -14px -14px;
+  }
+
+  .notesFolders {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    padding: 12px;
+  }
+
+  .notesFolderHeader,
+  .notesFolders > .notesFolder:first-of-type {
+    grid-column: 1 / -1;
+  }
+
+  .notesFolderRow {
+    min-width: 0;
+  }
+
+  .notesList {
+    min-height: 220px;
+    max-height: 300px;
+    border-left: 0;
+    border-right: 0;
+  }
+
+  .notesEditor {
+    min-height: 480px;
+    overflow: visible;
+  }
+
+  .notesEditorInner {
+    min-height: 480px;
+    padding: 18px 16px;
+  }
+
+  .notesEditorToolbar {
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+
+  .notesTitleInput {
+    font-size: 25px;
+  }
+
+  .notesEditorFooter {
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
 .transactionRow {
   display: flex;
   align-items: center;

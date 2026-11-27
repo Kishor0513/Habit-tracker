@@ -37,12 +37,25 @@ function blankTransaction() {
 	};
 }
 
+function blankAccount() {
+	return {
+		name: '',
+		type: 'checking',
+		currency: 'NPR',
+		openingBalanceMinor: 0,
+		color: '#7c3aed',
+		note: '',
+	};
+}
+
 export default function FinancePage() {
 	const { life, refresh } = useApp();
 	const { data, loading } = useLifeData();
 	const [tab, setTab] = useState('overview');
 	const [editing, setEditing] = useState(null);
+	const [editingAccount, setEditingAccount] = useState(null);
 	const [form, setForm] = useState(blankTransaction());
+	const [accountForm, setAccountForm] = useState(blankAccount());
 	const [saving, setSaving] = useState(false);
 
 	const currency = data.accounts.find((account) => true)?.currency ?? data.transactions[0]?.currency ?? 'NPR';
@@ -85,8 +98,25 @@ export default function FinancePage() {
 		return saved;
 	};
 
+	const saveAccount = async () => {
+		if (!accountForm.name.trim()) return;
+		await life.upsertAccount({
+			...accountForm,
+			name: accountForm.name.trim(),
+			id: editingAccount === 'new' ? undefined : editingAccount,
+		});
+		setEditingAccount(null);
+		refresh();
+	};
+
 	const removeTransaction = async (transaction) => {
 		await life.deleteTransaction(transaction.id);
+		refresh();
+	};
+
+	const removeAccount = async (account) => {
+		if (!window.confirm(`Delete account “${account.name}”? Transactions will be kept but unlinked.`)) return;
+		await life.deleteAccount(account.id);
 		refresh();
 	};
 
@@ -232,17 +262,29 @@ export default function FinancePage() {
 			)}
 
 			{tab === 'accounts' && (
-				<div className="grid two">
-					{data.accounts.map((account) => (
-						<div className="card premiumPanel" key={account.id}>
-							<div className="premiumPanelHeader">
-								<h3 className="premiumPanelTitle">{account.name}</h3>
-								<span className="badge">{account.type}</span>
+				<div className="stack">
+					<div className="row">
+						<button className="btn primary" type="button" onClick={() => { setAccountForm(blankAccount()); setEditingAccount('new'); }}>
+							<AppIcon name="plus" size={15} /> New account
+						</button>
+					</div>
+					<div className="grid two">
+						{data.accounts.map((account) => (
+							<div className="card premiumPanel" key={account.id}>
+								<div className="premiumPanelHeader">
+									<h3 className="premiumPanelTitle">{account.name}</h3>
+									<span className="badge">{account.type}</span>
+								</div>
+								<div className="value" style={{ fontSize: '1.6rem' }}>{formatMinor(accountBalanceLocal(account, data.transactions), account.currency)}</div>
+								<p className="subtle">{currencyInfo(account.currency).label} · opened with {formatMinor(account.openingBalanceMinor, account.currency)}</p>
+								<div className="row gap-sm mt-md">
+									<button className="btn btn-sm ghost" type="button" onClick={() => { setAccountForm({ ...account }); setEditingAccount(account.id); }}>Edit</button>
+									<button className="btn btn-sm ghost dangerText" type="button" onClick={() => removeAccount(account)}>Delete</button>
+								</div>
 							</div>
-							<div className="value" style={{ fontSize: '1.6rem' }}>{formatMinor(accountBalanceLocal(account, data.transactions), account.currency)}</div>
-							<p className="subtle">{currencyInfo(account.currency).label} · opened with {formatMinor(account.openingBalanceMinor, account.currency)}</p>
-						</div>
-					))}
+						))}
+						{data.accounts.length === 0 && <div className="emptyPanelState">No accounts yet — create one to start tracking money.</div>}
+					</div>
 				</div>
 			)}
 
@@ -319,6 +361,88 @@ export default function FinancePage() {
 					<p className="subtle">This month: income {formatMinor(totals.incomeMinor, currency)} · expenses {formatMinor(totals.expenseMinor, currency)} · net {formatMinor(totals.netMinor, currency)}</p>
 					<p className="subtle">Open invoices outstanding: {formatMinor(invoiceDashboard(data.invoices, data.invoicePayments).due, currency)}</p>
 				</div>
+			)}
+			{editingAccount && (
+				<Modal
+					title={editingAccount === 'new' ? 'New Account' : 'Edit Account'}
+					onClose={() => setEditingAccount(null)}
+					actions={
+						<>
+							<button className="btn primary" onClick={saveAccount}>
+								Save
+							</button>
+							<button className="btn ghost" onClick={() => setEditingAccount(null)}>
+								Cancel
+							</button>
+						</>
+					}
+				>
+					<div className="row gap-sm">
+						<div className="col-12">
+							<label className="subtle">Name</label>
+							<input
+								className="input"
+								type="text"
+								value={accountForm.name}
+								onChange={(e) => setAccountForm({ ...accountForm, name: e.target.value })}
+								placeholder="e.g. Checking"
+								required
+							/>
+						</div>
+						<div className="col-6">
+							<label className="subtle">Type</label>
+							<select
+								className="input"
+								value={accountForm.type}
+								onChange={(e) => setAccountForm({ ...accountForm, type: e.target.value })}
+							>
+								<option value="checking">Checking</option>
+								<option value="savings">Savings</option>
+								<option value="cash">Cash</option>
+								<option value="credit">Credit</option>
+							</select>
+						</div>
+						<div className="col-6">
+							<label className="subtle">Currency</label>
+							<select
+								className="input"
+								value={accountForm.currency}
+								onChange={(e) => setAccountForm({ ...accountForm, currency: e.target.value })}
+							>
+								<option value="NPR">NPR (Nepali Rupee)</option>
+								<option value="USD">USD</option>
+								<option value="EUR">EUR</option>
+							</select>
+						</div>
+						<div className="col-12">
+							<label className="subtle">Opening Balance</label>
+							<input
+								className="input"
+								type="number"
+								value={accountForm.openingBalanceMinor ?? ''}
+								onChange={(e) =>
+									setAccountForm({
+										...accountForm,
+										openingBalanceMinor:
+											e.target.value === '' ? 0 : Number(e.target.value),
+									})
+								}
+								placeholder="0"
+							/>
+							<span className="subtle">(minor units - e.g. 100 = NPR 1.00)</span>
+						</div>
+						<div className="col-12">
+							<label className="subtle">Note</label>
+							<input
+								className="input"
+								type="text"
+								value={accountForm.note ?? ''}
+								onChange={(e) => setAccountForm({ ...accountForm, note: e.target.value })}
+								placeholder="Optional note..."
+							/>
+						</div>
+					</div>
+				</Modal>
 			)}
 		</div>
 	);

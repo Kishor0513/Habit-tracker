@@ -33,8 +33,10 @@ function formatUpdated(iso) {
 }
 
 export default function NotesPage() {
-	const { life, refresh } = useApp();
+	const { life, refresh, dataVersion } = useApp();
 	const { data, loading } = useLifeData();
+	const [liveNotes, setLiveNotes] = useState(null);
+	const [liveFolders, setLiveFolders] = useState(null);
 	const [filter, setFilter] = useState('all');
 	const [folderId, setFolderId] = useState('');
 	const [selectedId, setSelectedId] = useState(null);
@@ -45,8 +47,22 @@ export default function NotesPage() {
 	const [saveState, setSaveState] = useState('Saved');
 	const editorRef = useRef(null);
 
+	useEffect(() => {
+		if (!life) return undefined;
+		let alive = true;
+		Promise.all([life.listNotes(), life.listNoteFolders()]).then(([notesResult, foldersResult]) => {
+			if (!alive) return;
+			setLiveNotes(notesResult);
+			setLiveFolders(foldersResult);
+		});
+		return () => { alive = false; };
+	}, [life, dataVersion]);
+
+	const noteRecords = liveNotes ?? data.notes;
+	const folderRecords = liveFolders ?? data.noteFolders;
+
 	const notes = useMemo(() => {
-		let list = data.notes.filter((note) => {
+		let list = noteRecords.filter((note) => {
 			if (filter === 'archive') return Boolean(note.archivedAt) && !note.deletedAt;
 			if (filter === 'trash') return Boolean(note.deletedAt);
 			if (note.archivedAt || note.deletedAt) return false;
@@ -69,19 +85,23 @@ export default function NotesPage() {
 			);
 		}
 		return list;
-	}, [data.notes, filter, folderId, query]);
+	}, [noteRecords, filter, folderId, query]);
 
-	const selected = data.notes.find((note) => note.id === selectedId) ?? null;
+	// Keep the clicked note available while the shared data snapshot is refreshing.
+	// Without this fallback, a refresh can briefly replace data.notes and leave the
+	// editor showing the empty state even though a note was just selected.
+	const selected = noteRecords.find((note) => note.id === selectedId) ??
+		(draft?.id === selectedId ? draft : null);
 
 	useEffect(() => {
-		const note = data.notes.find((item) => item.id === selectedId);
+		const note = noteRecords.find((item) => item.id === selectedId);
 		if (!note) {
-			setDraft(null);
+			if (draft?.id !== selectedId) setDraft(null);
 			return;
 		}
 		setDraft({ ...note });
 		if (editorRef.current) editorRef.current.innerHTML = note.content ?? '';
-	}, [selectedId]); // eslint-disable-line react-hooks/exhaustive-deps
+	}, [selectedId, noteRecords]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	useEffect(() => {
 		if (!draft || !selectedId) return undefined;
@@ -142,6 +162,7 @@ export default function NotesPage() {
 		});
 		refresh();
 		setFilter('all');
+		setDraft(note);
 		setSelectedId(note.id);
 	};
 
@@ -163,6 +184,11 @@ export default function NotesPage() {
 	const restoreNote = async (note) => {
 		await life.upsertNote({ ...note, deletedAt: null, archivedAt: null });
 		refresh();
+	};
+
+	const selectNote = (note) => {
+		setDraft({ ...note });
+		setSelectedId(note.id);
 	};
 
 	const addFolder = async () => {
@@ -214,8 +240,8 @@ export default function NotesPage() {
 					>
 						<AppIcon name="folder" size={15} /> All folders
 					</button>
-					{data.noteFolders.map((folder) => (
-						<div className="row gap-xs notesFolderRow" key={folder.id}>
+					{folderRecords.map((folder, index) => (
+						<div className="row gap-xs notesFolderRow" key={folder.id ?? `${folder.name}-${index}`}>
 							<button
 								className={`notesFolder flex-1 ${folderId === folder.id ? 'isActive' : ''}`}
 								type="button"
@@ -246,12 +272,12 @@ export default function NotesPage() {
 					<div className="notesListScroll">
 						{loading && <div className="emptyPanelState">Loading…</div>}
 						{!loading && notes.length === 0 && <div className="emptyPanelState">No notes here yet.</div>}
-						{notes.map((note) => (
+							{notes.map((note, index) => (
 							<button
-								key={note.id}
+									key={`${note.id ?? note.title ?? 'note'}-${index}`}
 								className={`notesListItem ${selectedId === note.id ? 'isActive' : ''}`}
 								type="button"
-								onClick={() => setSelectedId(note.id)}
+								onClick={() => selectNote(note)}
 							>
 								<div className="row between">
 									<strong>{note.title || 'Untitled note'}</strong>
@@ -321,7 +347,7 @@ export default function NotesPage() {
 										placeholder="Tags"
 									/>
 								</div>
-								<span className="subtle">{wordCount(selected.plainText)} words · {formatUpdated(selected.updatedAt)}</span>
+								<span className="subtle">{wordCount(draft?.plainText ?? selected.plainText)} words · {formatUpdated(draft?.updatedAt ?? selected.updatedAt)}</span>
 							</div>
 						</div>
 					)}

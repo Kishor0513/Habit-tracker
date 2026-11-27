@@ -22,9 +22,6 @@ const EMPTY = {
 	...Object.fromEntries(LIFE_METHODS.map((key) => [key, []])),
 };
 
-// One shared snapshot per data version avoids each page re-reading every store.
-let cache = null;
-
 async function loadAll(api, life) {
 	const jobs = {
 		habits: api?.listHabits?.() ?? Promise.resolve([]),
@@ -59,11 +56,8 @@ export function useLifeData() {
 			setState({ data: EMPTY, errors: [], loading: false });
 			return undefined;
 		}
-		if (!cache || cache.life !== life || cache.version !== dataVersion) {
-			cache = { life, version: dataVersion, promise: loadAll(api, life) };
-		}
 		let alive = true;
-		cache.promise
+		loadAll(api, life)
 			.then(({ data, errors }) => {
 				if (alive) setState({ data, errors, loading: false });
 			})

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { HabitApi } from '../api.js';
 import { LocalLifeApi } from '../api/lifeApi.js';
 import { createSupabase, getSupabaseEnv } from '../supabase/client.js';
@@ -16,6 +16,7 @@ export function AppProvider({ children }) {
 	const [authLoading, setAuthLoading] = useState(true);
 	const [dataVersion, setDataVersion] = useState(0);
 	const [session, setSession] = useState(null);
+	const refresh = useCallback(() => setDataVersion((v) => v + 1), []);
 
 	useEffect(() => {
 		const env = getSupabaseEnv();
@@ -107,7 +108,7 @@ export function AppProvider({ children }) {
 			api,
 			life,
 			isReady: Boolean(api && life),
-			refresh: () => setDataVersion((v) => v + 1),
+			refresh,
 			dataVersion,
 			supabaseConfigured,
 			user,
@@ -168,6 +169,7 @@ export function AppProvider({ children }) {
 			session,
 			authLoading,
 			supabase,
+			refresh,
 		],
 	);
 
