@@ -329,18 +329,14 @@ export default function NotesPage() {
 					) : (
 						<div className="notesEditorInner">
 							<div className="notesEditorToolbar">
-								<div className="row gap-xs flex-wrap">
-									{[
-										['bold', 'B', 'Bold'],
-										['italic', 'I', 'Italic'],
-										['underline', 'U', 'Underline'],
-										['insertUnorderedList', '• List', 'Bullet list'],
-										['insertOrderedList', '1. List', 'Numbered list'],
-									].map(([command, label, title]) => (
-										<button key={command} className="btn btn-sm" type="button" title={title} onMouseDown={(event) => event.preventDefault()} onClick={() => exec(command)}>{label}</button>
-									))}
-									<button className="btn btn-sm" type="button" title="Heading" onMouseDown={(event) => event.preventDefault()} onClick={() => exec('formatBlock', 'h2')}>H2</button>
-									<button className="btn btn-sm" type="button" title="Quote" onMouseDown={(event) => event.preventDefault()} onClick={() => exec('formatBlock', 'blockquote')}>❝</button>
+								<div className="row gap-sm">
+									<button className="iconBtn" type="button" title="Bold (⌘B)" onMouseDown={(event) => event.preventDefault()} onClick={() => exec('bold')}><AppIcon name="format" size={14} /></button>
+									<button className="iconBtn" type="button" title="Italic (⌘I)" onMouseDown={(event) => event.preventDefault()} onClick={() => exec('italic')}><AppIcon name="format" size={14} /></button>
+									<button className="iconBtn" type="button" title="Underline (⌘U)" onMouseDown={(event) => event.preventDefault()} onClick={() => exec('underline')}><AppIcon name="underline" size={14} /></button>
+									<button className="iconBtn" type="button" title="Bulleted list" onMouseDown={(event) => event.preventDefault()} onClick={() => exec('insertUnorderedList')}><AppIcon name="list" size={14} /></button>
+									<button className="iconBtn" type="button" title="Numbered list" onMouseDown={(event) => event.preventDefault()} onClick={() => exec('insertOrderedList')}><AppIcon name="list" size={14} /></button>
+									<button className="iconBtn" type="button" title="Heading" onMouseDown={(event) => event.preventDefault()} onClick={() => exec('formatBlock', 'h2')}><AppIcon name="textH1" size={14} /></button>
+									<button className="iconBtn" type="button" title="Quote" onMouseDown={(event) => event.preventDefault()} onClick={() => exec('formatBlock', 'blockquote')}><AppIcon name="quote" size={14} /></button>
 								</div>
 								<span className={`saveIndicator ${saveState === 'Save failed' ? 'dangerText' : ''}`}>{saveState}</span>
 							</div>
@@ -366,11 +362,7 @@ export default function NotesPage() {
 									<button className={`iconBtn ${draft?.pinned ? 'isPinned' : ''}`} type="button" title="Pin note" onClick={() => patchNote({ pinned: !draft.pinned })}><AppIcon name="pin" size={15} /></button>
 									<button className={`iconBtn ${draft?.favorite ? 'isPinned' : ''}`} type="button" title="Favorite note" onClick={() => patchNote({ favorite: !draft.favorite })}>♥</button>
 									<button className="iconBtn" type="button" title="Archive note" onClick={() => patchNote({ archivedAt: draft.archivedAt ? null : new Date().toISOString() })}><AppIcon name="archive" size={15} /></button>
-									{selected.deletedAt ? (
-										<button className="btn btn-sm" type="button" onClick={() => restoreNote(selected)}>Restore</button>
-									) : (
-										<button className="iconBtn" type="button" title="Move to trash" onClick={removeNote}><AppIcon name="trash" size={15} /></button>
-									)}
+									<button className={`iconBtn ${selected.deletedAt ? 'isPinned' : ''}`} type="button" title={selected.deletedAt ? "Restore note" : "Move to trash"} onClick={() => selected.deletedAt ? restoreNote(selected) : removeNote()}><AppIcon name={selected.deletedAt ? "pin" : "trash"} size={15} /></button>
 									<input
 										className="input notesTagInput"
 										value={(draft?.tags ?? []).join(', ')}
