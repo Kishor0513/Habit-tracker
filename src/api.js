@@ -18,7 +18,7 @@ export class HabitApi {
   }
 
   async listHabits() {
-    const habits = await tx(this.db, "habits", "readonly", async ({ store }) => getAll(store));
+    const habits = await tx(this.db, "habits", "readonly", async ({ habits }) => getAll(habits));
     return habits.map((habit) => ({
       ...habit,
       name: habit.name?.trim() || habit.title?.trim() || "Untitled habit",
