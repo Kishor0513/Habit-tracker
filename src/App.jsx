@@ -1,446 +1,32 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
-import { NavLink, Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
+import AppSidebar, { MobileNav } from './components/AppSidebar.jsx';
+import AppTopbar from './components/AppTopbar.jsx';
 import AuthGate from './components/AuthGate.jsx';
-import CircularClock from './components/CircularClock.jsx';
 import CommandPalette from './components/CommandPalette.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
-import LogoMark from './components/LogoMark.jsx';
 import { SkeletonPage } from './components/Skeleton.jsx';
 import ToastViewport from './components/ToastViewport.jsx';
-import { isoToday } from './lib/date.js';
 import { isDueOn } from './lib/habits.js';
+import { isoToday } from './lib/date.js';
 import { AppProvider, useApp } from './state/AppState.jsx';
-import { StudioProvider, useStudio } from './state/StudioState.jsx';
+import { StudioProvider } from './state/StudioState.jsx';
 import { ToastProvider, useToast } from './state/ToastState.jsx';
 
+const HomePage = lazy(() => import('./pages/HomePage.jsx'));
 const TodayPage = lazy(() => import('./pages/TodayPage.jsx'));
+const TasksPage = lazy(() => import('./pages/TasksPage.jsx'));
 const HabitsPage = lazy(() => import('./pages/HabitsPage.jsx'));
 const ProjectsPage = lazy(() => import('./pages/ProjectsPage.jsx'));
+const NotesPage = lazy(() => import('./pages/NotesPage.jsx'));
+const FinancePage = lazy(() => import('./pages/FinancePage.jsx'));
+const InvoicesPage = lazy(() => import('./pages/InvoicesPage.jsx'));
+const CalendarPage = lazy(() => import('./pages/CalendarPage.jsx'));
+const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage.jsx'));
 const InsightsPage = lazy(() => import('./pages/InsightsPage.jsx'));
 const DailyReviewPage = lazy(() => import('./pages/DailyReviewPage.jsx'));
 const WeeklyReviewPage = lazy(() => import('./pages/WeeklyReviewPage.jsx'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage.jsx'));
-
-const EXTRA_ROUTES = {
-	'/review/weekly': { label: 'Weekly review', emoji: '📅' },
-};
-
-const NAV_ITEMS = [
-	{ to: '/', label: 'Today', shortLabel: 'Today', icon: 'pulse', emoji: '⚡', hint: 'Execute' },
-	{ to: '/habits', label: 'Habits', shortLabel: 'Habits', icon: 'habit', emoji: '🌱', hint: 'Grow' },
-	{
-		to: '/projects',
-		label: 'Projects',
-		shortLabel: 'Projects',
-		icon: 'target',
-		emoji: '🎯',
-		hint: 'Ship',
-	},
-	{ to: '/insights', label: 'Insights', shortLabel: 'Insights', icon: 'chart', emoji: '📊', hint: 'Learn' },
-	{ to: '/review', label: 'Review', shortLabel: 'Review', icon: 'review', emoji: '💭', hint: 'Reflect' },
-	{
-		to: '/settings',
-		label: 'Settings',
-		shortLabel: 'Settings',
-		icon: 'settings',
-		emoji: '⚙️',
-		hint: 'Tune',
-	},
-];
-
-function NavGlyph({ name }) {
-	switch (name) {
-		case 'pulse':
-			return (
-				<svg
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="1.8"
-				>
-					<path
-						d="M3 12h4l2.2-5 4.4 10 2.4-5H21"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-					/>
-				</svg>
-			);
-		case 'habit':
-			return (
-				<svg
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="1.8"
-				>
-					<path
-						d="M7 7h10v10H7z"
-						rx="3"
-					/>
-					<path
-						d="M8 12h8"
-						strokeLinecap="round"
-					/>
-					<path
-						d="M12 8v8"
-						strokeLinecap="round"
-					/>
-				</svg>
-			);
-		case 'target':
-			return (
-				<svg
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="1.8"
-				>
-					<circle
-						cx="12"
-						cy="12"
-						r="7"
-					/>
-					<circle
-						cx="12"
-						cy="12"
-						r="3"
-					/>
-					<path
-						d="M19 5l-4.5 4.5"
-						strokeLinecap="round"
-					/>
-				</svg>
-			);
-		case 'chart':
-			return (
-				<svg
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="1.8"
-				>
-					<path
-						d="M4 19h16"
-						strokeLinecap="round"
-					/>
-					<path
-						d="M7 15l3-3 3 2 4-6"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-					/>
-				</svg>
-			);
-		case 'review':
-			return (
-				<svg
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="1.8"
-				>
-					<path
-						d="M7 4h8l4 4v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-					/>
-					<path
-						d="M15 4v4h4"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-					/>
-					<path
-						d="M9 13h6"
-						strokeLinecap="round"
-					/>
-					<path
-						d="M9 16h4"
-						strokeLinecap="round"
-					/>
-				</svg>
-			);
-		default:
-			return (
-				<svg
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="1.8"
-				>
-					<path d="M12 3.5l2.2 1.3 2.5-.2 1 2.3 2 1.5-.8 2.4.8 2.4-2 1.5-1 2.3-2.5-.2L12 20.5l-2.2-1.3-2.5.2-1-2.3-2-1.5.8-2.4-.8-2.4 2-1.5 1-2.3 2.5.2L12 3.5z" />
-					<circle
-						cx="12"
-						cy="12"
-						r="2.5"
-					/>
-				</svg>
-			);
-	}
-}
-
-function Sidebar({ theme, onThemeToggle }) {
-	const nextThemeLabel = {
-		light: 'Dark',
-		dark: 'Light',
-	};
-	const themeIcon = theme === 'dark' ? '☀️' : '🌙';
-	const ownerLinks = {
-		github: 'https://github.com/kishorchaudhary',
-		website: 'https://kishorchaudhary.com.np',
-		socials: 'https://instagram.com/kishor0513',
-	};
-
-	return (
-		<aside className="sidebarArea">
-			<div className="sidebarHeader">
-				<div className="sidebarBrand">
-					<div
-						className="sidebarAvatar"
-						aria-hidden="true"
-					>
-						<LogoMark size={28} />
-					</div>
-					<div className="sidebarBrandText">
-						<div className="sidebarEyebrow">✨ Habit</div>
-						<div className="sidebarWorkspace">
-							<span className="gradientText">Workspace</span>
-						</div>
-					</div>
-				</div>
-				<button
-					className="themeToggleBtn"
-					onClick={onThemeToggle}
-					aria-label={`Switch to ${nextThemeLabel[theme]} mode`}
-					title={`Current: ${theme} mode — switch to ${nextThemeLabel[theme]}`}
-				>
-					<span aria-hidden="true">{themeIcon}</span>&nbsp;{theme}
-				</button>
-			</div>
-			<div className="navGroup">
-				<div className="navGroupLabel">Workspace · ⌘K for actions</div>
-				{NAV_ITEMS.map((item) => (
-					<NavLink
-						key={item.to}
-						end={item.to === '/'}
-						className={({ isActive }) =>
-							isActive ? 'navItem isActive' : 'navItem'
-						}
-						to={item.to}
-					>
-						<span
-							className="navIcon"
-							aria-hidden="true"
-						>
-							<NavGlyph name={item.icon} />
-						</span>
-						<span style={{ flex: 1 }}>{item.label}</span>
-						<span
-							className="badge"
-							style={{ fontSize: 10, padding: '2px 6px' }}
-							title={item.hint}
-						>
-							{item.emoji}
-						</span>
-					</NavLink>
-				))}
-			</div>
-			<div className="sidebarLevelCard celebrateCard">
-				<div className="levelTop">
-					<span>🔥 Keep the chain alive</span>
-					<span className="badge levelPill">Lv 3</span>
-				</div>
-				<div className="levelBar" aria-hidden="true">
-					<div className="levelFill" style={{ width: '62%' }} />
-				</div>
-				<div className="levelSub">Small wins compound. Do 1 habit now.</div>
-			</div>
-			<div className="sidebarFooter">
-				<div className="sidebarFooterLine">🌱 Build steady systems.</div>
-				<div className="sidebarFooterLinks">
-					<a
-						href={ownerLinks.github}
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						GitHub
-					</a>
-					<a
-						href={ownerLinks.website}
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						Website
-					</a>
-					<a
-						href={ownerLinks.socials}
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						Socials
-					</a>
-				</div>
-				<div className="sidebarFooterMeta">Habit Tracker · v2.1 playful</div>
-			</div>
-		</aside>
-	);
-}
-
-function Topbar() {
-	const location = useLocation();
-	const [now, setNow] = useState(() => new Date());
-	const { spotify } = useStudio();
-	const routeMeta =
-		NAV_ITEMS.find((n) => n.to === location.pathname) ||
-		EXTRA_ROUTES[location.pathname];
-	const title = routeMeta?.label || 'Page';
-	const dateLabel = isoToday();
-
-	useEffect(() => {
-		const id = window.setInterval(() => setNow(new Date()), 1000);
-		return () => window.clearInterval(id);
-	}, []);
-
-	const timeLabel = now.toLocaleTimeString([], {
-		hour: '2-digit',
-		minute: '2-digit',
-		second: '2-digit',
-	});
-	const longDate = now.toLocaleDateString([], {
-		weekday: 'short',
-		month: 'short',
-		day: 'numeric',
-	});
-	const trackName = spotify.spotifyState?.item?.name || 'Spotify idle';
-	const isPlaying = Boolean(
-		spotify.spotifyState?.is_playing || spotify.spotifyState?.paused === false,
-	);
-
-	const openPalette = () => {
-		window.dispatchEvent(new CustomEvent('habit:open-palette'));
-	};
-	return (
-		<header className="topbar">
-			<div>
-				<div className="breadcrumb">
-					<span>✨ Habit Workspace</span>
-					<span className="breadcrumbSeparator">/</span>
-					<span className="breadcrumb active">{title}</span>
-				</div>
-				<div className="topbarTitle">
-					{routeMeta?.emoji ? `${routeMeta.emoji} ` : ''}{title}
-				</div>
-			</div>
-			<div className="topbarMeta">
-				<button
-					className="topbarSearch"
-					type="button"
-					onClick={openPalette}
-					aria-label="Open command palette"
-					title="Search or jump to… (⌘K)"
-				>
-					<svg
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						strokeWidth="1.8"
-						aria-hidden="true"
-					>
-						<circle
-							cx="11"
-							cy="11"
-							r="7"
-						/>
-						<path
-							d="m20 20-3.2-3.2"
-							strokeLinecap="round"
-						/>
-					</svg>
-					<span className="topbarSearchLabel">Search</span>
-					<kbd>⌘K</kbd>
-				</button>
-				<div className="topbarSpotify celebrateCard">
-					<div className="topbarSpotifyInfo">
-						<div className="topbarSpotifyLabel">
-							{isPlaying ? '🎶 Now playing' : '🎧 Spotify'}
-						</div>
-						<div className="topbarSpotifyTrack" title={trackName}>{trackName}</div>
-					</div>
-					<div className="topbarSpotifyControls">
-						<button
-							className="btn ghost"
-							type="button"
-							onClick={spotify.previous}
-							disabled={!spotify.spotifyAuthed}
-							title="Previous track"
-						>
-							⏮
-						</button>
-						<button
-							className="btn ghost"
-							type="button"
-							onClick={() => {
-								if (!spotify.spotifyAuthed) spotify.connect();
-								else spotify.playPause();
-							}}
-							title={spotify.spotifyAuthed ? (isPlaying ? 'Pause' : 'Play') : 'Connect Spotify'}
-						>
-							{!spotify.spotifyAuthed
-								? '✨ Connect'
-								: isPlaying
-									? '⏸'
-									: '▶'}
-						</button>
-						<button
-							className="btn ghost"
-							type="button"
-							onClick={spotify.next}
-							disabled={!spotify.spotifyAuthed}
-							title="Next track"
-						>
-							⏭
-						</button>
-					</div>
-				</div>
-				<div className="topbarClock">
-					<CircularClock
-						now={now}
-						compact
-					/>
-					<div>
-						<div className="topbarClockTime">{timeLabel}</div>
-						<div className="topbarClockDate">
-							{longDate} · {dateLabel}
-						</div>
-					</div>
-				</div>
-			</div>
-		</header>
-	);
-}
-
-function BottomNav() {
-	return (
-		<nav
-			className="mobileNav"
-			aria-label="Mobile navigation"
-		>
-			{NAV_ITEMS.map((item) => (
-				<NavLink
-					key={item.to}
-					end={item.to === '/'}
-					className={({ isActive }) =>
-						isActive ? 'mobileNavItem isActive' : 'mobileNavItem'
-					}
-					to={item.to}
-				>
-					<span className="mobileNavItemIcon">
-						<NavGlyph name={item.icon} />
-					</span>
-					<span className="mobileNavItemLabel">{item.shortLabel}</span>
-				</NavLink>
-			))}
-		</nav>
-	);
-}
 
 function RouteFallback() {
 	return <SkeletonPage />;
@@ -523,97 +109,72 @@ function ReminderEngine() {
 	return null;
 }
 
-function AppShell({ theme, onThemeToggle }) {
+function AppShell({ theme, setTheme }) {
+	const [collapsed, setCollapsed] = useState(() => localStorage.getItem('lifeos.sidebar.collapsed') === 'true');
+
+	const toggleCollapse = () => {
+		const next = !collapsed;
+		setCollapsed(next);
+		localStorage.setItem('lifeos.sidebar.collapsed', String(next));
+	};
+
 	return (
 		<div className="app">
 			<ReminderEngine />
-			<Sidebar
-				theme={theme}
-				onThemeToggle={onThemeToggle}
+			<AppSidebar
+				collapsed={collapsed}
+				onToggleCollapse={toggleCollapse}
+				onCreate={() => window.dispatchEvent(new CustomEvent('life:new-task'))}
 			/>
 			<div className="mainArea">
 				<CommandPalette />
-				<Topbar />
+				<AppTopbar theme={theme} setTheme={setTheme} />
 				<Suspense fallback={<RouteFallback />}>
 					<ErrorBoundary>
 						<Routes>
-							<Route
-								path="/"
-								element={<TodayPage />}
-							/>
-							<Route
-								path="/habits"
-								element={<HabitsPage />}
-							/>
-							<Route
-								path="/projects"
-								element={<ProjectsPage />}
-							/>
-							<Route
-								path="/insights"
-								element={<InsightsPage />}
-							/>
-							<Route
-								path="/review"
-								element={<DailyReviewPage />}
-							/>
-							<Route
-								path="/review/weekly"
-								element={<WeeklyReviewPage />}
-							/>
-							<Route
-								path="/settings"
-								element={<SettingsPage />}
-							/>
-							<Route
-								path="*"
-								element={<NotFoundPage />}
-							/>
+							<Route path="/home" element={<HomePage />} />
+							<Route path="/" element={<TodayPage />} />
+							<Route path="/tasks" element={<TasksPage />} />
+							<Route path="/projects" element={<ProjectsPage />} />
+							<Route path="/habits" element={<HabitsPage />} />
+							<Route path="/notes" element={<NotesPage />} />
+							<Route path="/finance" element={<FinancePage />} />
+							<Route path="/invoices" element={<InvoicesPage />} />
+							<Route path="/calendar" element={<CalendarPage />} />
+							<Route path="/analytics" element={<AnalyticsPage />} />
+							<Route path="/insights" element={<InsightsPage />} />
+							<Route path="/review" element={<DailyReviewPage />} />
+							<Route path="/review/weekly" element={<WeeklyReviewPage />} />
+							<Route path="/settings" element={<SettingsPage />} />
+							<Route path="*" element={<NotFoundPage />} />
 						</Routes>
 					</ErrorBoundary>
 				</Suspense>
 			</div>
-			<BottomNav />
+			<MobileNav />
 		</div>
 	);
 }
 
 export default function App() {
-	const [theme, setTheme] = useState(() => {
-		const saved = localStorage.getItem('habitTrackerTheme');
-		if (saved && ['light', 'dark'].includes(saved)) return saved;
-		const prefersDark = window.matchMedia(
-			'(prefers-color-scheme: dark)',
-		).matches;
-		return prefersDark ? 'dark' : 'light';
-	});
+	const [theme, setTheme] = useState(() => localStorage.getItem('habitTrackerTheme') || 'system');
 
 	useEffect(() => {
 		localStorage.setItem('habitTrackerTheme', theme);
-		document.documentElement.dataset.theme = theme;
-		if (theme === 'dark') {
-			document.documentElement.style.colorScheme = 'dark';
-		} else {
-			document.documentElement.style.colorScheme = 'light';
+		let effectiveTheme = theme;
+		if (theme === 'system') {
+			effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 		}
+		document.documentElement.dataset.theme = effectiveTheme;
+		document.documentElement.style.colorScheme = effectiveTheme;
 	}, [theme]);
-
-	const cycleTheme = () => {
-		const themes = ['light', 'dark'];
-		const currentIndex = themes.indexOf(theme);
-		const nextIndex = (currentIndex + 1) % themes.length;
-		setTheme(themes[nextIndex]);
-	};
 
 	return (
 		<ToastProvider>
 			<AppProvider>
 				<AuthGate>
 					<StudioProvider>
-						<AppShell
-							theme={theme}
-							onThemeToggle={cycleTheme}
-						/>
+						<AppShell theme={theme} setTheme={setTheme} />
 					</StudioProvider>
 				</AuthGate>
 				<ToastViewport />

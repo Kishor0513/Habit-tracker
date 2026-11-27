@@ -1,5 +1,8 @@
+import { LIFE_STORES } from "./lib/lifeSchema.js";
+
 const DB_NAME = "habit_tracker_db";
-const DB_VERSION = 2;
+// v3 adds the LifeOS stores. Existing object stores are never removed.
+const DB_VERSION = 3;
 
 function reqToPromise(request) {
   return new Promise((resolve, reject) => {
@@ -38,6 +41,26 @@ export async function openDb() {
     if (!db.objectStoreNames.contains("weeklyReviews")) {
       const store = db.createObjectStore("weeklyReviews", { keyPath: "id" });
       store.createIndex("byWeekStart", "weekStart", { unique: false });
+    }
+    for (const name of LIFE_STORES) {
+      if (db.objectStoreNames.contains(name)) continue;
+      const keyPath = name === "lifeSettings" ? "key" : "id";
+      const store = db.createObjectStore(name, { keyPath });
+      if (name === "tasks") {
+        store.createIndex("byStatus", "status", { unique: false });
+        store.createIndex("byDueDate", "dueDate", { unique: false });
+        store.createIndex("byProject", "projectId", { unique: false });
+      }
+      if (name === "notes") {
+        store.createIndex("byFolder", "folderId", { unique: false });
+        store.createIndex("byUpdatedAt", "updatedAt", { unique: false });
+      }
+      if (name === "transactions") {
+        store.createIndex("byAccount", "accountId", { unique: false });
+        store.createIndex("byDate", "date", { unique: false });
+      }
+      if (name === "invoices") store.createIndex("byClient", "clientId", { unique: false });
+      if (name === "invoicePayments") store.createIndex("byInvoice", "invoiceId", { unique: false });
     }
   };
   return reqToPromise(request);

@@ -1,12 +1,15 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { HabitApi } from '../api.js';
+import { LocalLifeApi } from '../api/lifeApi.js';
 import { createSupabase, getSupabaseEnv } from '../supabase/client.js';
 import { SupabaseHabitApi } from '../supabase/habitApi.js';
+import { SupabaseLifeApi } from '../supabase/lifeApi.js';
 
 const AppStateContext = createContext(null);
 
 export function AppProvider({ children }) {
 	const [api, setApi] = useState(null);
+	const [life, setLife] = useState(null);
 	const [supabase, setSupabase] = useState(null);
 	const [user, setUser] = useState(null);
 	const [supabaseConfigured, setSupabaseConfigured] = useState(false);
@@ -21,15 +24,34 @@ export function AppProvider({ children }) {
 		setSupabase(client);
 
 		let alive = true;
+		let localApiPromise = null;
+
 		async function boot() {
 			if (!client) {
-				const local = await HabitApi.create();
+				const [local, localLife] = await Promise.all([
+					HabitApi.create(),
+					LocalLifeApi.create(),
+				]);
 				if (!alive) return;
 				setApi(local);
+				setLife(localLife);
 				setUser(null);
 				setAuthLoading(false);
 				return;
 			}
+
+			// Start local API initialization immediately for fallback
+			localApiPromise = Promise.all([
+				HabitApi.create(),
+				LocalLifeApi.create(),
+			]).then(([local, localLife]) => {
+				if (!alive) return;
+				// Only set if we don't already have a user signed in
+				if (!user && !session) {
+					setApi(local);
+					setLife(localLife);
+				}
+			});
 
 			const {
 				data: { session: initialSession },
@@ -38,20 +60,38 @@ export function AppProvider({ children }) {
 			setSession(initialSession);
 			const nextUser = initialSession?.user ?? null;
 			setUser(nextUser);
-			if (nextUser) setApi(new SupabaseHabitApi(client, nextUser.id));
-			else setApi(null);
+			if (nextUser) {
+				setApi(new SupabaseHabitApi(client, nextUser.id));
+				setLife(new SupabaseLifeApi(client, nextUser.id));
+			} else {
+				// Wait for local API to be ready if no user
+				const local = await localApiPromise;
+				if (local && !alive) return;
+				// local API already set in promise callback
+			}
 			setAuthLoading(false);
 		}
 
 		boot().catch((e) => console.error(e));
 
 		const { data: sub } = client
-			? client.auth.onAuthStateChange((_event, session) => {
+			? client.auth.onAuthStateChange(async (_event, session) => {
 					setSession(session);
 					const nextUser = session?.user ?? null;
 					setUser(nextUser);
-					if (nextUser) setApi(new SupabaseHabitApi(client, nextUser.id));
-					else setApi(null);
+					if (nextUser) {
+						setApi(new SupabaseHabitApi(client, nextUser.id));
+						setLife(new SupabaseLifeApi(client, nextUser.id));
+					} else {
+						// User signed out - fall back to local mode
+						const [local, localLife] = await Promise.all([
+							HabitApi.create(),
+							LocalLifeApi.create(),
+						]);
+						if (!alive) return;
+						setApi(local);
+						setLife(localLife);
+					}
 					setDataVersion((v) => v + 1);
 				})
 			: { data: { subscription: { unsubscribe: () => {} } } };
@@ -65,7 +105,8 @@ export function AppProvider({ children }) {
 	const value = useMemo(
 		() => ({
 			api,
-			isReady: Boolean(api),
+			life,
+			isReady: Boolean(api && life),
 			refresh: () => setDataVersion((v) => v + 1),
 			dataVersion,
 			supabaseConfigured,
@@ -120,6 +161,7 @@ export function AppProvider({ children }) {
 		}),
 		[
 			api,
+			life,
 			dataVersion,
 			supabaseConfigured,
 			user,
