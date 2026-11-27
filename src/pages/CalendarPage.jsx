@@ -25,7 +25,8 @@ export default function CalendarPage() {
 			if (task.startDate === day) events.push({ label: `Start: ${task.title}`, color: '#0ea5e9' });
 		});
 		data.habits.filter((habit) => !habit.archivedAt && isDueOn(habit, day)).forEach((habit) => {
-			events.push({ label: `Habit: ${habit.name ?? 'Unnamed habit'}`, color: '#16a34a' });
+			const label = habit.name || habit.title || 'Untitled Habit';
+			events.push({ label: `Habit: ${label}`, color: '#16a34a' });
 		});
 		data.invoices.forEach((invoice) => {
 			if (invoice.dueDate === day) events.push({ label: `Invoice due: ${invoice.number}`, color: '#dc2626' });
