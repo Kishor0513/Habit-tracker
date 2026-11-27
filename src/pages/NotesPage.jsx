@@ -106,7 +106,8 @@ export default function NotesPage() {
 	useEffect(() => {
 		if (!draft || !selectedId) return undefined;
 		setSaveState('Saving…');
-		const timer = window.setTimeout(async () => {
+		
+		const saveNote = async () => {
 			try {
 				await life.upsertNote({
 					...draft,
@@ -119,7 +120,10 @@ export default function NotesPage() {
 			} catch {
 				setSaveState('Save failed');
 			}
-		}, 700);
+		};
+		
+		// Immediate save on draft change - no delay
+		const timer = window.setTimeout(saveNote, 50);
 		return () => window.clearTimeout(timer);
 	}, [draft, selectedId, life, refresh]);
 
@@ -327,7 +331,7 @@ export default function NotesPage() {
 								className="notesRichText"
 								contentEditable
 								suppressContentEditableWarning
-								onInput={() => setDraft((current) => current ? { ...current } : current)}
+								onInput={() => setDraft((current) => current ? { ...current, content: editorRef.current?.innerHTML ?? current.content, plainText: htmlToPlain(editorRef.current?.innerHTML ?? current.content) } : current)}
 								data-placeholder="Start writing…"
 							/>
 							<div className="notesEditorFooter">
