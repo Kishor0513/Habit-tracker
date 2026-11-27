@@ -287,7 +287,7 @@ export default function AppTopbar({ theme, setTheme }) {
 					{unreadCount > 0 && <span className="bellDot" />}
 				</button>
 				<button
-					className="topbarProfile"
+					className="iconBtn topbarProfile"
 					type="button"
 					aria-label="Profile and theme"
 					title="Profile and theme"

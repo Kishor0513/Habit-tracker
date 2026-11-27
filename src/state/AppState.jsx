@@ -4,8 +4,30 @@ import { LocalLifeApi } from '../api/lifeApi.js';
 import { createSupabase, getSupabaseEnv } from '../supabase/client.js';
 import { SupabaseHabitApi } from '../supabase/habitApi.js';
 import { SupabaseLifeApi } from '../supabase/lifeApi.js';
+import { subscribeToDataChanges } from '../lib/dataSync.js';
 
 const AppStateContext = createContext(null);
+const REALTIME_TABLES = [
+	'habits',
+	'entries',
+	'projects',
+	'tasks',
+	'notes',
+	'note_folders',
+	'accounts',
+	'transactions',
+	'budgets',
+	'recurring_transactions',
+	'savings_goals',
+	'clients',
+	'invoices',
+	'invoice_payments',
+	'life_settings',
+	'settings',
+	'habit_sessions',
+	'daily_reviews',
+	'weekly_reviews',
+];
 
 export function AppProvider({ children }) {
 	const [api, setApi] = useState(null);
@@ -102,6 +124,59 @@ export function AppProvider({ children }) {
 			sub?.subscription?.unsubscribe?.();
 		};
 	}, []);
+
+	useEffect(() => subscribeToDataChanges(refresh), [refresh]);
+
+	useEffect(() => {
+		let timer;
+		const refreshWhenVisible = () => {
+			if (document.visibilityState !== 'visible') return;
+			window.clearTimeout(timer);
+			timer = window.setTimeout(refresh, 150);
+		};
+		window.addEventListener('focus', refreshWhenVisible);
+		document.addEventListener('visibilitychange', refreshWhenVisible);
+		return () => {
+			window.clearTimeout(timer);
+			window.removeEventListener('focus', refreshWhenVisible);
+			document.removeEventListener('visibilitychange', refreshWhenVisible);
+		};
+	}, [refresh]);
+
+	useEffect(() => {
+		if (!supabase || !user?.id) return undefined;
+		let timer;
+		const refreshAfterChange = () => {
+			window.clearTimeout(timer);
+			timer = window.setTimeout(refresh, 150);
+		};
+		let channel = supabase.channel(`life-data:${user.id}`);
+		for (const table of REALTIME_TABLES) {
+			channel = channel.on(
+				'postgres_changes',
+				{
+					event: '*',
+					schema: 'public',
+					table,
+					filter: `user_id=eq.${user.id}`,
+				},
+				refreshAfterChange,
+			);
+		}
+		channel.subscribe((status, error) => {
+			if (status === 'SUBSCRIBED') {
+				refreshAfterChange();
+			} else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+				console.error('Supabase live data updates failed:', error ?? status);
+			}
+		});
+		return () => {
+			window.clearTimeout(timer);
+			supabase.removeChannel(channel).catch((error) => {
+				console.error('Failed to stop Supabase live updates:', error);
+			});
+		};
+	}, [supabase, user?.id, refresh]);
 
 	const value = useMemo(
 		() => ({

@@ -70,7 +70,7 @@ export default function DailyReviewPage() {
 					<span className="badge levelPill">💭 Today</span>
 					<a
 						href="#/review/weekly"
-						className="btn ghost btnSm"
+						className="btn ghost btn-sm"
 					>
 						Weekly review →
 					</a>

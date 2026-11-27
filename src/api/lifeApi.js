@@ -1,5 +1,6 @@
 import { del, get, getAll, openDb, put, tx } from '../db.js';
 import { normalizeRecord } from '../lib/lifeSchema.js';
+import { notifyDataChanged } from '../lib/dataSync.js';
 
 const METHODS = {
 	tasks: ['listTasks', 'upsertTask', 'deleteTask'],
@@ -28,10 +29,13 @@ export class LocalLifeApi {
 			this[upsertName] = async (record) => {
 				const full = normalizeRecord(store, record);
 				await tx(this.db, store, 'readwrite', async ({ [store]: target }) => put(target, full));
+				notifyDataChanged();
 				return full;
 			};
-			this[deleteName] = async (id) =>
-				tx(this.db, store, 'readwrite', async ({ [store]: target }) => del(target, id));
+			this[deleteName] = async (id) => {
+				await tx(this.db, store, 'readwrite', async ({ [store]: target }) => del(target, id));
+				notifyDataChanged();
+			};
 		}
 	}
 
@@ -49,6 +53,7 @@ export class LocalLifeApi {
 		await tx(this.db, 'lifeSettings', 'readwrite', async ({ lifeSettings }) =>
 			put(lifeSettings, { key, value, updatedAt: new Date().toISOString() }),
 		);
+		notifyDataChanged();
 		return { key, value };
 	}
 }

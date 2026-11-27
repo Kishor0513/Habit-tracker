@@ -92,7 +92,7 @@ export default function AuthGate({ children }) {
 					/>
 					<div className="authBtnGrid">
 						<button
-							className="btn btn-primary authBtnFull"
+							className="btn primary authBtnFull"
 							disabled={!email.trim() || !password || busy}
 							onClick={async () => {
 								try {
@@ -156,7 +156,7 @@ export default function AuthGate({ children }) {
 					</div>
 
 					<button
-						className="btn btn-primary authBtnSm"
+						className="btn primary authBtnSm"
 						disabled={!email.trim() || busy}
 						onClick={async () => {
 							try {

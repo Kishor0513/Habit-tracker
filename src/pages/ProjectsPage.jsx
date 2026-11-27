@@ -240,7 +240,7 @@ export default function ProjectsPage() {
                       Open
                     </button>
 										<button
-											className="btn danger btnSm"
+											className="btn danger btn-sm"
 											type="button"
 											onClick={async (event) => {
 												event.stopPropagation();

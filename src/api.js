@@ -2,6 +2,7 @@ import { del, get, getAll, openDb, put, tx } from "./db.js";
 import { uid } from "./lib/ids.js";
 import { isoToday } from "./lib/date.js";
 import { EntryStatus, normalizeSchedule } from "./lib/habits.js";
+import { notifyDataChanged } from "./lib/dataSync.js";
 
 function nowIso() {
   return new Date().toISOString();
@@ -48,6 +49,7 @@ export class HabitApi {
       updatedAt: nowIso(),
     };
     await tx(this.db, "habits", "readwrite", async ({ habits }) => put(habits, full));
+    notifyDataChanged();
     return full;
   }
 
@@ -74,7 +76,7 @@ export class HabitApi {
 
   async setEntry({ habitId, date, value, note, status, mood, playlistId, completedAt }) {
     const id = this.entryId(habitId, date);
-    return tx(this.db, "entries", "readwrite", async ({ entries }) => {
+    const entry = await tx(this.db, "entries", "readwrite", async ({ entries }) => {
       const existing = await get(entries, id);
       const nextStatus =
         status ?? existing?.status ?? (Number(value ?? 0) > 0 ? EntryStatus.done : EntryStatus.pending);
@@ -97,11 +99,14 @@ export class HabitApi {
       await put(entries, entry);
       return entry;
     });
+    notifyDataChanged();
+    return entry;
   }
 
   async deleteEntry(habitId, isoDate) {
     const id = this.entryId(habitId, isoDate);
     await tx(this.db, "entries", "readwrite", async ({ entries }) => del(entries, id));
+    notifyDataChanged();
   }
 
   async listEntries() {
@@ -127,11 +132,13 @@ export class HabitApi {
       archivedAt: project.archivedAt ?? null,
     };
     await tx(this.db, "projects", "readwrite", async ({ projects }) => put(projects, full));
+    notifyDataChanged();
     return full;
   }
 
   async deleteProject(projectId) {
     await tx(this.db, "projects", "readwrite", async ({ projects }) => del(projects, projectId));
+    notifyDataChanged();
   }
 
   async getSetting(key) {

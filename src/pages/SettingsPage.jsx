@@ -92,7 +92,7 @@ export default function SettingsPage() {
 					<div className="row settingsAccountRow">
 						<div className="badge accent">{user?.email ?? user?.id}</div>
 						<button
-							className="btn ghost btnSm"
+							className="btn ghost btn-sm"
 							type="button"
 							onClick={async (event) => {
 								event.stopPropagation();

@@ -222,3 +222,30 @@ begin
     execute format('create policy %I on public.%I for delete using (auth.uid() = user_id)', table_name || '_delete_own', table_name);
   end loop;
 end $$;
+
+-- Enable live client updates for the user's data when Supabase Realtime is available.
+do $$
+declare
+  table_name text;
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
+    foreach table_name in array array[
+      'habits', 'entries', 'projects', 'tasks', 'notes', 'note_folders',
+      'accounts', 'transactions', 'budgets', 'recurring_transactions',
+      'savings_goals', 'clients', 'invoices', 'invoice_payments',
+      'life_settings', 'settings', 'habit_sessions', 'daily_reviews',
+      'weekly_reviews'
+    ]
+    loop
+      if not exists (
+        select 1
+        from pg_publication_tables
+        where pubname = 'supabase_realtime'
+          and schemaname = 'public'
+          and tablename = table_name
+      ) then
+        execute format('alter publication supabase_realtime add table public.%I', table_name);
+      end if;
+    end loop;
+  end if;
+end $$;

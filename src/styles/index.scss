@@ -170,7 +170,15 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-button { -webkit-tap-highlight-color: transparent; }
+button {
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
 
 img, svg { max-width: 100%; }
 
@@ -1207,17 +1215,11 @@ button, input, select, textarea {
   background: var(--bg-elevated);
 }
 
-.btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
 .btn:active:not(:disabled) {
   transform: scale(0.98);
 }
 
-.btn.primary,
-.btn-primary {
+.btn.primary {
   color: var(--text-on-brand);
   border-color: transparent;
   background: var(--brand-gradient);
@@ -1233,7 +1235,6 @@ button, input, select, textarea {
   }
 }
 
-.btn.btn-sm,
 .btn-sm {
   min-height: 30px;
   height: 30px;
@@ -2973,13 +2974,6 @@ button, input, select, textarea {
   max-width: 320px;
 }
 
-.btn-sm {
-  min-height: 30px;
-  height: 30px;
-  font-size: 12px;
-  padding: 0 10px;
-}
-
 .isSkipped {
   opacity: 0.6;
 }
@@ -3109,11 +3103,6 @@ button, input, select, textarea {
   display: flex;
   align-items: center;
   gap: 12px;
-}
-
-.btnSm {
-  padding: 6px 12px;
-  font-size: 0.85rem;
 }
 
 .settingsDataNote {
@@ -3509,18 +3498,25 @@ button, input, select, textarea {
   gap: 8px;
 }
 
+.taskCardTitle,
+.tableTitle,
+.taskTextBtn {
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: color var(--dur-fast) ease;
+  &:hover { color: var(--brand); }
+}
+
 .taskCardTitle {
   flex: 1;
-  text-align: left;
   font-weight: 600;
   font-size: 14px;
-  color: var(--text-primary);
-  border: none;
-  background: transparent;
-  padding: 0;
   line-height: 1.4;
-  cursor: pointer;
-  &:hover { color: var(--brand); }
 }
 
 .taskCardMeta {
@@ -3751,6 +3747,106 @@ button, input, select, textarea {
   width: 320px;
   overflow: hidden;
   animation: modalPop 0.2s var(--ease-out);
+}
+
+.popoverBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+}
+
+.popoverItem,
+.notificationRow {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  transition:
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    color var(--dur-fast) ease;
+}
+
+.popoverItem:hover:not(:disabled),
+.notificationRow:hover:not(:disabled) {
+  border-color: var(--border);
+  background: var(--hover-tint);
+  color: var(--text-primary);
+}
+
+.popoverItem.danger {
+  color: var(--danger);
+}
+
+.notificationRow {
+  min-height: 58px;
+}
+
+.notificationRow.isRead {
+  opacity: 0.65;
+}
+
+.notificationCopy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.notificationTitle {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.themeSegments {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+}
+
+.themeSegment {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  transition:
+    background-color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    color var(--dur-fast) ease;
+}
+
+.themeSegment:hover:not(:disabled) {
+  background: var(--hover-tint);
+  color: var(--text-primary);
+}
+
+.themeSegment.isActive {
+  border-color: var(--brand-border);
+  background: var(--brand-soft);
+  color: var(--brand);
 }
 
 .popoverScrim {

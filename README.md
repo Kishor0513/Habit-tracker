@@ -263,13 +263,14 @@ Copy from `.env.example` to start.
    - Creates tables: habits, entries, habit_sessions, daily_reviews, weekly_reviews, projects, settings
    - Enables Row Level Security
    - Sets up indexes for performance
+2. **LifeOS tables and live updates**: Run `supabase/migrations/001_lifeos.sql` after the base schema. It adds the LifeOS tables and registers them with Supabase Realtime. Re-run it on existing deployments to enable live refreshes.
 
-2. **Enable Auth**:
+3. **Enable Auth**:
    - Go to Authentication → Providers
    - Enable "Email" provider
    - Configure email templates
 
-3. **Deploy Edge Functions** (optional):
+4. **Deploy Edge Functions** (optional):
    ```bash
    supabase functions deploy spotify-refresh
    supabase functions deploy weekly-analytics
