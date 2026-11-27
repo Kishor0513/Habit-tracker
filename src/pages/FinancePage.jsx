@@ -194,10 +194,10 @@ export default function FinancePage() {
 								<span className="badge">{currencyInfo(currency).label}</span>
 							</div>
 							<div className="list">
-								{spend.slice(0, 6).map((row) => {
+							{spend.slice(0, 6).map((row, index) => {
 									const percent = totals.expenseMinor > 0 ? Math.round((row.amountMinor / totals.expenseMinor) * 100) : 0;
 									return (
-										<div className="spendRow" key={row.category}>
+										<div className="spendRow" key={`${row.category}-${index}`}>
 											<div className="row between">
 												<span className="label">{row.category}</span>
 												<span className="value">{formatMinor(row.amountMinor, currency)}</span>
@@ -213,8 +213,8 @@ export default function FinancePage() {
 						<div className="card premiumPanel">
 							<div className="premiumPanelHeader"><h3 className="premiumPanelTitle">Budgets this month</h3></div>
 							<div className="list">
-								{budgets.map((budget) => (
-									<div className="spendRow" key={budget.id}>
+								{budgets.map((budget, index) => (
+									<div className="spendRow" key={`${budget.id ?? budget.category}-${index}`}>
 										<div className="row between">
 											<span className="label">{budget.category}</span>
 											<span className="value">{formatMinor(budget.spentMinor, currency)} / {formatMinor(budget.amountMinor, currency)}</span>
@@ -242,8 +242,8 @@ export default function FinancePage() {
 						])}>CSV export</button>
 						</div>
 						<div className="list">
-							{[...data.transactions].sort((a, b) => (b.date ?? '').localeCompare(a.date ?? '')).slice(0, 30).map((tx) => (
-								<div className="transactionRow" key={tx.id}>
+								{[...data.transactions].sort((a, b) => (b.date ?? '').localeCompare(a.date ?? '')).slice(0, 30).map((tx, index) => (
+									<div className="transactionRow" key={`${tx.id ?? tx.date}-${index}`}>
 									<span className={`transactionIcon ${tx.type}`}><AppIcon name={tx.type === 'income' ? 'finance' : 'arrow'} size={15} /></span>
 									<div className="flex-1 min-w-0">
 										<div className="itemName">{tx.description || tx.category}</div>
@@ -269,8 +269,8 @@ export default function FinancePage() {
 						</button>
 					</div>
 					<div className="grid two">
-						{data.accounts.map((account) => (
-							<div className="card premiumPanel" key={account.id}>
+							{data.accounts.map((account, index) => (
+								<div className="card premiumPanel" key={`${account.id ?? account.name}-${index}`}>
 								<div className="premiumPanelHeader">
 									<h3 className="premiumPanelTitle">{account.name}</h3>
 									<span className="badge">{account.type}</span>
@@ -290,8 +290,8 @@ export default function FinancePage() {
 
 			{tab === 'budgets' && (
 				<div className="list">
-					{data.budgets.map((budget) => (
-						<div className="card premiumPanel" key={budget.id}>
+						{data.budgets.map((budget, index) => (
+							<div className="card premiumPanel" key={`${budget.id ?? budget.category}-${index}`}>
 							<div className="premiumPanelHeader">
 								<h3 className="premiumPanelTitle">{budget.category}</h3>
 								<span className="badge">{budget.period}</span>
@@ -308,8 +308,8 @@ export default function FinancePage() {
 
 			{tab === 'recurring' && (
 				<div className="list">
-					{data.recurringTransactions.map((rule) => (
-						<div className="card premiumPanel" key={rule.id}>
+						{data.recurringTransactions.map((rule, index) => (
+							<div className="card premiumPanel" key={`${rule.id ?? rule.description}-${index}`}>
 							<div className="premiumPanelHeader">
 								<h3 className="premiumPanelTitle">{rule.description || `${rule.category} (recurring)`}</h3>
 								<span className="badge">{rule.frequency}</span>
@@ -330,10 +330,10 @@ export default function FinancePage() {
 
 			{tab === 'savings' && (
 				<div className="grid two">
-					{data.savingsGoals.map((goal) => {
+						{data.savingsGoals.map((goal, index) => {
 						const percent = goal.targetMinor > 0 ? Math.round((goal.currentMinor / goal.targetMinor) * 100) : 0;
 						return (
-							<div className="card premiumPanel" key={goal.id}>
+								<div className="card premiumPanel" key={`${goal.id ?? goal.name}-${index}`}>
 								<div className="premiumPanelHeader">
 									<h3 className="premiumPanelTitle">{goal.name}</h3>
 									<span className="badge">{percent}%</span>

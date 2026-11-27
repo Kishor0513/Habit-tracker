@@ -24,19 +24,7 @@ export class LocalLifeApi {
 		this.db = db;
 		for (const [store, [listName, upsertName, deleteName]] of Object.entries(METHODS)) {
 			this[listName] = async () =>
-				tx(this.db, store, 'readwrite', async ({ [store]: source }) => {
-					const records = await getAll(source);
-					const seenIds = new Set();
-					const repaired = records.map((record) => {
-						const id = record?.id && !seenIds.has(record.id) ? record.id : crypto.randomUUID();
-						seenIds.add(id);
-						return record?.id === id ? record : { ...record, id };
-					});
-					for (const [index, record] of repaired.entries()) {
-						if (record !== records[index]) await put(source, record);
-					}
-					return repaired;
-				});
+				tx(this.db, store, 'readonly', async ({ [store]: source }) => getAll(source));
 			this[upsertName] = async (record) => {
 				const full = normalizeRecord(store, record);
 				await tx(this.db, store, 'readwrite', async ({ [store]: target }) => put(target, full));
