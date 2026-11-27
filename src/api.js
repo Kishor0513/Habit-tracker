@@ -18,7 +18,11 @@ export class HabitApi {
   }
 
   async listHabits() {
-    return tx(this.db, "habits", "readonly", async ({ habits }) => getAll(habits));
+    const habits = await tx(this.db, "habits", "readonly", async ({ store }) => getAll(store));
+    return habits.map((habit) => ({
+      ...habit,
+      name: habit.name?.trim() || habit.title?.trim() || "Untitled habit",
+    }));
   }
 
   async upsertHabit(habit) {

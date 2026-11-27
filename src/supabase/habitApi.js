@@ -49,6 +49,7 @@ function normalizeHabit(row) {
 		archivedAt: row.archived_at ?? null,
 		createdAt: row.created_at ?? null,
 		updatedAt: row.updated_at ?? null,
+		name: row.name ?? row.title ?? 'Untitled habit',
 	};
 }
 

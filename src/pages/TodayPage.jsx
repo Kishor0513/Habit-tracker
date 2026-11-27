@@ -84,7 +84,7 @@ function HabitTaskRow({
 			<div className="taskContent">
 				<div className="taskNameRow">
 					<span className="taskText font-semibold text-md">
-						{done ? '✅ ' : ''}{habit.name}
+						{done ? '✅ ' : ''}{habit.name || habit.title || 'Untitled habit'}
 					</span>
 					{streak >= 3 ? (
 						<span className="badge warning streakPop">🔥 {streak}</span>

@@ -87,7 +87,7 @@ export default function HomePage() {
 								const done = entryMeetsTarget(habit, entriesByKey.get(`${habit.id}__${today}`));
 								return (
 									<div className="row between taskRow" key={habit.id}>
-										<span className="itemName" style={{ textDecoration: done ? 'line-through' : 'none', color: done ? 'var(--text-muted)' : 'inherit' }}>{habit.name}</span>
+										<span className="itemName" style={{ textDecoration: done ? 'line-through' : 'none', color: done ? 'var(--text-muted)' : 'inherit' }}>{habit.name || habit.title || 'Untitled habit'}</span>
 										<span className="badge">{done ? 'Done' : 'Pending'}</span>
 									</div>
 								);
